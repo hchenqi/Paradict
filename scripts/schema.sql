@@ -100,7 +100,7 @@ begin
   return query
   with candidate_concepts as (
     select
-      e.concept_id,
+      e.concept_id as id,
       max(similarity(e.expression, query)) as best_score
     from public.entries e
     where e.indexed
@@ -117,8 +117,7 @@ begin
     e.expression,
     e.indexed
   from public.entries e
-  join candidate_concepts c
-    on c.concept_id = e.concept_id
+  join candidate_concepts c on c.id = e.concept_id
   where e.language_id = any(language_list)
   order by c.best_score desc;
 end;
@@ -126,6 +125,52 @@ $$;
 
 revoke execute on function public.search(text, bigint[], integer) from public;
 grant execute on function public.search(text, bigint[], integer) to anon, authenticated;
+
+
+create function public.explore(
+  result_limit integer
+)
+returns table (
+  concept_id bigint,
+  language_id bigint,
+  entry_id bigint,
+  expression text,
+  indexed boolean
+)
+language plpgsql
+stable
+security invoker
+set search_path = pg_temp
+as $$
+begin
+  if result_limit is null or result_limit < 1 then
+    raise exception 'result_limit must be greater than 0';
+  end if;
+
+  if result_limit > 20 then
+    raise exception 'result_limit must not exceed 20';
+  end if;
+
+  return query
+  with candidate_concepts as (
+    select id
+    from public.concepts c
+    tablesample system (1)
+    limit result_limit
+  )
+  select
+    e.concept_id,
+    e.language_id,
+    e.id as entry_id,
+    e.expression,
+    e.indexed
+  from public.entries e
+  join candidate_concepts c on c.id = e.concept_id;
+end;
+$$;
+
+revoke execute on function public.explore(integer) from public;
+grant execute on function public.explore(integer) to anon, authenticated;
 
 
 -- =========================================================================

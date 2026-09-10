@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Paradict</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <main>
+      <form id="search-form">
+        <label class="visually-hidden" for="query">Search Paradict</label>
+        <input
+          id="query"
+          name="query"
+          type="search"
+          autocomplete="off"
+          placeholder="Search selected text"
+          autofocus
+        />
+      </form>
+      <section id="results" aria-live="polite"></section>
+    </main>
+    <script src="popup.js"></script>
+  </body>
+</html>

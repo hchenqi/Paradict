@@ -1,0 +1,19 @@
+{
+  "name": "paradict",
+  "private": true,
+  "version": "0.1.0",
+  "packageManager": "npm@12.0.2",
+  "workspaces": [
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "start": "turbo run start",
+    "lint": "turbo run lint",
+    "check": "turbo run check"
+  },
+  "devDependencies": {
+    "turbo": "^2.10.12"
+  }
+}

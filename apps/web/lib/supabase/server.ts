@@ -1,23 +1,22 @@
-import { createServerClient } from "@supabase/ssr";
+import "server-only";
+
 import { createClient } from "@supabase/supabase-js";
+import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
+import { Database } from "../database.types";
 
 export function getSupabasePublicClient() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
-  if (!url || !key) return null;
-  return createClient(url, key, {
-    auth: { persistSession: false, autoRefreshToken: false },
+  return createClient<Database>(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!, {
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false
+    },
   });
 }
 
 export async function getSupabaseServerClient() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
-  if (!url || !key) return null;
-
   const cookieStore = await cookies();
-  return createServerClient(url, key, {
+  return createServerClient<Database>(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!, {
     cookies: {
       getAll() {
         return cookieStore.getAll();
@@ -28,7 +27,7 @@ export async function getSupabaseServerClient() {
             cookieStore.set(name, value, options),
           );
         } catch {
-          // Server Components cannot always write cookies; middleware refreshes them.
+          // server components cannot always write cookies
         }
       },
     },

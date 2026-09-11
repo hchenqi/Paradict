@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { getSupabaseBrowserClient } from "@/lib/client";
 
-export default function LoginPage() {
+export default function () {
   const router = useRouter();
   const [mode, setMode] = useState<"login" | "signup">("login");
   const [email, setEmail] = useState("");
@@ -69,7 +69,7 @@ export default function LoginPage() {
             <input
               type="email"
               value={email}
-              onChange={(event) => setEmail(event.target.value)}
+              onChange={event => setEmail(event.target.value)}
               required
               autoComplete="email"
             />
@@ -79,7 +79,7 @@ export default function LoginPage() {
             <input
               type="password"
               value={password}
-              onChange={(event) => setPassword(event.target.value)}
+              onChange={event => setPassword(event.target.value)}
               required
               minLength={6}
               autoComplete={
@@ -92,7 +92,7 @@ export default function LoginPage() {
               Username
               <input
                 value={username}
-                onChange={(event) => setUsername(event.target.value)}
+                onChange={event => setUsername(event.target.value)}
                 required
                 minLength={6}
                 maxLength={30}

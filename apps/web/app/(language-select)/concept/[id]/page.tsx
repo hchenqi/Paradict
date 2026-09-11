@@ -15,10 +15,10 @@ export default async function ConceptPage({
   const { languages } = await searchParams;
   const conceptId = Number(id);
   if (!Number.isInteger(conceptId) || conceptId < 1) notFound();
-  const activeLanguageList = (languages?.split(",") ?? []).filter(
+  const activeLanguages = (languages?.split(",") ?? []).filter(
     (code): code is LanguageCode => Boolean(code),
   );
-  const entries = await getConcept(conceptId, activeLanguageList);
+  const entries = await getConcept(conceptId, activeLanguages);
   if (!entries.length) notFound();
 
   return (
@@ -27,12 +27,12 @@ export default async function ConceptPage({
         <ConceptCard
           conceptId={conceptId}
           entries={entries}
-          activeLanguageList={activeLanguageList}
+          activeLanguages={activeLanguages}
         />
         <div className="concept-actions">
           <Link
             className="submission-cta"
-            href={`/submissions?type=update_concept&concept_id=${conceptId}&languages=${activeLanguageList.join(",")}`}
+            href={`/submissions?type=update_concept&concept_id=${conceptId}&languages=${activeLanguages.join(",")}`}
           >
             Update entries
           </Link>

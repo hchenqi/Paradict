@@ -1,4 +1,4 @@
-export default function AboutPage() {
+export default function () {
   return (
     <main className="info-page">
       <article className="info-content">

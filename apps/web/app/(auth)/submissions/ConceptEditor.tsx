@@ -1,11 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import {
-  languageLabel,
-  type Concept,
-  type LanguageCode,
-} from "@/lib/types";
+import { languageLabel, type LanguageCode } from "@/lib/types";
 
 type EditType = "create_concept" | "update_concept" | "merge_concepts";
 type DraftEntry = {
@@ -21,16 +17,16 @@ function draftFromConcept(
   languages: LanguageCode[],
 ): DraftGroups {
   return Object.fromEntries(
-    languages.map((language) => [
+    languages.map(language => [
       language,
       (
-        concept?.entries.filter((entry) => entry.language === language) ?? []
-      ).map((entry) => ({ id: entry.entry_id, text: entry.expression })),
+        concept?.entries.filter(entry => entry.language === language) ?? []
+      ).map(entry => ({ id: entry.entry_id, text: entry.expression })),
     ]),
   );
 }
 
-export default function ConceptEditor({
+export default function ({
   type,
   concept,
   languages,
@@ -46,11 +42,11 @@ export default function ConceptEditor({
   const [message, setMessage] = useState("");
   const [saving, setSaving] = useState(false);
   const originalEntries = Object.fromEntries(
-    (concept?.entries ?? []).map((entry) => [entry.entry_id, entry.expression]),
+    (concept?.entries ?? []).map(entry => [entry.entry_id, entry.expression]),
   );
 
   function updateEntry(language: string, index: number, text: string) {
-    setGroups((current) => ({
+    setGroups(current => ({
       ...current,
       [language]: current[language].map((entry, entryIndex) =>
         entryIndex === index ? { ...entry, text } : entry,
@@ -59,14 +55,14 @@ export default function ConceptEditor({
   }
 
   function addEntry(language: string) {
-    setGroups((current) => ({
+    setGroups(current => ({
       ...current,
       [language]: [...current[language], { text: "" }],
     }));
   }
 
   function toggleDeleted(language: string, index: number) {
-    setGroups((current) => ({
+    setGroups(current => ({
       ...current,
       [language]: current[language].map((entry, entryIndex) =>
         entryIndex === index ? { ...entry, deleted: !entry.deleted } : entry,
@@ -94,7 +90,7 @@ export default function ConceptEditor({
         Object.entries(groups)
           .map(([language, values]) => [
             language,
-            values.map((entry) => entry.text.trim()).filter(Boolean),
+            values.map(entry => entry.text.trim()).filter(Boolean),
           ])
           .filter(([, values]) => values.length),
       );
@@ -108,7 +104,7 @@ export default function ConceptEditor({
       const updated: Array<{ entry_id: number; text: string }> = [];
       const deleted: number[] = [];
       Object.entries(groups).forEach(([language, values]) =>
-        values.forEach((entry) => {
+        values.forEach(entry => {
           const text = entry.text.trim();
           if (entry.id && entry.deleted) deleted.push(entry.id);
           else if (entry.id && text && originalEntries[entry.id] !== text)
@@ -149,13 +145,13 @@ export default function ConceptEditor({
           Other concept id
           <input
             value={mergeId}
-            onChange={(event) => setMergeId(event.target.value)}
+            onChange={event => setMergeId(event.target.value)}
             inputMode="numeric"
           />
         </label>
       ) : (
         <div className="entries-grid">
-          {languages.map((language) => (
+          {languages.map(language => (
             <div className="entry editor-entry" key={language}>
               <div className="entry-language">
                 {languageLabel(language)}
@@ -168,7 +164,7 @@ export default function ConceptEditor({
                   >
                     <input
                       value={entry.text}
-                      onChange={(event) =>
+                      onChange={event =>
                         updateEntry(language, index, event.target.value)
                       }
                       aria-label={`${languageLabel(language)} word`}

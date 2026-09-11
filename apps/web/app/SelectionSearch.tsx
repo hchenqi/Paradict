@@ -1,11 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 type SelectionState = { text: string; top: number; left: number } | null;
 
-export default function SelectionSearch() {
+export default function () {
   const [selection, setSelection] = useState<SelectionState>(null);
+  const router = useRouter();
 
   useEffect(() => {
     function updateSelection() {
@@ -45,14 +47,8 @@ export default function SelectionSearch() {
       className="selection-search"
       style={{ top: selection.top, left: selection.left }}
       type="button"
-      onMouseDown={(event) => event.preventDefault()}
-      onClick={() =>
-        window.open(
-          `/?q=${encodeURIComponent(selection.text)}`,
-          "_blank",
-          "noopener,noreferrer",
-        )
-      }
+      onMouseDown={event => event.preventDefault()}
+      onClick={() => { router.push(`/search?q=${encodeURIComponent(selection.text)}`); setSelection(null); }}
     >
       Search selected text
     </button>

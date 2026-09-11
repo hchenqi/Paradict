@@ -3,12 +3,12 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { getSupabaseBrowserClient } from "@/lib/client";
-import RoleEditor from "./role-editor";
+import RoleEditor from "./RoleEditor";
 
 type Profile = { id: string; username: string; display_name: string | null; role: string; created_at: string };
 type Submission = { id: number; payload: unknown; review_status: string; created_at: string };
 
-export default function PublicUserPage() {
+export default function () {
   const { username } = useParams<{ username: string }>();
   const supabase = getSupabaseBrowserClient();
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -16,7 +16,7 @@ export default function PublicUserPage() {
   const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
-    void supabase.from("users").select("id, username, display_name, role, created_at").eq("username", username.toLowerCase()).single().then(async ({ data }) => {
+    supabase.from("users").select("id, username, display_name, role, created_at").eq("username", username.toLowerCase()).single().then(async ({ data }) => {
       if (!data) return;
       setProfile(data);
       const { data: own } = await supabase.from("submissions").select("id, payload, review_status, created_at").eq("created_by", data.id).order("created_at", { ascending: false });
@@ -37,7 +37,7 @@ export default function PublicUserPage() {
       <p className="profile-username">@{profile.username}</p>
       <p>Member since {new Date(profile.created_at).toLocaleDateString()}</p>
       {isAdmin && <RoleEditor username={profile.username} role={profile.role} />}
-      <section className="public-submissions profile-submissions"><div className="results-heading"><span className="eyebrow">Submissions</span></div>{submissions.map((submission) => <article className="concept-card submission-item" key={submission.id}><div className="concept-heading"><span className="concept-title">Submission #{submission.id}</span><span className="submission-status">{submission.review_status}</span></div><pre className="submission-raw">{JSON.stringify(submission.payload, null, 2)}</pre></article>)}{!submissions.length && <p>No submissions yet.</p>}</section>
+      <section className="public-submissions profile-submissions"><div className="results-heading"><span className="eyebrow">Submissions</span></div>{submissions.map(submission => <article className="concept-card submission-item" key={submission.id}><div className="concept-heading"><span className="concept-title">Submission #{submission.id}</span><span className="submission-status">{submission.review_status}</span></div><pre className="submission-raw">{JSON.stringify(submission.payload, null, 2)}</pre></article>)}{!submissions.length && <p>No submissions yet.</p>}</section>
     </section>
   );
 }

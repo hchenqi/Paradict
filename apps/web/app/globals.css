@@ -144,7 +144,6 @@ p {
 .search-icon {
   color: #eb5e3f;
   font-size: 25px;
-  transform: rotate(-20deg);
 }
 .search-form input {
   flex: 1;
@@ -275,7 +274,6 @@ kbd {
   box-shadow: inset 0 0 0 1px #8bb998;
 }
 .language-add.added::after {
-  content: "Selected";
   margin-left: 6px;
   color: #386348;
   font: 10px "DM Mono", monospace;

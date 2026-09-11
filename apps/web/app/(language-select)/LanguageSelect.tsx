@@ -1,96 +1,70 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { languageLabel, type LanguageCode } from "@/lib/types";
-import { useActiveLanguageList } from "./ActiveLanguageListProvider";
-
-type Language = { iso_code: LanguageCode };
+import { useActiveLanguages } from "./ActiveLanguagesProvider";
 
 function optionLabel(code: LanguageCode) {
   const name = languageLabel(code);
-  return name.toLowerCase() === code.toLowerCase()
-    ? name
-    : `${name} (${code})`;
+  return name === code ? name : `${name} (${code})`;
 }
 
-export default function LanguageSelect() {
-  const { activeLanguageList, setActiveLanguageList } = useActiveLanguageList();
-  const [languages, setLanguages] = useState<Language[]>([]);
-  const [selected, setSelected] = useState<LanguageCode[]>([]);
-  const [open, setOpen] = useState(false);
+export default function () {
+  const [languages, setLanguages] = useState<LanguageCode[]>([]);
+  const [selectedLanguages, setSelectedLanguages] = useState<LanguageCode[]>([]);
+  const { activeLanguages, setActiveLanguages } = useActiveLanguages();
   const [dragged, setDragged] = useState<string | null>(null);
+  const [open, setOpen] = useState(false);
   const popupRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    void fetch("/api/languages", { cache: "no-store" })
-      .then((response) => response.json() as Promise<{ languages?: Language[] }>)
-      .then((payload) => {
-        const available = payload.languages ?? [];
-        setLanguages(available);
-        const codes = new Set(available.map((language) => language.iso_code));
-        const stored = JSON.parse(
-          localStorage.getItem("paradict-selected-languages") ?? "[]",
-        ) as string[];
-        const fromUrl = new URLSearchParams(window.location.search)
-          .get("languages")?.split(",") ?? [];
-        const initial = (stored.length ? stored : fromUrl).filter((code) =>
-          codes.has(code),
-        );
-        setSelected(initial);
-        setActiveLanguageList(initial);
+    fetch("/api/languages")
+      .then(response => response.json() as Promise<LanguageCode[]>)
+      .then(languages => {
+        setLanguages(languages.sort((a, b) => languageLabel(a).localeCompare(languageLabel(b))));
+        const codes = new Set(languages);
+        const stored = JSON.parse(localStorage.getItem("paradict-selected-languages") ?? "[]") as string[];
+        const fromUrl = new URLSearchParams(window.location.search).get("languages")?.split(",") ?? [];
+        const initial = (stored.length ? stored : fromUrl).filter(code => codes.has(code));
+        setSelectedLanguages(initial);
+        setActiveLanguages(initial);
       })
       .catch(() => undefined);
-  }, [setActiveLanguageList]);
+  }, []);
 
   useEffect(() => {
-    if (!open) return;
-    function close(event: MouseEvent) {
-      if (!popupRef.current?.contains(event.target as Node)) setOpen(false);
+    if (open) {
+      function close(event: MouseEvent) {
+        if (!popupRef.current?.contains(event.target as Node)) {
+          setOpen(false);
+        }
+      }
+      document.addEventListener("mousedown", close);
+      return () => document.removeEventListener("mousedown", close);
     }
-    document.addEventListener("mousedown", close);
-    return () => document.removeEventListener("mousedown", close);
   }, [open]);
 
-  const available = useMemo(
-    () => [...languages].sort((a, b) => optionLabel(a.iso_code).localeCompare(optionLabel(b.iso_code))),
-    [languages],
-  );
-
-  function updateActive(next: LanguageCode[]) {
-    setActiveLanguageList(next);
-    const url = new URL(window.location.href);
-    if (next.length) url.searchParams.set("languages", next.join(","));
-    else url.searchParams.delete("languages");
-    window.history.replaceState({}, "", url);
-  }
-
-  function toggleMembership(code: LanguageCode) {
-    const nextSelected = selected.includes(code)
-      ? selected.filter((item) => item !== code)
-      : [...selected, code];
-    setSelected(nextSelected);
+  function toggleSelected(code: LanguageCode) {
+    const nextSelected = selectedLanguages.includes(code) ? selectedLanguages.filter(item => item !== code) : [...selectedLanguages, code];
+    setSelectedLanguages(nextSelected);
     localStorage.setItem("paradict-selected-languages", JSON.stringify(nextSelected));
-    updateActive(nextSelected);
-  }
-
-  function move(code: string, target: string) {
-    const next = [...activeLanguageList];
-    const sourceIndex = next.indexOf(code);
-    const targetIndex = next.indexOf(target);
-    if (sourceIndex < 0 || targetIndex < 0 || sourceIndex === targetIndex) return;
-    next.splice(sourceIndex, 1);
-    next.splice(targetIndex, 0, code);
-    setSelected(next);
-    localStorage.setItem("paradict-selected-languages", JSON.stringify(next));
-    updateActive(next);
+    setActiveLanguages(selectedLanguages.includes(code) ? activeLanguages.filter(item => item !== code) : [...activeLanguages, code]);
   }
 
   function toggleActive(code: LanguageCode) {
-    updateActive(
-      activeLanguageList.includes(code)
-        ? activeLanguageList.filter((item) => item !== code)
-        : [...activeLanguageList, code],
-    );
+    setActiveLanguages(activeLanguages.includes(code) ? activeLanguages.filter(item => item !== code) : selectedLanguages.filter(curr => curr === code || activeLanguages.includes(curr)));
+  }
+
+  function move(code: string, target: string) {
+    const nextSelected = [...selectedLanguages];
+    const sourceIndex = nextSelected.indexOf(code);
+    const targetIndex = nextSelected.indexOf(target);
+    if (sourceIndex < 0 || targetIndex < 0 || sourceIndex === targetIndex) { return; }
+    nextSelected.splice(sourceIndex, 1);
+    nextSelected.splice(targetIndex, 0, code);
+    setSelectedLanguages(nextSelected);
+    localStorage.setItem("paradict-selected-languages", JSON.stringify(nextSelected));
+    setActiveLanguages(nextSelected.filter(code => activeLanguages.includes(code)));
   }
 
   return (
@@ -98,47 +72,48 @@ export default function LanguageSelect() {
       <div className="language-selector-rows">
         <div className="language-row selected-language-row">
           <span className="filter-label">Search in</span>
-          {selected.map((code) => (
-            <button
-              className={`language-pill ${activeLanguageList.includes(code) ? "selected" : "language-inactive"} ${dragged === code ? "dragging" : ""}`}
-              draggable
-              key={code}
-              type="button"
-              aria-pressed={activeLanguageList.includes(code)}
-              onClick={() => toggleActive(code)}
-              onDragStart={(event) => {
-                event.dataTransfer.setData("text/plain", code);
-                setDragged(code);
-              }}
-              onDragEnd={() => setDragged(null)}
-              onDragOver={(event) => event.preventDefault()}
-              onDrop={(event) => move(event.dataTransfer.getData("text/plain"), code)}
-            >
-              {languageLabel(code)}
-            </button>
-          ))}
-          <div className="language-control" ref={popupRef}>
-            <button className="available-toggle" type="button" onClick={() => setOpen((value) => !value)} aria-expanded={open}>
-              {open ? "Hide languages" : "Available languages"}
-            </button>
-            {open && (
+          {
+            selectedLanguages.map(code => (
+              <button
+                className={`language-pill ${activeLanguages.includes(code) ? "selected" : "language-inactive"} ${dragged === code ? "dragging" : ""}`}
+                draggable
+                key={code}
+                type="button"
+                aria-pressed={activeLanguages.includes(code)}
+                onClick={() => toggleActive(code)}
+                onDragStart={event => { event.dataTransfer.setData("text/plain", code); setDragged(code); }}
+                onDragEnd={() => setDragged(null)}
+                onDragOver={event => event.preventDefault()}
+                onDrop={event => move(event.dataTransfer.getData("text/plain"), code)}
+              >
+                {languageLabel(code)}
+              </button>
+            ))
+          }
+        </div>
+        <div className="language-control" ref={popupRef}>
+          <button className="available-toggle" type="button" onClick={() => setOpen(open => !open)} aria-expanded={open}>
+            {open ? "Hide languages" : "Available languages"}
+          </button>
+          {
+            open && (
               <div className="language-popup">
                 <div className="language-row available-language-row">
-                  {available.map((language) => (
+                  {languages.map(language => (
                     <button
-                      className={`language-add ${selected.includes(language.iso_code) ? "added" : ""}`}
-                      key={language.iso_code}
+                      className={`language-add ${selectedLanguages.includes(language) ? "added" : ""}`}
+                      key={language}
                       type="button"
-                      aria-pressed={selected.includes(language.iso_code)}
-                      onClick={() => toggleMembership(language.iso_code)}
+                      aria-pressed={selectedLanguages.includes(language)}
+                      onClick={() => toggleSelected(language)}
                     >
-                      {optionLabel(language.iso_code)}
+                      {optionLabel(language)}
                     </button>
                   ))}
                 </div>
               </div>
-            )}
-          </div>
+            )
+          }
         </div>
       </div>
     </section>

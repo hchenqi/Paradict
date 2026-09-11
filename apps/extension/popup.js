@@ -18,9 +18,9 @@ function render(concepts, query) {
     return;
   }
   results.innerHTML = concepts
-    .map((concept) => {
+    .map(concept => {
       const entries = new Map();
-      concept.entries.forEach((entry) =>
+      concept.entries.forEach(entry =>
         entries.set(entry.language, [
           ...(entries.get(entry.language) || []),
           entry.text,
@@ -38,7 +38,7 @@ function render(concepts, query) {
     .join("");
   results
     .querySelectorAll(".open-button")
-    .forEach((button) =>
+    .forEach(button =>
       button.addEventListener("click", () =>
         chrome.tabs.create({ url: button.dataset.url }),
       ),
@@ -57,7 +57,7 @@ async function search() {
     if (!languageResponse.ok) throw new Error("Languages unavailable");
     const languagePayload = await languageResponse.json();
     const languageCodes = (languagePayload.languages || [])
-      .map((language) => language.iso_code)
+      .map(language => language.iso_code)
       .join(",");
     const response = await fetch(
       `${appUrl}/api/dictionary/search?q=${encodeURIComponent(query)}&languages=${encodeURIComponent(languageCodes)}&limit=8`,
@@ -84,7 +84,7 @@ chrome.tabs.query({ active: true, currentWindow: true }).then(async ([tab]) => {
   if (queryInput.value) search();
 });
 
-document.querySelector("#search-form").addEventListener("submit", (event) => {
+document.querySelector("#search-form").addEventListener("submit", event => {
   event.preventDefault();
   search();
 });

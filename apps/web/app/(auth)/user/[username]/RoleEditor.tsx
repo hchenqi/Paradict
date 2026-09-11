@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-export default function RoleEditor({
+export default function ({
   username,
   role: initialRole,
 }: {
@@ -29,7 +29,7 @@ export default function RoleEditor({
         Role
         <select
           value={role}
-          onChange={(event) => void updateRole(event.target.value)}
+          onChange={event => updateRole(event.target.value)}
         >
           <option value="member">Member</option>
           <option value="editor">Editor</option>

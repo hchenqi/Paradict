@@ -2,7 +2,7 @@ import "server-only";
 
 import { createClient } from "@supabase/supabase-js";
 import { Database } from "@/lib/database.types";
-import type { Entry, LanguageCode } from "@/lib/types";
+import type { LanguageCode, Entry } from "@/lib/types";
 
 const supabase = createClient<Database>(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!, {
   auth: {
@@ -79,7 +79,7 @@ async function checkRefreshCache() {
 
 export async function getLanguageList() {
   await checkRefreshCache();
-  return cache.languageList.map((iso_code) => ({ iso_code }));
+  return cache.languageList;
 }
 
 export async function explore() {
@@ -87,24 +87,22 @@ export async function explore() {
   return cache.randomConcepts;
 }
 
-export async function search(query: string, selectedLanguages: LanguageCode[], limit: number) {
+export async function search(query: string, languages: LanguageCode[], result_limit: number) {
   await checkRefreshCache();
-  const { data, error } = await supabase.rpc("search", {
-    query,
-    language_list: selectedLanguages.map(code => cache.languageCodeIdMap.get(code)).filter(id => id !== undefined),
-    result_limit: limit,
-  });
+  const language_list = languages.map(code => cache.languageCodeIdMap.get(code)).filter(id => id !== undefined);
+  if (language_list.length === 0) { return []; }
+  const { data, error } = await supabase.rpc("search", { query, language_list, result_limit });
   if (error) { throw error; }
   return transformResultRows(data);
 }
 
-export async function getConcept(id: number, selectedLanguages: LanguageCode[]) {
+export async function getConcept(id: number, languages: LanguageCode[]) {
   await checkRefreshCache();
   const { data, error } = await supabase
     .from("entries")
     .select("language_id, id, expression, indexed")
     .eq("concept_id", id)
-    .in("language_id", selectedLanguages.map(code => cache.languageCodeIdMap.get(code)).filter(id => id !== undefined));
+    .in("language_id", languages.map(code => cache.languageCodeIdMap.get(code)).filter(id => id !== undefined));
   if (error) { throw error; }
 
   return data.map(row => ({

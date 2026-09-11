@@ -41,7 +41,7 @@ function isLikelyEuVisitor() {
   return Boolean(region && euRegions.has(region));
 }
 
-export default function CookieConsent() {
+export default function () {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {

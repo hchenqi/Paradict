@@ -1,17 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { languageLabel, type LanguageCode } from "../lib/dictionary";
-
-type Language = { code: LanguageCode; id: number };
-type Props = {
-  languages?: Language[];
-  selectedLanguages: LanguageCode[];
-  activeLanguages?: LanguageCode[];
-  onChange?: (languages: LanguageCode[]) => void;
-  onSelectedChange?: (languages: LanguageCode[]) => void;
-  refreshOnChange?: boolean;
-};
+import { type LanguageCode, languageLabel } from "@/lib/types";
 
 function languageOptionLabel(code: LanguageCode) {
   const name = languageLabel(code);
@@ -20,14 +10,7 @@ function languageOptionLabel(code: LanguageCode) {
     : `${name} (${code})`;
 }
 
-export default function LanguageSelector({
-  languages: suppliedLanguages,
-  selectedLanguages,
-  activeLanguages: suppliedActiveLanguages,
-  onChange,
-  onSelectedChange,
-  refreshOnChange = false,
-}: Props) {
+export default function () {
   const [fetchedLanguages, setFetchedLanguages] = useState<Language[]>([]);
   const [ordered, setOrdered] = useState<LanguageCode[]>(selectedLanguages);
   const [active, setActive] = useState<LanguageCode[]>(
@@ -45,8 +28,8 @@ export default function LanguageSelector({
       .then(async (response) =>
         response.ok
           ? (response.json() as Promise<{
-              languages?: Array<{ id: number; iso_code: string }>;
-            }>)
+            languages?: Array<{ id: number; iso_code: string }>;
+          }>)
           : null,
       )
       .then((payload) =>
@@ -89,8 +72,8 @@ export default function LanguageSelector({
   const available = useMemo(
     () =>
       [...languages].sort((a, b) =>
-        languageLabel(a.code, a.code).localeCompare(
-          languageLabel(b.code, b.code),
+        languageLabel(a.code).localeCompare(
+          languageLabel(b.code),
         ),
       ),
     [languages],
@@ -163,38 +146,38 @@ export default function LanguageSelector({
               }}
             >
               <span className={!active.includes(code) ? "language-inactive" : undefined}>
-                {languageLabel(code, code)}
+                {languageLabel(code)}
               </span>
             </button>
           ))}
           <div ref={popupRef} className="language-control">
-          <button
-            className="available-toggle"
-            type="button"
-            onClick={() => setOpen((value) => !value)}
-            aria-expanded={open}
-          >
-            {open ? "Hide languages" : "Available languages"}
-          </button>
-          {open && (
-            <div className="language-popup">
-              <div className="language-row available-language-row">
-                {available.map((language) => (
-                  <button
-                    className={`language-add ${ordered.includes(language.code) ? "added" : ""}`}
-                    key={language.code}
-                    type="button"
-                    aria-pressed={ordered.includes(language.code)}
-                    onClick={() =>
-                      toggleMembership(language.code)
-                    }
-                  >
-                    {languageOptionLabel(language.code)}
-                  </button>
-                ))}
+            <button
+              className="available-toggle"
+              type="button"
+              onClick={() => setOpen((value) => !value)}
+              aria-expanded={open}
+            >
+              {open ? "Hide languages" : "Available languages"}
+            </button>
+            {open && (
+              <div className="language-popup">
+                <div className="language-row available-language-row">
+                  {available.map((language) => (
+                    <button
+                      className={`language-add ${ordered.includes(language.code) ? "added" : ""}`}
+                      key={language.code}
+                      type="button"
+                      aria-pressed={ordered.includes(language.code)}
+                      onClick={() =>
+                        toggleMembership(language.code)
+                      }
+                    >
+                      {languageOptionLabel(language.code)}
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
-          )}
+            )}
           </div>
         </div>
       </div>

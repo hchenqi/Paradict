@@ -45,7 +45,7 @@ export default function CookieConsent() {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    if (isLikelyEuVisitor() && !window.localStorage.getItem(consentKey))
+    if (isLikelyEuVisitor() && !localStorage.getItem(consentKey))
       setVisible(true);
   }, []);
 
@@ -62,7 +62,7 @@ export default function CookieConsent() {
       <button
         type="button"
         onClick={() => {
-          window.localStorage.setItem(consentKey, "acknowledged");
+          localStorage.setItem(consentKey, "acknowledged");
           setVisible(false);
         }}
       >

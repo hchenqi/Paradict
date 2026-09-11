@@ -1,7 +1,15 @@
 import "server-only";
 
-import type { LanguageCode, Entry } from "../types";
-import { getSupabasePublicClient } from "./server";
+import { createClient } from "@supabase/supabase-js";
+import { Database } from "@/lib/database.types";
+import type { LanguageCode, Entry } from "@/lib/types";
+
+const supabase = createClient<Database>(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!, {
+  auth: {
+    persistSession: false,
+    autoRefreshToken: false
+  },
+});
 
 type Cache = {
   languageList: LanguageCode[],
@@ -20,7 +28,6 @@ const cache = (globalThis as typeof globalThis & { __paradictServerCache?: Cache
 };
 
 async function queryLanguages() {
-  const supabase = getSupabasePublicClient();
   const { data, error } = await supabase.from("languages").select("id, iso_code");
   if (error) { throw error; }
 
@@ -56,7 +63,6 @@ function transformResultRows(
 }
 
 async function queryRandomConcepts() {
-  const supabase = getSupabasePublicClient();
   const { data, error } = await supabase.rpc("explore", { result_limit: 10 });
   if (error) { throw error; }
 
@@ -82,7 +88,6 @@ export async function explore() {
 }
 
 export async function search(query: string, selectedLanguages: LanguageCode[], limit: number) {
-  const supabase = await getSupabasePublicClient();
   const { data, error } = await supabase.rpc("search", {
     query,
     language_list: selectedLanguages.map(code => cache.languageCodeIdMap.get(code)).filter(id => id !== undefined),
@@ -93,7 +98,6 @@ export async function search(query: string, selectedLanguages: LanguageCode[], l
 }
 
 export async function getConcept(id: number, selectedLanguages: LanguageCode[]) {
-  const supabase = await getSupabasePublicClient();
   const { data, error } = await supabase
     .from("entries")
     .select("language_id, id, expression, indexed")

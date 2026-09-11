@@ -15,3 +15,4 @@ export async function GET() {
     return NextResponse.json({ error: "Explore lookup failed" }, { status: 500 });
   }
 }
+

@@ -8,6 +8,19 @@ export type Entry = {
   indexed: boolean;
 };
 
+export type ConceptEntry = {
+  language: LanguageCode;
+  entry_id: number;
+  expression: string;
+  indexed: boolean;
+};
+
+export type LanguageEntry = {
+  entry_id: number;
+  expression: string;
+  indexed: boolean;
+}
+
 export function languageLabel(code: LanguageCode) {
   return new Intl.DisplayNames([code], { type: "language" }).of(code);
 }

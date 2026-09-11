@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { getSupabaseBrowserClient } from "../../lib/supabase/client";
+import { getSupabaseBrowserClient } from "@/lib/client";
 
 export default function LoginPage() {
   const router = useRouter();

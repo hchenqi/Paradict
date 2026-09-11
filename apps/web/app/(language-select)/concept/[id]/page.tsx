@@ -4,7 +4,7 @@ import {
   groupEntriesByLanguage,
   languageLabel,
   type LanguageCode,
-} from "../../lib/dictionary";
+} from "../../lib/types";
 import { getConceptFromSupabase } from "../../lib/supabase/dictionary";
 import LanguageSelector from "../language-selector";
 import SelectionSearch from "../selection-search";
@@ -50,29 +50,6 @@ export default async function ConceptPage({
       <LanguageSelector selectedLanguages={selectedLanguages} refreshOnChange />
       <section className="results concept-results">
         {entries.length ? (
-          <article className="concept-card">
-            <div className="concept-heading">
-              <span className="concept-title">Concept {concept.id}</span>
-            </div>
-            <div className="entries-grid">
-              {groupEntriesByLanguage(concept, displayLanguages).map(
-                (group) => (
-                  <div className="entry" key={group.language}>
-                    <div className="entry-language">
-                      {languageLabel(group.language, group.language)}
-                    </div>
-                    <div className="entry-words">
-                      {group.entries.map((entry) => (
-                        <span className="entry-word" key={entry.id}>
-                          {entry.text}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                ),
-              )}
-            </div>
-          </article>
         ) : (
           <div className="empty-state">
             <p>This concept has no entries in the selected languages.</p>
@@ -98,6 +75,56 @@ export default async function ConceptPage({
         <span>/concepts?concept_id={concept.id}</span>
       </footer>
       <SelectionSearch />
+    </main>
+  );
+}
+
+
+import { NextResponse } from "next/server";
+import type { LanguageCode } from "../../../../lib/types";
+import { getConcept } from "../../../../lib/supabase/query";
+
+function parseLanguages(value: string | null): LanguageCode[] {
+  return (value?.split(",") ?? [])
+    .filter((code): code is LanguageCode => Boolean(code))
+    .slice(0, 20);
+}
+
+export async function GET(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  const conceptId = Number((await params).id);
+  if (!Number.isInteger(conceptId) || conceptId < 1)
+    return NextResponse.json({ error: "Invalid concept id" }, { status: 400 });
+
+  try {
+    const concept = await getConcept(
+      conceptId,
+      parseLanguages(new URL(request.url).searchParams.get("languages")),
+    );
+    if (concept === null)
+      return NextResponse.json(
+        { error: "Supabase is not configured" },
+        { status: 503 },
+      );
+    if (concept === undefined)
+      return NextResponse.json({ error: "Concept not found" }, { status: 404 });
+    return NextResponse.json({ configured: true, concept });
+  } catch (error) {
+    console.error("Concept lookup failed", error);
+    return NextResponse.json(
+      { error: "Concept lookup failed" },
+      { status: 500 },
+    );
+  }
+}
+export default function LoadingConcept() {
+  return (
+    <main className="shell concept-page">
+      <section className="loading-state" role="status">
+        Loading concept...
+      </section>
     </main>
   );
 }

@@ -5,7 +5,7 @@ import {
   languageLabel,
   type Concept,
   type LanguageCode,
-} from "../../lib/dictionary";
+} from "../../lib/types";
 
 type EditType = "create_concept" | "update_concept" | "merge_concepts";
 type DraftEntry = {

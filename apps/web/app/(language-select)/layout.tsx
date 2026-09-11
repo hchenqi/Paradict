@@ -1,12 +1,12 @@
 "use client";
 
 import { ActiveLanguageListProvider } from "./ActiveLanguageListProvider";
-import LanguageSelector from "./LanguageSelector";
+import LanguageSelect from "./LanguageSelect";
 
-export default function ({ children }: { children: React.ReactNode; }) {
+export default function LanguageSelectLayout({ children }: { children: React.ReactNode }) {
   return (
     <ActiveLanguageListProvider>
-      <LanguageSelector />
+      <LanguageSelect />
       {children}
     </ActiveLanguageListProvider>
   );

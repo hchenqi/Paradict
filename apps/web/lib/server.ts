@@ -2,7 +2,7 @@ import "server-only";
 
 import { createClient } from "@supabase/supabase-js";
 import { Database } from "@/lib/database.types";
-import type { LanguageCode, Entry } from "@/lib/types";
+import type { Entry, LanguageCode } from "@/lib/types";
 
 const supabase = createClient<Database>(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!, {
   auth: {
@@ -79,7 +79,7 @@ async function checkRefreshCache() {
 
 export async function getLanguageList() {
   await checkRefreshCache();
-  return cache.languageList;
+  return cache.languageList.map((iso_code) => ({ iso_code }));
 }
 
 export async function explore() {
@@ -88,6 +88,7 @@ export async function explore() {
 }
 
 export async function search(query: string, selectedLanguages: LanguageCode[], limit: number) {
+  await checkRefreshCache();
   const { data, error } = await supabase.rpc("search", {
     query,
     language_list: selectedLanguages.map(code => cache.languageCodeIdMap.get(code)).filter(id => id !== undefined),
@@ -98,6 +99,7 @@ export async function search(query: string, selectedLanguages: LanguageCode[], l
 }
 
 export async function getConcept(id: number, selectedLanguages: LanguageCode[]) {
+  await checkRefreshCache();
   const { data, error } = await supabase
     .from("entries")
     .select("language_id, id, expression, indexed")

@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
-import { getLanguages } from "../../../lib/supabase/dictionary";
+import { getLanguageList } from "@/lib/server";
 
 export async function GET() {
-  const languages = await getLanguages();
+  const languages = await getLanguageList();
   if (!languages)
     return NextResponse.json(
       { error: "Supabase is not configured" },

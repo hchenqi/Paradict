@@ -1,16 +1,6 @@
-import Link from "next/link";
-
 export default function ImpressumPage() {
   return (
-    <main className="shell info-page">
-      <header className="topbar">
-        <Link className="brand" href="/">
-          paradict<span>.</span>
-        </Link>
-        <Link className="back-link" href="/">
-          Back to dictionary
-        </Link>
-      </header>
+    <main className="info-page">
       <article className="info-content">
         <p className="eyebrow">Impressum</p>
         <h1>Legal notice</h1>
@@ -26,18 +16,6 @@ export default function ImpressumPage() {
           organisation before publishing the site.
         </p>
       </article>
-      <InfoFooter />
     </main>
-  );
-}
-
-function InfoFooter() {
-  return (
-    <footer>
-      <span>Paradict / legal information</span>
-      <span>
-        <Link href="/about">About</Link> · <Link href="/contact">Contact</Link>
-      </span>
-    </footer>
   );
 }

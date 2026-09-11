@@ -1,123 +1,96 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { type LanguageCode, languageLabel } from "@/lib/types";
+import { languageLabel, type LanguageCode } from "@/lib/types";
+import { useActiveLanguageList } from "./ActiveLanguageListProvider";
 
-function languageOptionLabel(code: LanguageCode) {
+type Language = { iso_code: LanguageCode };
+
+function optionLabel(code: LanguageCode) {
   const name = languageLabel(code);
   return name.toLowerCase() === code.toLowerCase()
     ? name
     : `${name} (${code})`;
 }
 
-export default function () {
-  const [fetchedLanguages, setFetchedLanguages] = useState<Language[]>([]);
-  const [ordered, setOrdered] = useState<LanguageCode[]>(selectedLanguages);
-  const [active, setActive] = useState<LanguageCode[]>(
-    suppliedActiveLanguages ?? selectedLanguages,
-  );
+export default function LanguageSelect() {
+  const { activeLanguageList, setActiveLanguageList } = useActiveLanguageList();
+  const [languages, setLanguages] = useState<Language[]>([]);
+  const [selected, setSelected] = useState<LanguageCode[]>([]);
   const [open, setOpen] = useState(false);
   const [dragged, setDragged] = useState<string | null>(null);
-  const initialized = useRef(false);
   const popupRef = useRef<HTMLDivElement>(null);
-  const languages = suppliedLanguages ?? fetchedLanguages;
 
   useEffect(() => {
-    if (suppliedLanguages) return;
     void fetch("/api/languages", { cache: "no-store" })
-      .then(async (response) =>
-        response.ok
-          ? (response.json() as Promise<{
-            languages?: Array<{ id: number; iso_code: string }>;
-          }>)
-          : null,
-      )
-      .then((payload) =>
-        setFetchedLanguages(
-          (payload?.languages ?? []).map((language) => ({
-            code: language.iso_code,
-            id: language.id,
-          })),
-        ),
-      )
+      .then((response) => response.json() as Promise<{ languages?: Language[] }>)
+      .then((payload) => {
+        const available = payload.languages ?? [];
+        setLanguages(available);
+        const codes = new Set(available.map((language) => language.iso_code));
+        const stored = JSON.parse(
+          localStorage.getItem("paradict-selected-languages") ?? "[]",
+        ) as string[];
+        const fromUrl = new URLSearchParams(window.location.search)
+          .get("languages")?.split(",") ?? [];
+        const initial = (stored.length ? stored : fromUrl).filter((code) =>
+          codes.has(code),
+        );
+        setSelected(initial);
+        setActiveLanguageList(initial);
+      })
       .catch(() => undefined);
-  }, [suppliedLanguages]);
-
-  useEffect(() => {
-    if (
-      languages.length &&
-      (!initialized.current || (!ordered.length && selectedLanguages.length))
-    ) {
-      setOrdered(selectedLanguages);
-      setActive(suppliedActiveLanguages ?? selectedLanguages);
-      initialized.current = true;
-    }
-  }, [
-    languages.length,
-    ordered.length,
-    selectedLanguages,
-    suppliedActiveLanguages,
-  ]);
+  }, [setActiveLanguageList]);
 
   useEffect(() => {
     if (!open) return;
-    function handleOutsideClick(event: MouseEvent) {
-      if (popupRef.current?.contains(event.target as Node)) return;
-      setOpen(false);
+    function close(event: MouseEvent) {
+      if (!popupRef.current?.contains(event.target as Node)) setOpen(false);
     }
-    document.addEventListener("mousedown", handleOutsideClick);
-    return () => document.removeEventListener("mousedown", handleOutsideClick);
-  });
+    document.addEventListener("mousedown", close);
+    return () => document.removeEventListener("mousedown", close);
+  }, [open]);
 
   const available = useMemo(
-    () =>
-      [...languages].sort((a, b) =>
-        languageLabel(a.code).localeCompare(
-          languageLabel(b.code),
-        ),
-      ),
+    () => [...languages].sort((a, b) => optionLabel(a.iso_code).localeCompare(optionLabel(b.iso_code))),
     [languages],
   );
+
   function updateActive(next: LanguageCode[]) {
-    setActive(next);
-    onChange?.(next);
+    setActiveLanguageList(next);
     const url = new URL(window.location.href);
-    url.searchParams.set("languages", next.join(","));
+    if (next.length) url.searchParams.set("languages", next.join(","));
+    else url.searchParams.delete("languages");
     window.history.replaceState({}, "", url);
-    if (refreshOnChange) window.location.reload();
+  }
+
+  function toggleMembership(code: LanguageCode) {
+    const nextSelected = selected.includes(code)
+      ? selected.filter((item) => item !== code)
+      : [...selected, code];
+    setSelected(nextSelected);
+    localStorage.setItem("paradict-selected-languages", JSON.stringify(nextSelected));
+    updateActive(nextSelected);
+  }
+
+  function move(code: string, target: string) {
+    const next = [...activeLanguageList];
+    const sourceIndex = next.indexOf(code);
+    const targetIndex = next.indexOf(target);
+    if (sourceIndex < 0 || targetIndex < 0 || sourceIndex === targetIndex) return;
+    next.splice(sourceIndex, 1);
+    next.splice(targetIndex, 0, code);
+    setSelected(next);
+    localStorage.setItem("paradict-selected-languages", JSON.stringify(next));
+    updateActive(next);
   }
 
   function toggleActive(code: LanguageCode) {
     updateActive(
-      active.includes(code)
-        ? active.filter((item) => item !== code)
-        : ordered.filter((item) => item === code || active.includes(item)),
+      activeLanguageList.includes(code)
+        ? activeLanguageList.filter((item) => item !== code)
+        : [...activeLanguageList, code],
     );
-  }
-
-  function move(code: string, target: string) {
-    if (!code || code === target) return;
-    const next = [...ordered];
-    const sourceIndex = next.indexOf(code);
-    const targetIndex = next.indexOf(target);
-    if (sourceIndex < 0 || targetIndex < 0) return;
-    next.splice(sourceIndex, 1);
-    next.splice(targetIndex, 0, code);
-    setOrdered(next);
-    updateActive(next.filter((item) => active.includes(item)));
-    setDragged(null);
-  }
-
-  function toggleMembership(code: LanguageCode) {
-    if (ordered.includes(code)) {
-      setOrdered((current) => current.filter((item) => item !== code));
-      updateActive(active.filter((item) => item !== code));
-      onSelectedChange?.(ordered.filter((item) => item !== code));
-    } else {
-      setOrdered((current) => [...current, code]);
-      updateActive([...active, code]);
-      onSelectedChange?.([...ordered, code]);
-    }
   }
 
   return (
@@ -125,38 +98,27 @@ export default function () {
       <div className="language-selector-rows">
         <div className="language-row selected-language-row">
           <span className="filter-label">Search in</span>
-          {ordered.map((code) => (
+          {selected.map((code) => (
             <button
-              className={`language-pill language-drag-item ${active.includes(code) ? "selected" : ""} ${dragged === code ? "dragging" : ""}`}
+              className={`language-pill ${activeLanguageList.includes(code) ? "selected" : "language-inactive"} ${dragged === code ? "dragging" : ""}`}
               draggable
               key={code}
               type="button"
-              aria-pressed={active.includes(code)}
+              aria-pressed={activeLanguageList.includes(code)}
               onClick={() => toggleActive(code)}
               onDragStart={(event) => {
-                event.dataTransfer.effectAllowed = "move";
                 event.dataTransfer.setData("text/plain", code);
                 setDragged(code);
               }}
               onDragEnd={() => setDragged(null)}
               onDragOver={(event) => event.preventDefault()}
-              onDrop={(event) => {
-                event.preventDefault();
-                move(event.dataTransfer.getData("text/plain"), code);
-              }}
+              onDrop={(event) => move(event.dataTransfer.getData("text/plain"), code)}
             >
-              <span className={!active.includes(code) ? "language-inactive" : undefined}>
-                {languageLabel(code)}
-              </span>
+              {languageLabel(code)}
             </button>
           ))}
-          <div ref={popupRef} className="language-control">
-            <button
-              className="available-toggle"
-              type="button"
-              onClick={() => setOpen((value) => !value)}
-              aria-expanded={open}
-            >
+          <div className="language-control" ref={popupRef}>
+            <button className="available-toggle" type="button" onClick={() => setOpen((value) => !value)} aria-expanded={open}>
               {open ? "Hide languages" : "Available languages"}
             </button>
             {open && (
@@ -164,15 +126,13 @@ export default function () {
                 <div className="language-row available-language-row">
                   {available.map((language) => (
                     <button
-                      className={`language-add ${ordered.includes(language.code) ? "added" : ""}`}
-                      key={language.code}
+                      className={`language-add ${selected.includes(language.iso_code) ? "added" : ""}`}
+                      key={language.iso_code}
                       type="button"
-                      aria-pressed={ordered.includes(language.code)}
-                      onClick={() =>
-                        toggleMembership(language.code)
-                      }
+                      aria-pressed={selected.includes(language.iso_code)}
+                      onClick={() => toggleMembership(language.iso_code)}
                     >
-                      {languageOptionLabel(language.code)}
+                      {optionLabel(language.iso_code)}
                     </button>
                   ))}
                 </div>

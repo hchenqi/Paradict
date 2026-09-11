@@ -1,18 +1,10 @@
-import { NextResponse } from "next/server";
-import { explore } from "../../../lib/supabase/dictionary";
+import type { Metadata } from "next";
+import { explore } from "@/lib/server";
+import ExploreResults from "./ExploreResults";
 
-export async function GET() {
-  try {
-    const concepts = await explore();
-    if (concepts === null)
-      return NextResponse.json(
-        { error: "Supabase is not configured" },
-        { status: 503 },
-      );
-    return NextResponse.json({ configured: true, concepts });
-  } catch (error) {
-    console.error("Explore lookup failed", error);
-    return NextResponse.json({ error: "Explore lookup failed" }, { status: 500 });
-  }
+export const metadata: Metadata = { title: "Explore | Paradict" };
+
+export default async function ExplorePage() {
+  const entries = await explore();
+  return <ExploreResults entries={entries} />;
 }
-

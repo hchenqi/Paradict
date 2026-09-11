@@ -1,10 +1,21 @@
 import { NextResponse } from "next/server";
-import { getSupabaseServerClient } from "../../../lib/supabase/server";
+import { createServerClient } from "@supabase/ssr";
+import { cookies } from "next/headers";
 
 export async function GET(request: Request) {
   const url = new URL(request.url);
   const code = url.searchParams.get("code");
-  const supabase = await getSupabaseServerClient();
+  const cookieStore = await cookies();
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
+    {
+      cookies: {
+        getAll: () => cookieStore.getAll(),
+        setAll: (items) => items.forEach(({ name, value, options }) => cookieStore.set(name, value, options)),
+      },
+    },
+  );
   if (code && supabase) {
     const { error } = await supabase.auth.exchangeCodeForSession(code);
     if (error)

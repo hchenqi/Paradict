@@ -1,23 +1,30 @@
 "use client";
 
 import { createContext, useContext, useState } from "react";
-import { LanguageCode } from "@/lib/types";
+import type { LanguageCode } from "@/lib/types";
 
 type ActiveLanguageListState = {
   activeLanguageList: LanguageCode[];
-  setActiveLanguageList: (activeLanguageList: LanguageCode[]) => void;
+  setActiveLanguageList: (languages: LanguageCode[]) => void;
 };
 
 const ActiveLanguageListContext = createContext<ActiveLanguageListState>({
   activeLanguageList: [],
-  setActiveLanguageList: () => {}
+  setActiveLanguageList: () => undefined,
 });
 
-export function ActiveLanguageListProvider({ children }: { children: React.ReactNode }) {
-  const [activeLanguageList, setActiveLanguageList] = useState<LanguageCode[]>([]);
-
+export function ActiveLanguageListProvider({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const [activeLanguageList, setActiveLanguageList] = useState<LanguageCode[]>(
+    [],
+  );
   return (
-    <ActiveLanguageListContext.Provider value={{ activeLanguageList, setActiveLanguageList }}>
+    <ActiveLanguageListContext.Provider
+      value={{ activeLanguageList, setActiveLanguageList }}
+    >
       {children}
     </ActiveLanguageListContext.Provider>
   );

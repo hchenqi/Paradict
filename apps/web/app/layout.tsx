@@ -1,6 +1,4 @@
-"use client";
-
-import React, { useState } from "react";
+import React from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import CookieConsent from "./CookieConsent";

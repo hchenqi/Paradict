@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { search } from "../../../lib/supabase/dictionary";
+import { search } from "@/lib/server";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",

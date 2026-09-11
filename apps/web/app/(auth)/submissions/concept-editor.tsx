@@ -5,7 +5,7 @@ import {
   languageLabel,
   type Concept,
   type LanguageCode,
-} from "../../lib/types";
+} from "@/lib/types";
 
 type EditType = "create_concept" | "update_concept" | "merge_concepts";
 type DraftEntry = {
@@ -25,7 +25,7 @@ function draftFromConcept(
       language,
       (
         concept?.entries.filter((entry) => entry.language === language) ?? []
-      ).map((entry) => ({ id: entry.id, text: entry.text })),
+      ).map((entry) => ({ id: entry.entry_id, text: entry.expression })),
     ]),
   );
 }
@@ -46,7 +46,7 @@ export default function ConceptEditor({
   const [message, setMessage] = useState("");
   const [saving, setSaving] = useState(false);
   const originalEntries = Object.fromEntries(
-    (concept?.entries ?? []).map((entry) => [entry.id, entry.text]),
+    (concept?.entries ?? []).map((entry) => [entry.entry_id, entry.expression]),
   );
 
   function updateEntry(language: string, index: number, text: string) {
@@ -158,7 +158,7 @@ export default function ConceptEditor({
           {languages.map((language) => (
             <div className="entry editor-entry" key={language}>
               <div className="entry-language">
-                {languageLabel(language, language)}
+                {languageLabel(language)}
               </div>
               <div className="editor-words">
                 {(groups[language] ?? []).map((entry, index) => (
@@ -171,7 +171,7 @@ export default function ConceptEditor({
                       onChange={(event) =>
                         updateEntry(language, index, event.target.value)
                       }
-                      aria-label={`${languageLabel(language, language)} word`}
+                      aria-label={`${languageLabel(language)} word`}
                     />
                     <button
                       className="editor-delete"

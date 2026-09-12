@@ -5,8 +5,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { getSupabaseBrowserClient } from "@/lib/client";
 import { getConceptAction } from "@/app/actions";
 import type { LanguageCode, Entry } from "@/lib/types";
-import ConceptEditor from "./concept-editor";
-import SubmissionList from "./submission-list";
+import ConceptEditor from "./ConceptEditor";
+import SubmissionList from "./SubmissionList";
 
 export default function () {
   const router = useRouter();
@@ -27,13 +27,17 @@ export default function () {
       const { data } = await supabase.from("users").select("role").eq("id", user.id).single();
       setRole(data?.role ?? "member");
       if (conceptId > 0 && (type === "update_concept" || type === "merge_concepts"))
-        setEntries(await getConceptAction(conceptId, languages) as Entry[]);
+        setEntries(await getConceptAction(conceptId, languages));
     });
   }, [conceptId, languages, router, type]);
 
   return (
     <section className="account-content">
-      <div className="account-heading"><p className="eyebrow">Community edits</p><h1>Submissions</h1><p>Browse community proposals and help improve the dictionary.</p></div>
+      <div className="account-heading">
+        <p className="eyebrow">The Paradict Community</p>
+        <h1>Submissions</h1>
+        <p>Help improve the dictionary.</p>
+      </div>
       {type && <ConceptEditor type={type} concept={entries.length ? { id: conceptId, entries: entries } : undefined} languages={languages} />}
       <SubmissionList canReview={role === "editor" || role === "admin"} isAdmin={role === "admin"} />
     </section>

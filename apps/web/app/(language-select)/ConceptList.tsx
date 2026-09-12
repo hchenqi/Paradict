@@ -1,3 +1,5 @@
+"use client";
+
 import type { LanguageCode, Entry } from "@/lib/types";
 import ConceptCard from "./ConceptCard";
 

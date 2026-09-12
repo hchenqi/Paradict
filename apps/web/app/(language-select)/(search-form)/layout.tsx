@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { usePathname, useSearchParams, useRouter } from "next/navigation";
 import { useActiveLanguages } from "../ActiveLanguagesProvider";
+import SearchIntro from "./SearchIntro";
 
 export default function ({ children }: { children: React.ReactNode }) {
   const { activeLanguages } = useActiveLanguages();
@@ -56,15 +57,7 @@ export default function ({ children }: { children: React.ReactNode }) {
       <section className={`hero ${input ? "hero-searching" : ""}`}>
         {
           !input && (
-            <>
-              <p className="eyebrow">A dictionary of shared meaning</p>
-              <h1>
-                Find the word.
-                <br />
-                <em>Keep the meaning.</em>
-              </h1>
-              <p className="lede">Search across languages and browse the concepts that connect them.</p>
-            </>
+            <SearchIntro />
           )
         }
         <form ref={formRef} className={`search-form ${!activeLanguages.length ? "search-disabled" : ""}`} onSubmit={event => event.preventDefault()}>

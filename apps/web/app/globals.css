@@ -29,7 +29,7 @@ p {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 18px 0;
+  padding: 8px 0;
   border-bottom: 1px solid #d9d6cd;
 }
 .brand {
@@ -95,7 +95,7 @@ p {
 .hero {
   max-width: 780px;
   margin: 0 auto;
-  padding: 34px 0;
+  padding: 14px 0;
   text-align: center;
   scroll-margin-top: 18px;
 }
@@ -188,10 +188,6 @@ kbd {
     11px "DM Mono",
     monospace;
 }
-.hero-searching {
-  padding-top: 20px;
-  padding-bottom: 20px;
-}
 .hero-searching .search-form {
   margin-top: 0;
 }
@@ -199,15 +195,15 @@ kbd {
   position: relative;
   display: flex;
   width: 100%;
-  margin: 0 auto;
-  padding: 14px 0;
+  margin: 0 0 24px;
+  padding: 8px 0;
   border-top: 1px solid #d9d6cd;
   border-bottom: 1px solid #d9d6cd;
 }
 .language-selector-rows {
   display: grid;
   width: 100%;
-  gap: 10px;
+  gap: 8px;
 }
 .language-row {
   display: flex;
@@ -285,7 +281,7 @@ kbd {
   justify-content: flex-end;
 }
 .available-toggle {
-  padding-right: 0;
+  padding-left: 0;
   border: 0;
   border-radius: 0;
 }
@@ -304,7 +300,6 @@ kbd {
   box-shadow: 5px 5px 0 #dce5d8;
 }
 .language-popup .language-row {
-  max-height: 220px;
   overflow-y: auto;
   align-content: flex-start;
 }
@@ -353,7 +348,7 @@ kbd {
 .results {
   max-width: 680px;
   margin: 0 auto;
-  padding: 24px 0 48px;
+  padding: 8px 0 48px;
 }
 .results-heading {
   display: flex;
@@ -368,15 +363,15 @@ kbd {
     monospace;
 }
 .concept-card {
-  margin-bottom: 12px;
-  padding: 17px;
+  margin-bottom: 8px;
+  padding: 14px;
   background: #fffdf9;
   border: 1px solid #d9d6cd;
 }
 .concept-heading {
   display: flex;
   align-items: flex-start;
-  margin-bottom: 20px;
+  margin-bottom: 8px;
 }
 .concept-title {
   display: block;
@@ -384,15 +379,14 @@ kbd {
   font-size: 18px;
   font-weight: 600;
   text-decoration: none;
+  padding-left: 8px;
 }
 .concept-title:hover {
   color: #eb5e3f;
 }
 .concept-number {
   color: #b7c5b3;
-  font:
-    20px "DM Mono",
-    monospace;
+  font: 20px "DM Mono", monospace;
 }
 .permalink {
   margin-left: 10px;
@@ -410,7 +404,7 @@ kbd {
   grid-template-columns: 110px 1fr;
   column-gap: 18px;
   align-items: baseline;
-  padding: 9px 0 9px 12px;
+  padding: 8px;
   border-top: 1px solid #e1dfd8;
 }
 .entry:first-child {
@@ -502,9 +496,6 @@ footer {
   }
   .language-bar {
     display: block;
-  }
-  .language-row {
-    align-items: flex-start;
   }
   .filter-label {
     width: 100%;
@@ -727,7 +718,7 @@ footer {
 }
 .submission-cta {
   display: inline-block;
-  margin-top: 18px;
+  margin-top: 8px;
   padding: 9px 12px;
   border: 1px solid #b7c5b3;
   color: #172320;

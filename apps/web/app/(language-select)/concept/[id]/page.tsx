@@ -1,48 +1,43 @@
-import Link from "next/link";
-import { notFound } from "next/navigation";
-import { getConcept } from "@/lib/server";
-import ConceptCard from "../../ConceptCard";
-import type { LanguageCode } from "@/lib/types";
+"use client";
 
-export default async function ConceptPage({
-  params,
-  searchParams,
-}: {
-  params: Promise<{ id: string }>;
-  searchParams: Promise<{ languages?: string }>;
-}) {
-  const { id } = await params;
-  const { languages } = await searchParams;
-  const conceptId = Number(id);
-  if (!Number.isInteger(conceptId) || conceptId < 1) notFound();
-  const activeLanguages = (languages?.split(",") ?? []).filter(
-    (code): code is LanguageCode => Boolean(code),
-  );
-  const entries = await getConcept(conceptId, activeLanguages);
-  if (!entries.length) notFound();
+import { useEffect, useState } from "react";
+import { useParams, useSearchParams, useRouter } from "next/navigation";
+import { getConceptAction } from "@/app/actions";
+import type { Entry } from "@/lib/types";
+import { useActiveLanguages } from "../../ActiveLanguagesProvider";
+import ConceptCard from "../../ConceptCard";
+
+export default function () {
+  const { activeLanguages } = useActiveLanguages();
+  const { id: urlId } = useParams<{ id: string }>();
+  const searchParams = useSearchParams();
+  const id = Number(urlId);
+  const urlLanguages = searchParams.get("lang") ?? "";
+  const router = useRouter();
+  const [entries, setEntries] = useState<Entry[]>([]);
+
+  useEffect(() => {
+    if (activeLanguages.join(",") !== urlLanguages) {
+      router.replace(`/concept/${id}?lang=${activeLanguages.join(",")}`);
+    }
+  }, [activeLanguages, searchParams, router]);
+
+  useEffect(() => {
+    if (Number.isInteger(id) && activeLanguages.length) {
+      getConceptAction(id, activeLanguages).then(entries => setEntries(entries));
+    } else {
+      setEntries([]);
+    }
+  }, [searchParams]);
 
   return (
     <main className="concept-page">
       <section className="results concept-results">
         <ConceptCard
-          conceptId={conceptId}
+          conceptId={id}
           entries={entries}
           activeLanguages={activeLanguages}
         />
-        <div className="concept-actions">
-          <Link
-            className="submission-cta"
-            href={`/submissions?type=update_concept&concept_id=${conceptId}&languages=${activeLanguages.join(",")}`}
-          >
-            Update entries
-          </Link>
-          <Link
-            className="submission-cta"
-            href={`/submissions?type=merge_concepts&concept_id=${conceptId}`}
-          >
-            Merge concept
-          </Link>
-        </div>
       </section>
     </main>
   );

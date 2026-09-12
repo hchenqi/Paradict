@@ -56,7 +56,7 @@ export default function () {
         <Link className="brand" href="/">
           paradict<span>.</span>
         </Link>
-        <p className="eyebrow">Your dictionary</p>
+        <p className="eyebrow">Your multilingual dictionary</p>
         <h1>{mode === "login" ? "Welcome back." : "Join Paradict."}</h1>
         <p className="auth-lede">
           {mode === "login"

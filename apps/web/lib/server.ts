@@ -110,5 +110,5 @@ export async function getConcept(id: number, languages: LanguageCode[]) {
     entry_id: row.id,
     expression: row.expression,
     indexed: row.indexed,
-  }));
+  } as Entry));
 }

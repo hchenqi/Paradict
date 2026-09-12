@@ -11,12 +11,11 @@ export default function () {
   const query = searchParams.get("q");
   const languages = searchParams.get("lang");
   const activeLanguages = languages?.split(",") ?? [];
-  const valid = query && query.trim() && activeLanguages.length;
   const [loading, setLoading] = useState(false);
   const [concepts, setConcepts] = useState<Map<number, Entry[]>>(new Map());
 
   useEffect(() => {
-    if (valid) {
+    if (query && query.trim() && activeLanguages.length) {
       setLoading(true);
       const controller = new AbortController();
       fetch(`/api/search?q=${encodeURIComponent(query)}&lang=${languages}&limit=20`, { signal: controller.signal })
@@ -54,7 +53,7 @@ export default function () {
               </>
             ) : (
               <div className="empty-state">
-                <h2>{activeLanguages.length ? "No shared meaning found" : "Select a language to search"}</h2>
+                <h2>{activeLanguages.length ? "No result" : "Select a language first"}</h2>
               </div>
             )
           )

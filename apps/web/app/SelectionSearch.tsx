@@ -10,10 +10,14 @@ export default function () {
   const router = useRouter();
 
   useEffect(() => {
-    function updateSelection() {
+    function onSelectionChange() {
       const currentSelection = window.getSelection();
-      const text = currentSelection?.toString().trim() ?? "";
-      if (!text || !currentSelection?.rangeCount) {
+      if (!currentSelection || currentSelection.isCollapsed || currentSelection.rangeCount === 0) {
+        setSelection(null);
+        return;
+      }
+      const text = currentSelection.toString().trim();
+      if (!text) {
         setSelection(null);
         return;
       }
@@ -33,12 +37,8 @@ export default function () {
       });
     }
 
-    document.addEventListener("mouseup", updateSelection);
-    document.addEventListener("keyup", updateSelection);
-    return () => {
-      document.removeEventListener("mouseup", updateSelection);
-      document.removeEventListener("keyup", updateSelection);
-    };
+    document.addEventListener("selectionchange", onSelectionChange);
+    return () => document.removeEventListener("selectionchange", onSelectionChange);
   }, []);
 
   if (!selection) return null;

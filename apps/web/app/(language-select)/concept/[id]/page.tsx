@@ -5,6 +5,8 @@ import { useParams, useSearchParams, useRouter } from "next/navigation";
 import { getConceptAction } from "@/app/actions";
 import { type LanguageCode, type Entry, languageLabel } from "@/lib/types";
 import { useActiveLanguages } from "../../ActiveLanguagesProvider";
+import "./page.css";
+import "../../(search-form)/ConceptList.css";
 
 type EditType = "create_concept" | "update_concept" | "merge_concepts";
 type DraftEntry = {

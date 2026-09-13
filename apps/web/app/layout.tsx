@@ -5,7 +5,7 @@ import { AuthProvider } from "./AuthProvider";
 import AuthStatus from "./AuthStatus";
 import SelectionSearch from "./SelectionSearch";
 import CookieConsent from "./CookieConsent";
-import "./globals.css";
+import "./layout.css";
 
 export const metadata: Metadata = {
   title: "Paradict",

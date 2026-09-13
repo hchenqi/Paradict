@@ -1,0 +1,97 @@
+@import url("https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap");
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
+  background: #f4f1eb;
+  color: #172320;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: "Space Grotesk", sans-serif;
+  line-height: 1.5;
+}
+
+h1,
+h2,
+p {
+  margin-top: 0;
+}
+
+.shell {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 0 28px;
+}
+
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid #d9d6cd;
+}
+
+.brand {
+  color: #172320;
+  font-size: 25px;
+  font-weight: 700;
+  letter-spacing: -1.5px;
+  text-decoration: none;
+}
+
+.brand span {
+  color: #eb5e3f;
+}
+
+.back-link {
+  color: #6d756d;
+  font: 12px "DM Mono", monospace;
+  text-decoration: none;
+}
+
+.topbar-actions,
+.auth-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.eyebrow,
+.filter-label,
+.entry-language {
+  color: #eb5e3f;
+  font: 11px "DM Mono", monospace;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+footer {
+  display: flex;
+  justify-content: space-between;
+  padding: 18px 0 30px;
+  color: #8a8d85;
+  border-top: 1px solid #d9d6cd;
+  font: 11px "DM Mono", monospace;
+}
+
+footer a {
+  color: #172320;
+}
+
+@media (max-width: 720px) {
+  .shell {
+    padding: 0 18px;
+  }
+
+  footer {
+    gap: 15px;
+    flex-direction: column;
+  }
+}

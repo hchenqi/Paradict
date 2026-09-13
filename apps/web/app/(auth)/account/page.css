@@ -1,0 +1,103 @@
+.account-shell {
+  min-height: 100vh;
+}
+
+.account-content {
+  max-width: 620px;
+  margin: 0 auto;
+  padding: 46px 0 64px;
+}
+
+.account-heading h1 {
+  margin: 10px 0 6px;
+  font-size: 34px;
+  letter-spacing: -1.5px;
+}
+
+.account-heading p:last-child,
+.account-danger p:last-child {
+  color: #6d756d;
+  font-size: 14px;
+}
+
+.account-form {
+  display: grid;
+  gap: 14px;
+  margin-top: 28px;
+}
+
+.account-form label {
+  display: grid;
+  gap: 6px;
+  color: #6d756d;
+  font: 11px "DM Mono", monospace;
+  text-transform: uppercase;
+}
+
+.account-form input {
+  padding: 10px;
+  border: 1px solid #c9c7be;
+  color: #172320;
+  background: #f4f1eb;
+  font: 15px "Space Grotesk", sans-serif;
+}
+
+.account-submit {
+  padding: 11px;
+  border: 0;
+  color: #fffdf9;
+  background: #172320;
+  font: 13px "DM Mono", monospace;
+  cursor: pointer;
+}
+
+.account-submit:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.account-message {
+  margin: 0;
+  color: #b34f38;
+  font-size: 13px;
+}
+
+.account-danger {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  align-items: center;
+  margin-top: 42px;
+  padding-top: 18px;
+  border-top: 1px solid #d9d6cd;
+}
+
+.account-danger .eyebrow {
+  margin-bottom: 4px;
+}
+
+.account-danger p {
+  margin-bottom: 0;
+}
+
+.account-danger > button {
+  flex: 0 0 auto;
+  padding: 10px 12px;
+  border: 1px solid #b34f38;
+  color: #b34f38;
+  background: transparent;
+  font: 12px "DM Mono", monospace;
+  cursor: pointer;
+}
+
+.account-danger > button:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+@media (max-width: 720px) {
+  .account-danger {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}

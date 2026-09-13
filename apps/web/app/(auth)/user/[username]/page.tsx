@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import { supabase } from "@/lib/client";
 import { useUserProfile } from "@/app/AuthProvider";
 import { Submission, UserProfile } from "@/lib/types";
+import "./page.css";
 
 function RoleEdit({ id, role: initialRole }: { id: string; role: string; }) {
   const [role, setRole] = useState(initialRole);

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import "./CookieConsent.css";
 
 export default function () {
   const [visible, setVisible] = useState(false);

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import "./SelectionSearch.css";
 
 type SelectionState = { text: string; top: number; left: number } | null;
 

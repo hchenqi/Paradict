@@ -1,0 +1,25 @@
+.concept-card {
+  margin-bottom: 8px;
+  padding: 14px;
+  background: #fffdf9;
+  border: 1px solid #d9d6cd;
+}
+
+.concept-heading {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 8px;
+}
+
+.concept-title {
+  display: block;
+  padding-left: 8px;
+  color: #172320;
+  font-size: 18px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.concept-title:hover {
+  color: #eb5e3f;
+}

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { supabase } from "@/lib/client";
 import { useUserProfile } from "./AuthProvider";
+import "./AuthStatus.css"
 
 export default function () {
   const { userProfile } = useUserProfile();

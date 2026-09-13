@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { type LanguageCode, type Entry, languageLabel, groupEntriesByLanguage } from "@/lib/types";
+import "./ConceptList.css";
 
 function highlight(text: string, query: string) {
   return text

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useUserProfile } from "@/app/AuthProvider";
 import { supabase } from "@/lib/client";
 import { UserProfile } from "@/lib/types";
+import "./page.css";
 
 function UserDetails({ userProfile, setUserProfile }: { userProfile: UserProfile; setUserProfile: (userProfile: UserProfile) => void }) {
   const [username, setUsername] = useState("");
@@ -52,10 +53,13 @@ function UserDetails({ userProfile, setUserProfile }: { userProfile: UserProfile
         <label>Email<input value={userProfile.email ?? ""} readOnly /></label>
         <label>Username<input value={username} onChange={event => setUsername(event.target.value)} minLength={6} maxLength={30} pattern="[a-z0-9_]{6,30}" /></label>
         <label>Display name<input value={displayName} onChange={event => setDisplayName(event.target.value)} maxLength={50} /></label>
-        {message && <p className="auth-message" role="status">{message}</p>}
-        <button className="auth-submit" type="submit" disabled={saving}>{saving ? "Saving..." : "Save details"}</button>
+        {message && <p className="account-message" role="status">{message}</p>}
+        <button className="account-submit" type="submit" disabled={saving}>{saving ? "Saving..." : "Save details"}</button>
       </form>
-      <div className="account-danger"><p>Delete your account and sign out.</p><button className="danger-button" type="button" onClick={() => deleteAccount()} disabled={deleting}>{deleting ? "Deleting..." : "Delete account"}</button></div>
+      <div className="account-danger">
+        <p>Delete your account and sign out.</p>
+        <button type="button" onClick={() => deleteAccount()} disabled={deleting}>{deleting ? "Deleting..." : "Delete account"}</button>
+      </div>
     </>
   );
 }

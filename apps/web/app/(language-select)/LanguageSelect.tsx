@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { languageLabel, type LanguageCode } from "@/lib/types";
 import { useActiveLanguages } from "./ActiveLanguagesProvider";
+import "./LanguageSelect.css";
 
 function optionLabel(code: LanguageCode) {
   const name = languageLabel(code);

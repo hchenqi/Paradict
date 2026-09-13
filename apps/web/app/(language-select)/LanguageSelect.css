@@ -1,0 +1,134 @@
+.language-bar {
+  position: relative;
+  display: flex;
+  width: 100%;
+  margin: 0 0 24px;
+  padding: 8px 0;
+  border-top: 1px solid #d9d6cd;
+  border-bottom: 1px solid #d9d6cd;
+}
+
+.language-selector-rows {
+  display: grid;
+  width: 100%;
+  gap: 8px;
+}
+
+.language-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px;
+  min-height: 38px;
+}
+
+.filter-label {
+  flex: 0 0 auto;
+  margin-right: 10px;
+  color: #6d756d;
+}
+
+.language-pill,
+.language-add,
+.available-toggle {
+  margin: 0;
+  padding: 8px 11px;
+  border: 1px solid transparent;
+  border-radius: 20px;
+  color: #6d756d;
+  background: transparent;
+  font: 13px "Space Grotesk", sans-serif;
+  cursor: pointer;
+}
+
+.language-pill {
+  cursor: grab;
+}
+
+.language-pill:active {
+  cursor: grabbing;
+}
+
+.language-pill.selected {
+  color: #172320;
+  border-color: #b7c5b3;
+  background: #e3ebdf;
+}
+
+.language-pill.dragging {
+  opacity: 0.35;
+  transform: scale(0.96);
+}
+
+.language-pill.language-inactive {
+  color: #a4a69e;
+  background: #eeece5;
+}
+
+.language-add {
+  position: relative;
+  border-color: #d9d6cd;
+  background: #fffdf9;
+}
+
+.language-add.added {
+  border-color: #50715c;
+  color: #102b1b;
+  background: #cfe4d3;
+  box-shadow: inset 0 0 0 1px #8bb998;
+}
+
+.language-control {
+  position: relative;
+  display: flex;
+  width: 100%;
+  margin-left: auto;
+}
+
+.available-toggle {
+  padding-left: 0;
+  border: 0;
+  border-radius: 0;
+}
+
+.language-popup {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  right: auto;
+  z-index: 15;
+  display: grid;
+  width: 100%;
+  min-width: 0;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid #c9c7be;
+  background: #fffdf9;
+  box-shadow: 5px 5px 0 #dce5d8;
+}
+
+.language-popup .language-row {
+  overflow-y: auto;
+  align-content: flex-start;
+}
+
+.selected-language-row .language-pill:not(.selected) {
+  border-color: #b7c5b3;
+  color: #6d756d;
+  background: transparent;
+}
+
+@media (max-width: 720px) {
+  .language-bar {
+    display: block;
+  }
+
+  .filter-label {
+    width: 100%;
+    margin-bottom: 2px;
+  }
+
+  .language-pill {
+    margin-left: 0;
+  }
+}

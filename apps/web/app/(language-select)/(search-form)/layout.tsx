@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { usePathname, useSearchParams, useRouter } from "next/navigation";
 import { useActiveLanguages } from "../ActiveLanguagesProvider";
 import SearchIntro from "./SearchIntro";
+import "./layout.css";
 
 export default function ({ children }: { children: React.ReactNode }) {
   const { activeLanguages } = useActiveLanguages();

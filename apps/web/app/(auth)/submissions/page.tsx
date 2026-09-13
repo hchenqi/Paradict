@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/client";
 import { type Submission } from "@/lib/types";
 import { useUserProfile } from "@/app/AuthProvider";
+import "./page.css";
 
 function SubmissionList({ role }: { role: string }) {
   const [submissions, setSubmissions] = useState<Submission[]>([]);

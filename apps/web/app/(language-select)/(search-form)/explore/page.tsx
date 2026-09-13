@@ -3,11 +3,11 @@
 import { useEffect, useState } from "react";
 import { type Entry, groupEntriesByConcept } from "@/lib/types";
 import { exploreAction } from "@/app/actions";
-import { useActiveLanguages } from "../../ActiveLanguagesProvider";
+import { useActiveLanguages } from "../../LanguageProvider";
 import ConceptList from "../ConceptList";
 
 export default function () {
-  const { activeLanguages } = useActiveLanguages();
+  const [activeLanguages] = useActiveLanguages();
   const [entries, setEntries] = useState<Entry[]>([]);
   const [concepts, setConcepts] = useState<Map<number, Entry[]>>(new Map());
 

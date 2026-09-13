@@ -1,37 +1,8 @@
-.hero {
-  max-width: 780px;
-  margin: 0 auto;
-  padding: 14px 0;
-  text-align: center;
-  scroll-margin-top: 18px;
-}
-
-.hero h1 {
-  margin: 12px 0 14px;
-  font-size: clamp(34px, 4vw, 48px);
-  line-height: 1;
-  letter-spacing: -2px;
-  font-weight: 600;
-}
-
-.hero h1 em {
-  color: #eb5e3f;
-  font-style: normal;
-}
-
-.lede {
-  max-width: 410px;
-  margin-right: auto;
-  margin-left: auto;
-  color: #6d756d;
-  font-size: 15px;
-}
-
 .search-form {
   display: flex;
   align-items: center;
   max-width: 680px;
-  margin: 24px auto 0;
+  margin: 16px auto;
   padding: 0 14px;
   height: 52px;
   background: #fffdf9;
@@ -87,10 +58,6 @@ kbd {
   margin: 10px 0 0;
   color: #6d756d;
   font: 11px "DM Mono", monospace;
-}
-
-.hero-searching .search-form {
-  margin-top: 0;
 }
 
 .result-count,
@@ -155,15 +122,6 @@ kbd {
 }
 
 @media (max-width: 720px) {
-  .hero {
-    padding: 38px 0 28px;
-  }
-
-  .hero h1 {
-    font-size: 36px;
-    letter-spacing: -1.5px;
-  }
-
   .result-count {
     display: block;
     margin-top: 10px;

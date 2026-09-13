@@ -2,12 +2,11 @@
 
 import { useState, useRef, useEffect } from "react";
 import { usePathname, useSearchParams, useRouter } from "next/navigation";
-import { useActiveLanguages } from "../ActiveLanguagesProvider";
-import SearchIntro from "./SearchIntro";
+import { useActiveLanguages } from "../LanguageProvider";
 import "./layout.css";
 
 export default function ({ children }: { children: React.ReactNode }) {
-  const { activeLanguages } = useActiveLanguages();
+  const [activeLanguages] = useActiveLanguages();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const urlQuery = pathname === "/search" ? searchParams.get("q") ?? "" : "";
@@ -47,23 +46,20 @@ export default function ({ children }: { children: React.ReactNode }) {
 
   return (
     <>
-      <section className={`hero ${input ? "hero-searching" : ""}`}>
-        {!input && <SearchIntro />}
-        <form className={`search-form ${!activeLanguages.length ? "search-disabled" : ""}`} onSubmit={event => event.preventDefault()}>
-          <span className="search-icon" aria-hidden="true">⌕</span>
-          <input
-            aria-label="Search"
-            disabled={!activeLanguages.length}
-            value={input}
-            onFocus={event => requestAnimationFrame(() => event.target.scrollIntoView({ behavior: "smooth", block: "start" }))}
-            onChange={event => setInput(event.target.value)}
-            onCompositionStart={() => composing.current = true}
-            onCompositionEnd={event => { composing.current = false; setValue(event.currentTarget.value); }}
-            placeholder={activeLanguages.length ? "Search" : "Select a language first"}
-          />
-          {input && (<button className="clear-button" type="button" onClick={() => setInput("")} aria-label="Clear search">×</button>)}
-        </form>
-      </section>
+      <form className={`search-form ${!activeLanguages.length ? "search-disabled" : ""}`} onSubmit={event => event.preventDefault()}>
+        <span className="search-icon" aria-hidden="true">⌕</span>
+        <input
+          aria-label="Search"
+          disabled={!activeLanguages.length}
+          value={input}
+          onFocus={event => requestAnimationFrame(() => event.target.scrollIntoView({ behavior: "smooth", block: "start" }))}
+          onChange={event => setInput(event.target.value)}
+          onCompositionStart={() => composing.current = true}
+          onCompositionEnd={event => { composing.current = false; setValue(event.currentTarget.value); }}
+          placeholder={activeLanguages.length ? "Search" : "Select a language first"}
+        />
+        {input && (<button className="clear-button" type="button" onClick={() => setInput("")} aria-label="Clear search">×</button>)}
+      </form>
       {children}
     </>
   );

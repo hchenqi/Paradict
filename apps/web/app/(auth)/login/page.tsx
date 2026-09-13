@@ -1,12 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/client";
+import { useUserProfile } from "@/app/AuthProvider";
 import "./page.css";
 
 export default function () {
+  const { userProfile } = useUserProfile();
   const searchParams = useSearchParams();
   const router = useRouter();
   const [mode, setMode] = useState<"login" | "signup">(searchParams.get("mode") === "signup" ? "signup" : "login");
@@ -15,6 +17,12 @@ export default function () {
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState(searchParams.get("error") ?? "");
   const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    if (userProfile) {
+      router.replace("/account");
+    }
+  }, [router, userProfile]);
 
   async function submit(event: React.SubmitEvent<HTMLFormElement>) {
     event.preventDefault();

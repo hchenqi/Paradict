@@ -4,9 +4,8 @@ import { useEffect, useState } from "react";
 import { useParams, useSearchParams, useRouter } from "next/navigation";
 import { getConceptAction } from "@/app/actions";
 import { type LanguageCode, type Entry, languageLabel } from "@/lib/types";
-import { useActiveLanguages } from "../../ActiveLanguagesProvider";
+import { useAvailableLanguages, useSelectedLanguages, useActiveLanguages } from "../../LanguageProvider";
 import "./page.css";
-import "../../(search-form)/ConceptList.css";
 
 type EditType = "create_concept" | "update_concept" | "merge_concepts";
 type DraftEntry = {
@@ -211,27 +210,20 @@ export default function ({
 }
 
 export default function () {
-  const { activeLanguages } = useActiveLanguages();
+  const [availableLanguages] = useAvailableLanguages();
+  const [selectedLanguages] = useSelectedLanguages();
+  const [activeLanguages] = useActiveLanguages();
   const { id: urlId } = useParams<{ id: string }>();
   const id = Number(urlId);
-  const searchParams = useSearchParams();
-  const urlLanguages = searchParams.get("lang") ?? "";
-  const router = useRouter();
   const [entries, setEntries] = useState<Entry[]>([]);
 
   useEffect(() => {
-    if (activeLanguages.join(",") !== urlLanguages) {
-      router.replace(`/concept/${id}?lang=${activeLanguages.join(",")}`);
-    }
-  }, [activeLanguages, searchParams, router]);
-
-  useEffect(() => {
-    if (Number.isInteger(id) && activeLanguages.length) {
+    if (Number.isInteger(id)) {
       getConceptAction(id).then(entries => setEntries(entries));
     } else {
       setEntries([]);
     }
-  }, [searchParams]);
+  }, [id]);
 
   return (
     <main className="concept-page">

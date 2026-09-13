@@ -15,13 +15,9 @@ export const metadata: Metadata = {
 function Header() {
   return (
     <header className="topbar">
-      <Link className="brand" href="/">
-        paradict<span>.</span>
-      </Link>
+      <Link className="brand" href="/">paradict<span>.</span></Link>
       <div className="topbar-actions">
-        <Link className="back-link" href="/submissions">
-          Submissions
-        </Link>
+        <Link className="back-link" href="/submissions">Submissions</Link>
         <AuthStatus />
       </div>
     </header>

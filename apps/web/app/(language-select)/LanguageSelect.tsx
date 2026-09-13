@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { languageLabel, type LanguageCode } from "@/lib/types";
-import { useActiveLanguages } from "./ActiveLanguagesProvider";
+import { useAvailableLanguages, useSelectedLanguages, useActiveLanguages } from "./LanguageProvider";
 import "./LanguageSelect.css";
 
 function optionLabel(code: LanguageCode) {
@@ -11,20 +11,21 @@ function optionLabel(code: LanguageCode) {
 }
 
 export default function () {
-  const [languages, setLanguages] = useState<LanguageCode[]>([]);
-  const [selectedLanguages, setSelectedLanguages] = useState<LanguageCode[]>([]);
-  const { activeLanguages, setActiveLanguages } = useActiveLanguages();
+  const [availableLanguages, setAvailableLanguages] = useAvailableLanguages();
+  const [selectedLanguages, setSelectedLanguages] = useSelectedLanguages();
+  const [activeLanguages, setActiveLanguages] = useActiveLanguages();
   const [dragged, setDragged] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
   const popupRef = useRef<HTMLDivElement>(null);
+  const toggleRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     fetch("/api/languages")
       .then(response => response.json() as Promise<LanguageCode[]>)
-      .then(languages => {
-        setLanguages(languages.sort((a, b) => languageLabel(a).localeCompare(languageLabel(b))));
-        const codes = new Set(languages);
-        const stored = JSON.parse(localStorage.getItem("paradict-selected-languages") ?? "[]") as string[];
+      .then(availableLanguages => {
+        setAvailableLanguages(availableLanguages.sort((a, b) => languageLabel(a).localeCompare(languageLabel(b))));
+        const codes = new Set(availableLanguages);
+        const stored = JSON.parse(localStorage.getItem("selected-languages") ?? "[]") as string[];
         const fromUrl = new URLSearchParams(window.location.search).get("languages")?.split(",") ?? [];
         const initial = (stored.length ? stored : fromUrl).filter(code => codes.has(code));
         setSelectedLanguages(initial);
@@ -36,7 +37,7 @@ export default function () {
   useEffect(() => {
     if (open) {
       function close(event: MouseEvent) {
-        if (!popupRef.current?.contains(event.target as Node)) {
+        if (!popupRef.current?.contains(event.target as Node) && !toggleRef.current?.contains(event.target as Node)) {
           setOpen(false);
         }
       }
@@ -48,7 +49,7 @@ export default function () {
   function toggleSelected(code: LanguageCode) {
     const nextSelected = selectedLanguages.includes(code) ? selectedLanguages.filter(item => item !== code) : [...selectedLanguages, code];
     setSelectedLanguages(nextSelected);
-    localStorage.setItem("paradict-selected-languages", JSON.stringify(nextSelected));
+    localStorage.setItem("selected-languages", JSON.stringify(nextSelected));
     setActiveLanguages(selectedLanguages.includes(code) ? activeLanguages.filter(item => item !== code) : [...activeLanguages, code]);
   }
 
@@ -64,7 +65,7 @@ export default function () {
     nextSelected.splice(sourceIndex, 1);
     nextSelected.splice(targetIndex, 0, code);
     setSelectedLanguages(nextSelected);
-    localStorage.setItem("paradict-selected-languages", JSON.stringify(nextSelected));
+    localStorage.setItem("selected-languages", JSON.stringify(nextSelected));
     setActiveLanguages(nextSelected.filter(code => activeLanguages.includes(code)));
   }
 
@@ -91,31 +92,29 @@ export default function () {
               </button>
             ))
           }
-        </div>
-        <div className="language-control" ref={popupRef}>
-          <button className="available-toggle" type="button" onClick={() => setOpen(open => !open)} aria-expanded={open}>
+          <button ref={toggleRef} className="available-toggle" type="button" onClick={() => setOpen(open => !open)} aria-expanded={open}>
             {open ? "Hide languages" : "Available languages"}
           </button>
-          {
-            open && (
-              <div className="language-popup">
-                <div className="language-row available-language-row">
-                  {languages.map(language => (
-                    <button
-                      className={`language-add ${selectedLanguages.includes(language) ? "added" : ""}`}
-                      key={language}
-                      type="button"
-                      aria-pressed={selectedLanguages.includes(language)}
-                      onClick={() => toggleSelected(language)}
-                    >
-                      {optionLabel(language)}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )
-          }
         </div>
+        {
+          open && (
+            <div ref={popupRef} className="language-popup">
+              <div className="language-row">
+                {availableLanguages.map(language => (
+                  <button
+                    className={`language-add ${selectedLanguages.includes(language) ? "added" : ""}`}
+                    key={language}
+                    type="button"
+                    aria-pressed={selectedLanguages.includes(language)}
+                    onClick={() => toggleSelected(language)}
+                  >
+                    {optionLabel(language)}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )
+        }
       </div>
     </section>
   );

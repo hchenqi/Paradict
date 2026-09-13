@@ -1,14 +1,14 @@
 "use client";
 
-import { ActiveLanguagesProvider } from "./ActiveLanguagesProvider";
+import { LanguageProvider } from "./LanguageProvider";
 import LanguageSelect from "./LanguageSelect";
 import "./layout.css";
 
 export default function ({ children }: { children: React.ReactNode }) {
   return (
-    <ActiveLanguagesProvider>
+    <LanguageProvider>
       <LanguageSelect />
       {children}
-    </ActiveLanguagesProvider>
+    </LanguageProvider>
   );
 }

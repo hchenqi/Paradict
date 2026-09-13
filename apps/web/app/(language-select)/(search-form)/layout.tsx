@@ -14,7 +14,6 @@ export default function ({ children }: { children: React.ReactNode }) {
   const [input, setInput] = useState(urlQuery);
   const [value, setValue] = useState(input);
   const router = useRouter();
-  const formRef = useRef<HTMLFormElement>(null);
   const composing = useRef(false);
 
   useEffect(() => {
@@ -45,33 +44,23 @@ export default function ({ children }: { children: React.ReactNode }) {
     return () => clearTimeout(timeout);
   }, [activeLanguages, pathname, searchParams, value, router]);
 
-  function onInput(input: string) {
-    setInput(input);
-    if (input) {
-      requestAnimationFrame(() => formRef.current?.scrollIntoView({ block: "start" }));
-    }
-  }
-
   return (
     <>
       <section className={`hero ${input ? "hero-searching" : ""}`}>
         {!input && <SearchIntro />}
-        <form ref={formRef} className={`search-form ${!activeLanguages.length ? "search-disabled" : ""}`} onSubmit={event => event.preventDefault()}>
+        <form className={`search-form ${!activeLanguages.length ? "search-disabled" : ""}`} onSubmit={event => event.preventDefault()}>
           <span className="search-icon" aria-hidden="true">⌕</span>
           <input
             aria-label="Search"
             disabled={!activeLanguages.length}
             value={input}
-            onChange={event => onInput(event.target.value)}
+            onFocus={event => requestAnimationFrame(() => event.target.scrollIntoView({ behavior: "smooth", block: "start" }))}
+            onChange={event => setInput(event.target.value)}
             onCompositionStart={() => composing.current = true}
             onCompositionEnd={event => { composing.current = false; setValue(event.currentTarget.value); }}
             placeholder={activeLanguages.length ? "Search" : "Select a language first"}
           />
-          {
-            input && (
-              <button className="clear-button" type="button" onClick={() => onInput("")} aria-label="Clear search">×</button>
-            )
-          }
+          {input && (<button className="clear-button" type="button" onClick={() => setInput("")} aria-label="Clear search">×</button>)}
         </form>
       </section>
       {children}

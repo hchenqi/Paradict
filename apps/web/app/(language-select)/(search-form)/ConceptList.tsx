@@ -26,7 +26,7 @@ function ConceptCard({ conceptId, entries, activeLanguages, query }: { conceptId
   return (
     <article className="concept-card">
       <div className="concept-heading">
-        <Link className="concept-title" href={`/concept/${conceptId}?lang=${activeLanguages.join(",")}`}>Concept {conceptId}</Link>
+        <Link className="concept-title" href={`/concept/${conceptId}}`}>Concept {conceptId}</Link>
       </div>
       <div className="entries-grid">
         {

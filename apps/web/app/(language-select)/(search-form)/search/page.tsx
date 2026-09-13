@@ -35,7 +35,7 @@ export default function () {
       <section className="results" aria-live="polite">
         {
           loading ? (
-            <div className="loading-state" role="status">Searching concepts...</div>
+            <div className="loading-state" role="status">Searching...</div>
           ) : (
             concepts.size ? (
               <>

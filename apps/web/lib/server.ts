@@ -30,7 +30,6 @@ const cache = (globalThis as typeof globalThis & { __paradictServerCache?: Cache
 async function queryLanguages() {
   const { data, error } = await supabase.from("languages").select("id, iso_code");
   if (error) { throw error; }
-
   const languageList: LanguageCode[] = [];
   const languageIdCodeMap = new Map<number, LanguageCode>();
   const languageCodeIdMap = new Map<LanguageCode, number>();
@@ -65,7 +64,6 @@ function transformResultRows(
 async function queryRandomConcepts() {
   const { data, error } = await supabase.rpc("explore", { result_limit: 10 });
   if (error) { throw error; }
-
   cache.randomConcepts = transformResultRows(data);
 }
 
@@ -96,15 +94,10 @@ export async function search(query: string, languages: LanguageCode[], result_li
   return transformResultRows(data);
 }
 
-export async function getConcept(id: number, languages: LanguageCode[]) {
+export async function getConcept(id: number) {
   await checkRefreshCache();
-  const { data, error } = await supabase
-    .from("entries")
-    .select("language_id, id, expression, indexed")
-    .eq("concept_id", id)
-    .in("language_id", languages.map(code => cache.languageCodeIdMap.get(code)).filter(id => id !== undefined));
+  const { data, error } = await supabase.from("entries").select("language_id, id, expression, indexed").eq("concept_id", id);
   if (error) { throw error; }
-
   return data.map(row => ({
     language: cache.languageIdCodeMap.get(row.language_id)!,
     entry_id: row.id,

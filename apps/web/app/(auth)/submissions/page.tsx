@@ -1,35 +1,74 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { getSupabaseBrowserClient } from "@/lib/client";
-import { getConceptAction } from "@/app/actions";
-import type { LanguageCode, Entry } from "@/lib/types";
-import ConceptEditor from "./ConceptEditor";
-import SubmissionList from "./SubmissionList";
+import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/client";
+import { type Submission } from "@/lib/types";
+import { useUserProfile } from "@/app/AuthProvider";
 
-export default function () {
-  const router = useRouter();
-  const params = useSearchParams();
-  const [role, setRole] = useState("member");
-  const [entries, setEntries] = useState<Entry[]>([]);
-  const type = params.get("type") as "create_concept" | "update_concept" | "merge_concepts" | null;
-  const conceptId = Number(params.get("concept_id"));
-  const languages = (params.get("languages")?.split(",") ?? []).filter(Boolean) as LanguageCode[];
+function SubmissionList({ role }: { role: string }) {
+  const [submissions, setSubmissions] = useState<Submission[]>([]);
+  const [message, setMessage] = useState("");
 
   useEffect(() => {
-    const supabase = getSupabaseBrowserClient();
-    supabase.auth.getUser().then(async ({ data: { user } }) => {
-      if (!user) {
-        router.push("/login");
-        return;
-      }
-      const { data } = await supabase.from("users").select("role").eq("id", user.id).single();
-      setRole(data?.role ?? "member");
-      if (conceptId > 0 && (type === "update_concept" || type === "merge_concepts"))
-        setEntries(await getConceptAction(conceptId, languages));
+    supabase.from("submissions").select("*").eq("review_status", "pending").order("created_at", { ascending: true }).then(({ data }) => {
+      setSubmissions(data as Submission[]);
     });
-  }, [conceptId, languages, router, type]);
+  }, []);
+
+  async function review(id: number, action: "approve" | "reject") {
+    const response = await fetch(`/api/submissions/${id}/review`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action }),
+    });
+    setMessage(response.ok ? `Submission ${action}d.` : "Review failed.");
+    if (response.ok) setSubmissions(items => items.filter(item => item.id !== id));
+  }
+
+  async function remove(id: number) {
+    if (!window.confirm("Delete this submission permanently?")) return;
+    const response = await fetch(`/api/submissions/${id}`, { method: "DELETE" });
+    if (response.ok) setSubmissions(items => items.filter(item => item.id !== id));
+  }
+
+  return (
+    <section className="public-submissions">
+      {message && <p className="auth-message" role="status">{message}</p>}
+      {
+        submissions.map(submission => (
+          <article className="concept-card submission-item" key={submission.id}>
+            <div className="concept-heading">
+              <span className="concept-title">Submission #{submission.id}</span>
+              <span className="submission-status">{submission.review_status}</span>
+            </div>
+            <pre className="submission-raw">{JSON.stringify(submission.payload, null, 2)}</pre>
+            {
+              (role === "editor" || role === "admin") && (
+                <div className="submission-actions">
+                  <button type="button" onClick={() => review(submission.id, "approve")}>Approve</button>
+                  <button type="button" onClick={() => review(submission.id, "reject")}>Reject</button>
+                  {role === "admin" && (<button type="button" onClick={() => remove(submission.id)}>Delete</button>)}
+                </div>
+              )
+            }
+          </article>
+        ))
+      }
+      {!submissions.length && <p>No pending submissions.</p>}
+    </section>
+  );
+}
+
+export default function () {
+  const { userProfile } = useUserProfile();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!userProfile) {
+      router.replace("/login");
+    }
+  }, [userProfile, router]);
 
   return (
     <section className="account-content">
@@ -38,8 +77,7 @@ export default function () {
         <h1>Submissions</h1>
         <p>Help improve the dictionary.</p>
       </div>
-      {type && <ConceptEditor type={type} concept={entries.length ? { id: conceptId, entries: entries } : undefined} languages={languages} />}
-      <SubmissionList canReview={role === "editor" || role === "admin"} isAdmin={role === "admin"} />
+      {userProfile && <SubmissionList role={userProfile.role} />}
     </section>
   );
 }

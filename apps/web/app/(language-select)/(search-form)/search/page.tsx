@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import ConceptList from "../../ConceptList";
+import ConceptList from "../ConceptList";
 import { type Entry, groupEntriesByConcept } from "@/lib/types";
 
 export default function () {
@@ -42,7 +42,7 @@ export default function () {
                 <div className="results-heading">
                   <span className="eyebrow">Search results</span>
                 </div>
-                <ConceptList concepts={concepts} activeLanguages={activeLanguages} />
+                <ConceptList concepts={concepts} activeLanguages={activeLanguages} query={query?.trim() || undefined} />
                 {
                   query && (
                     <Link className="submission-cta" href={`/submissions?type=create_concept&languages=${activeLanguages.join(",")}`}>

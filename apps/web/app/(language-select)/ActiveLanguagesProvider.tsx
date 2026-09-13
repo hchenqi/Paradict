@@ -3,15 +3,17 @@
 import { createContext, useContext, useState } from "react";
 import type { LanguageCode } from "@/lib/types";
 
-type ActiveLanguagesState = {
+const ActiveLanguagesContext = createContext<{
   activeLanguages: LanguageCode[];
   setActiveLanguages: (languages: LanguageCode[]) => void;
-};
-
-const ActiveLanguagesContext = createContext<ActiveLanguagesState>({
+}>({
   activeLanguages: [],
   setActiveLanguages: () => undefined,
 });
+
+export function useActiveLanguages() {
+  return useContext(ActiveLanguagesContext);
+}
 
 export function ActiveLanguagesProvider({ children }: { children: React.ReactNode; }) {
   const [activeLanguages, setActiveLanguages] = useState<LanguageCode[]>([]);
@@ -20,8 +22,4 @@ export function ActiveLanguagesProvider({ children }: { children: React.ReactNod
       {children}
     </ActiveLanguagesContext.Provider>
   );
-}
-
-export function useActiveLanguages() {
-  return useContext(ActiveLanguagesContext);
 }

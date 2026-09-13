@@ -155,7 +155,7 @@ begin
   with candidate_concepts as (
     select id
     from public.concepts c
-    tablesample system (1)
+    order by random()
     limit result_limit
   )
   select
@@ -182,9 +182,6 @@ create table public.users (
   role text not null default 'member' check (role in ('member', 'editor', 'admin')),
   username text not null unique check (char_length(username) between 6 and 30 and username ~ '^[a-z0-9_]+$'),
   display_name text check (char_length(display_name) <= 50),
-  languages bigint[] not null default '{}' check (cardinality(languages) <= 20),
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
 );
 
 create table public.submissions (
@@ -204,8 +201,8 @@ create index idx_submissions_reviewed_by on public.submissions(reviewed_by);
 create index idx_submissions_pending on public.submissions(created_at) where review_status = 'pending';
 
 
-grant select (id, role, username, display_name, languages) on public.users to authenticated;
-grant update (username, display_name, languages) on public.users to authenticated;
+grant select (id, role, username, display_name) on public.users to authenticated;
+grant update (username, display_name) on public.users to authenticated;
 grant select, delete on public.submissions to authenticated;
 grant insert (created_by, payload) on public.submissions to authenticated;
 grant update (review_status, reviewed_by, review_note, reviewed_at) on public.submissions to authenticated;
@@ -276,9 +273,6 @@ end;
 $$;
 
 create trigger entries_set_updated_at before update on public.entries
-for each row execute function public.set_updated_at();
-
-create trigger users_set_updated_at before update on public.users
 for each row execute function public.set_updated_at();
 
 

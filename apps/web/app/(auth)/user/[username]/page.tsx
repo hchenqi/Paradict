@@ -2,42 +2,88 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import { getSupabaseBrowserClient } from "@/lib/client";
-import RoleEditor from "./RoleEditor";
+import { supabase } from "@/lib/client";
+import { useUserProfile } from "@/app/AuthProvider";
+import { Submission, UserProfile } from "@/lib/types";
 
-type Profile = { id: string; username: string; display_name: string | null; role: string; created_at: string };
-type Submission = { id: number; payload: unknown; review_status: string; created_at: string };
+function RoleEdit({ id, role: initialRole }: { id: string; role: string; }) {
+  const [role, setRole] = useState(initialRole);
+  const [message, setMessage] = useState("");
+
+  async function updateRole(newRole: string) {
+    setMessage("Updating user role...")
+    const { error } = await supabase.rpc("update_user_role", { user_id: id, user_role: newRole });
+    if (error) {
+      setMessage("Unable to update role.");
+    } else {
+      setRole(newRole);
+      setMessage("Role updated.");
+    }
+  }
+
+  return (
+    <>
+      <label>role</label>
+      <select value={role} onChange={event => updateRole(event.target.value)} >
+        <option value="member">Member</option>
+        <option value="editor">Editor</option>
+        <option value="admin">Admin</option>
+      </select>
+      {message && <p className="auth-message">{message}</p>}
+    </>
+  );
+}
 
 export default function () {
+  const { userProfile: myProfile } = useUserProfile();
   const { username } = useParams<{ username: string }>();
-  const supabase = getSupabaseBrowserClient();
-  const [profile, setProfile] = useState<Profile | null>(null);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [submissions, setSubmissions] = useState<Submission[]>([]);
-  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
-    supabase.from("users").select("id, username, display_name, role, created_at").eq("username", username.toLowerCase()).single().then(async ({ data }) => {
-      if (!data) return;
-      setProfile(data);
-      const { data: own } = await supabase.from("submissions").select("id, payload, review_status, created_at").eq("created_by", data.id).order("created_at", { ascending: false });
-      setSubmissions(own ?? []);
-      const { data: user } = await supabase.auth.getUser();
-      if (user.user) {
-        const { data: actor } = await supabase.from("users").select("role").eq("id", user.user.id).single();
-        setIsAdmin(actor?.role === "admin");
-      }
-    });
-  }, [supabase, username]);
+    if (myProfile) {
+      supabase.from("users").select("id, role, username, display_name").eq("username", username.toLowerCase()).single().then(async ({ data }) => {
+        if (data) {
+          setUserProfile(data);
+        }
+      });
+    }
+  }, [myProfile, username]);
 
-  if (!profile) return <main className="account-content"><div className="loading-state">Loading profile...</div></main>;
-  return (
+  useEffect(() => {
+    if (userProfile) {
+      supabase.from("submissions").select("id, created_at, payload, review_status").eq("created_by", userProfile.id).order("created_at", { ascending: false }).then(({ data }) => {
+        setSubmissions(data as Submission[]);
+      });
+    }
+  }, [userProfile]);
+
+  return !userProfile ? (
+    <main className="account-content">
+      <div className="loading-state">Loading profile...</div>
+    </main>
+  ) : (
     <section className="account-content">
-      <p className="eyebrow">Public profile</p>
-      <h1>{profile.display_name || profile.username}</h1>
-      <p className="profile-username">@{profile.username}</p>
-      <p>Member since {new Date(profile.created_at).toLocaleDateString()}</p>
-      {isAdmin && <RoleEditor username={profile.username} role={profile.role} />}
-      <section className="public-submissions profile-submissions"><div className="results-heading"><span className="eyebrow">Submissions</span></div>{submissions.map(submission => <article className="concept-card submission-item" key={submission.id}><div className="concept-heading"><span className="concept-title">Submission #{submission.id}</span><span className="submission-status">{submission.review_status}</span></div><pre className="submission-raw">{JSON.stringify(submission.payload, null, 2)}</pre></article>)}{!submissions.length && <p>No submissions yet.</p>}</section>
-    </section>
+      <p className="eyebrow">Public profile</p >
+      <h1>{userProfile.display_name || userProfile.username}</h1>
+      <p className="profile-username">@{userProfile.username}</p>
+      {myProfile?.role === "admin" && <RoleEdit id={userProfile.id} role={userProfile.role} />}
+      <section className="public-submissions profile-submissions">
+        <div className="results-heading">
+          <span className="eyebrow">Submissions</span>
+        </div>
+        {
+          submissions.map(submission =>
+            <article className="concept-card submission-item" key={submission.id}>
+              <div className="concept-heading">
+                <span className="concept-title">Submission #{submission.id}</span>
+                <span className="submission-status">{submission.review_status}</span>
+              </div>
+              <pre className="submission-raw">{JSON.stringify(submission.payload, null, 2)}</pre>
+            </article>)
+        }
+        {!submissions.length && <p>No submissions yet.</p>}
+      </section>
+    </section >
   );
 }

@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { type Entry, groupEntriesByConcept } from "@/lib/types";
 import { exploreAction } from "@/app/actions";
 import { useActiveLanguages } from "../../ActiveLanguagesProvider";
-import ConceptList from "../../ConceptList";
+import ConceptList from "../ConceptList";
 
 export default function () {
   const { activeLanguages } = useActiveLanguages();

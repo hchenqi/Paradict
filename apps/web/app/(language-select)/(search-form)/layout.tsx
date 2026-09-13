@@ -55,14 +55,18 @@ export default function ({ children }: { children: React.ReactNode }) {
   return (
     <>
       <section className={`hero ${input ? "hero-searching" : ""}`}>
-        {
-          !input && (
-            <SearchIntro />
-          )
-        }
+        {!input && <SearchIntro />}
         <form ref={formRef} className={`search-form ${!activeLanguages.length ? "search-disabled" : ""}`} onSubmit={event => event.preventDefault()}>
           <span className="search-icon" aria-hidden="true">⌕</span>
-          <input aria-label="Search" disabled={!activeLanguages.length} value={input} onChange={event => onInput(event.target.value)} onCompositionStart={() => composing.current = true} onCompositionEnd={event => { composing.current = false; setValue(event.currentTarget.value); }} placeholder={activeLanguages.length ? "Search" : "Select a language first"} />
+          <input
+            aria-label="Search"
+            disabled={!activeLanguages.length}
+            value={input}
+            onChange={event => onInput(event.target.value)}
+            onCompositionStart={() => composing.current = true}
+            onCompositionEnd={event => { composing.current = false; setValue(event.currentTarget.value); }}
+            placeholder={activeLanguages.length ? "Search" : "Select a language first"}
+          />
           {
             input && (
               <button className="clear-button" type="button" onClick={() => onInput("")} aria-label="Clear search">×</button>

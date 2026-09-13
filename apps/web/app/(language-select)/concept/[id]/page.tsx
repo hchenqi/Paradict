@@ -5,13 +5,12 @@ import { useParams, useSearchParams, useRouter } from "next/navigation";
 import { getConceptAction } from "@/app/actions";
 import type { Entry } from "@/lib/types";
 import { useActiveLanguages } from "../../ActiveLanguagesProvider";
-import ConceptCard from "../../ConceptCard";
 
 export default function () {
   const { activeLanguages } = useActiveLanguages();
   const { id: urlId } = useParams<{ id: string }>();
-  const searchParams = useSearchParams();
   const id = Number(urlId);
+  const searchParams = useSearchParams();
   const urlLanguages = searchParams.get("lang") ?? "";
   const router = useRouter();
   const [entries, setEntries] = useState<Entry[]>([]);

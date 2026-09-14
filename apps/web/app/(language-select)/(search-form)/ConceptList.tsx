@@ -1,8 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { type LanguageCode, type Entry, languageLabel, groupEntriesByLanguage } from "@/lib/types";
-import "./ConceptList.css";
+import { type LanguageCode, type Entry, languageLabel, groupEntriesByLanguageOrdered } from "@/lib/types";
 
 function highlight(text: string, query: string) {
   return text
@@ -16,7 +15,7 @@ function LanguageRow({ language, entries, query }: { language: LanguageCode; ent
       <div className="entry-language">{languageLabel(language)}</div>
       <div className="entry-words">
         {
-          entries.map(entry => <span className="entry-word" key={entry.entry_id}>{query ? highlight(entry.expression, query) : entry.expression}</span>)
+          entries.map(entry => <span className="entry-word" key={entry.id}>{query ? highlight(entry.expression, query) : entry.expression}</span>)
         }
       </div>
     </div>
@@ -26,12 +25,10 @@ function LanguageRow({ language, entries, query }: { language: LanguageCode; ent
 function ConceptCard({ conceptId, entries, activeLanguages, query }: { conceptId: number; entries: Entry[]; activeLanguages: LanguageCode[]; query: string | undefined; }) {
   return (
     <article className="concept-card">
-      <div className="concept-heading">
-        <Link className="concept-title" href={`/concept/${conceptId}`}>Concept {conceptId}</Link>
-      </div>
+      <Link className="concept-title" href={`/concept/${conceptId}`}>Concept {conceptId}</Link>
       <div className="entries-grid">
         {
-          groupEntriesByLanguage(entries, activeLanguages).map(row => (
+          groupEntriesByLanguageOrdered(entries, activeLanguages).map(row => (
             <LanguageRow key={row.language} language={row.language} entries={row.entries} query={query} />
           ))
         }

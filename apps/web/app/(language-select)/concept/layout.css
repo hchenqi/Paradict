@@ -64,9 +64,7 @@
   text-transform: uppercase;
 }
 
-.concept-actions,
-.compare-form,
-.language-views {
+.concept-actions {
   display: flex;
   gap: 8px;
   align-items: center;
@@ -80,8 +78,6 @@
 .concept-actions a,
 .compare-form button,
 .compare-form input,
-.compare-form label,
-.language-views button,
 .concept-editor select,
 .concept-editor>button {
   padding: 7px 9px;
@@ -92,37 +88,49 @@
   text-decoration: none;
 }
 
-.compare-form {
-  margin: 18px 0;
-}
-
 .compare-form input {
   width: 110px;
   background: #f4f1eb;
 }
 
-.language-views {
-  margin-bottom: 18px;
+.language-filter {
+  padding: 8px;
+  cursor: pointer;
 }
 
-.language-views .current {
-  background: #172320;
-  color: #fffdf9;
-}
-
-.compare-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 24px;
-}
-
-.compare-grid h2 {
-  font-size: 15px;
+.language-filter:focus-visible {
+  outline: none;
 }
 
 .editor-entry {
   display: grid;
   gap: 8px;
+}
+
+.entry.compare {
+  display: grid;
+  grid-template-columns: minmax(110px, 0.7fr) minmax(0, 1.5fr) minmax(0, 1.5fr);
+  gap: 16px;
+  align-items: start;
+}
+
+.entry-language {
+  grid-column: 1;
+  padding-left: 8px;
+}
+
+.entry-current-words {
+  grid-column: 2;
+}
+
+.entry-compare-words {
+  grid-column: 3;
+}
+
+@media (max-width: 700px) {
+  .entry {
+    grid-template-columns: minmax(90px, 0.7fr) minmax(0, 1fr);
+  }
 }
 
 .concept-editor>button {
@@ -131,10 +139,4 @@
 
 .editor-add {
   margin-right: 8px;
-}
-
-@media (max-width: 700px) {
-  .compare-grid {
-    grid-template-columns: 1fr;
-  }
 }

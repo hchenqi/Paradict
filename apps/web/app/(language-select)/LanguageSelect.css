@@ -85,23 +85,16 @@
 
 .language-popup {
   position: absolute;
-  top: calc(100% + 8px);
+  top: 100%;
   left: 0;
   right: auto;
   z-index: 15;
-  display: grid;
   width: 100%;
   min-width: 0;
-  gap: 12px;
   padding: 14px;
   border: 1px solid #c9c7be;
   background: #fffdf9;
   box-shadow: 5px 5px 0 #dce5d8;
-}
-
-.language-popup .language-row {
-  overflow-y: auto;
-  align-content: flex-start;
 }
 
 .selected-language-row .language-pill:not(.selected) {

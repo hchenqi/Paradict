@@ -53,9 +53,9 @@ function transformResultRows(
   }>
 ) {
   return rows.map(row => ({
-    concept_id: row.concept_id,
+    concept: row.concept_id,
     language: cache.languageIdCodeMap.get(row.language_id)!,
-    entry_id: row.entry_id,
+    id: row.entry_id,
     expression: row.expression,
     indexed: row.indexed,
   }));
@@ -100,7 +100,7 @@ export async function getConcept(id: number) {
   if (error) { throw error; }
   return data.map(row => ({
     language: cache.languageIdCodeMap.get(row.language_id)!,
-    entry_id: row.id,
+    id: row.id,
     expression: row.expression,
     indexed: row.indexed,
   } as Entry));

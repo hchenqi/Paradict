@@ -5,18 +5,22 @@ export function languageLabel(code: LanguageCode) {
 }
 
 export type Entry = {
-  concept_id: number;
+  concept: number;
   language: LanguageCode;
-  entry_id: number;
+  id: number;
   expression: string;
   indexed: boolean;
 };
 
 export function groupEntriesByConcept(entries: Entry[]) {
-  return Map.groupBy(entries, entry => entry.concept_id);
+  return Map.groupBy(entries, entry => entry.concept);
 }
 
-export function groupEntriesByLanguage(entries: Entry[], languageList: LanguageCode[]) {
+export function groupEntriesByLanguage(entries: Entry[]) {
+  return Map.groupBy(entries, entry => entry.language);
+}
+
+export function groupEntriesByLanguageOrdered(entries: Entry[], languageList: LanguageCode[]) {
   const group = Map.groupBy(entries, entry => entry.language);
   return languageList.map(language => ({ language, entries: group.get(language) ?? [] }));
 }
@@ -29,9 +33,38 @@ export type UserProfile = {
   display_name: string | null;
 };
 
-export type SubmissionPayload = {
-
+export type EntryCreate = {
+  id?: number;
+  language: LanguageCode;
+  expression: string;
+  indexed: boolean;
 };
+
+export type EntryUpdate = {
+  id: number;
+  expression?: string;
+  indexed?: boolean;
+};
+
+export type EntryDelete = {
+  id: number;
+};
+
+export type CreateConceptPayload = {
+  type: "create-concept";
+  entries: EntryCreate[];
+};
+
+export type UpdateConceptPayload = {
+  type: "update-concept";
+  id: number;
+  merge?: number;
+  create: EntryCreate[];
+  update: EntryUpdate[];
+  delete: EntryDelete[];
+};
+
+export type SubmissionPayload = CreateConceptPayload | UpdateConceptPayload;
 
 export type Submission = {
   id: number;

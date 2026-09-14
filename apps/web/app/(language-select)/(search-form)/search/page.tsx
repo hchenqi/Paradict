@@ -11,19 +11,20 @@ export default function () {
   const query = searchParams.get("q");
   const languages = searchParams.get("lang");
   const activeLanguages = languages?.split(",") ?? [];
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [concepts, setConcepts] = useState<Map<number, Entry[]>>(new Map());
 
   useEffect(() => {
     if (query && query.trim() && activeLanguages.length) {
-      setLoading(true);
       const controller = new AbortController();
+      let abort = false;
+      setLoading(true);
       fetch(`/api/search?q=${encodeURIComponent(query)}&lang=${languages}&limit=20`, { signal: controller.signal })
         .then(response => response.json() as Promise<Entry[]>)
         .then(entries => setConcepts(groupEntriesByConcept(entries)))
-        .finally(() => setLoading(false))
+        .finally(() => { if (!abort) { setLoading(false); } })
         .catch(() => undefined);
-      return () => controller.abort();
+      return () => { abort = true; controller.abort(); };
     } else {
       setConcepts(new Map());
       setLoading(false);
@@ -39,17 +40,9 @@ export default function () {
           ) : (
             concepts.size ? (
               <>
-                <div className="results-heading">
-                  <span className="eyebrow">Search results</span>
-                </div>
+                <div className="results-heading"><span className="eyebrow">Search results</span></div>
                 <ConceptList concepts={concepts} activeLanguages={activeLanguages} query={query?.trim() || undefined} />
-                {
-                  query && (
-                    <Link className="submission-cta" href={`/submissions?type=create_concept&languages=${activeLanguages.join(",")}`}>
-                      Suggest a new concept
-                    </Link>
-                  )
-                }
+                {query && <Link className="submission-cta" href={`/concept/create`}>Suggest a new concept</Link>}
               </>
             ) : (
               <div className="empty-state">

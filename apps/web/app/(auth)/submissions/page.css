@@ -32,11 +32,6 @@
   margin-top: 34px;
 }
 
-.submission-item .concept-heading {
-  align-items: center;
-  margin-bottom: 0;
-}
-
 .submission-item time,
 .submission-item > a {
   color: #6d756d;

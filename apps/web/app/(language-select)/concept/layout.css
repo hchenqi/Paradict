@@ -1,0 +1,140 @@
+.concept-results {
+  padding-top: 0;
+}
+
+.concept-editor {
+  display: grid;
+  gap: 14px;
+  margin-top: 28px;
+}
+
+.editor-entry {
+  grid-template-columns: 110px 1fr;
+}
+
+.editor-words {
+  display: grid;
+  gap: 8px;
+}
+
+.editor-word {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.editor-word input,
+.editor-field input {
+  min-width: 0;
+  flex: 1;
+  padding: 8px 10px;
+  border: 1px solid #c9c7be;
+  border-radius: 5px;
+  background: #f4f1eb;
+  font: 14px "Space Grotesk", sans-serif;
+}
+
+.editor-word button,
+.editor-add {
+  padding: 7px 9px;
+  border: 1px solid #c9c7be;
+  color: #6d756d;
+  background: transparent;
+  font: 11px "DM Mono", monospace;
+  cursor: pointer;
+}
+
+.editor-delete {
+  width: 28px;
+  height: 28px;
+  padding: 0 !important;
+  border-radius: 50%;
+}
+
+.editor-word.deleted input {
+  color: #8a8d85;
+  text-decoration: line-through;
+}
+
+.editor-field {
+  display: grid;
+  gap: 6px;
+  color: #6d756d;
+  font: 11px "DM Mono", monospace;
+  text-transform: uppercase;
+}
+
+.concept-actions,
+.compare-form,
+.language-views {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.concept-actions {
+  margin-left: auto;
+}
+
+.concept-actions button,
+.concept-actions a,
+.compare-form button,
+.compare-form input,
+.compare-form label,
+.language-views button,
+.concept-editor select,
+.concept-editor>button {
+  padding: 7px 9px;
+  border: 1px solid #c9c7be;
+  background: transparent;
+  color: #172320;
+  font: 11px "DM Mono", monospace;
+  text-decoration: none;
+}
+
+.compare-form {
+  margin: 18px 0;
+}
+
+.compare-form input {
+  width: 110px;
+  background: #f4f1eb;
+}
+
+.language-views {
+  margin-bottom: 18px;
+}
+
+.language-views .current {
+  background: #172320;
+  color: #fffdf9;
+}
+
+.compare-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+}
+
+.compare-grid h2 {
+  font-size: 15px;
+}
+
+.editor-entry {
+  display: grid;
+  gap: 8px;
+}
+
+.concept-editor>button {
+  cursor: pointer;
+}
+
+.editor-add {
+  margin-right: 8px;
+}
+
+@media (max-width: 700px) {
+  .compare-grid {
+    grid-template-columns: 1fr;
+  }
+}

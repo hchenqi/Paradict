@@ -1,8 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { usePathname, useSearchParams, useRouter } from "next/navigation";
-import Link from "next/link";
 import { getConceptAction } from "@/app/actions";
 import { supabase } from "@/lib/client";
 import { EntryCreate, EntryDelete, EntryUpdate, groupEntriesByLanguage, languageLabel, type Entry, type LanguageCode } from "@/lib/types";
@@ -10,6 +9,32 @@ import { useActiveLanguages, useAvailableLanguages, useSelectedLanguages } from 
 import "./layout.css";
 
 type LanguageFilter = "all" | "selected" | "active";
+
+function useLanguageFilter(): [LanguageCode[], LanguageFilter, (languageFilter: LanguageFilter) => void] {
+  const [availableLanguages] = useAvailableLanguages();
+  const [selectedLanguages] = useSelectedLanguages();
+  const [activeLanguages] = useActiveLanguages();
+  const [languageFilter, setLanguageFilter] = useState<LanguageFilter>("active");
+  const languages = languageFilter === "all" ? availableLanguages : languageFilter === "selected" ? selectedLanguages : activeLanguages;
+  return [languages, languageFilter, setLanguageFilter];
+}
+
+function CompareEntriesLoader({ currentId, setCompare }: { currentId: number | undefined; setCompare: (compare: { id: number, entries: Entry[] } | undefined) => void; }) {
+  const searchParams = useSearchParams();
+  const compareId = Number(searchParams.get("compare") || NaN);
+  const validCompareId = Number.isInteger(compareId) ? compareId : undefined;
+  const hasCompare = validCompareId !== undefined && validCompareId !== currentId;
+
+  useEffect(() => {
+    if (hasCompare) {
+      getConceptAction(validCompareId).then(entries => setCompare({ id: validCompareId, entries }));
+    } else {
+      setCompare(undefined);
+    }
+  }, [validCompareId]);
+
+  return null;
+}
 
 function EntryRows({
   languages,
@@ -103,11 +128,7 @@ function EntryRows({
 }
 
 export default function () {
-  const [availableLanguages] = useAvailableLanguages();
-  const [selectedLanguages] = useSelectedLanguages();
-  const [activeLanguages] = useActiveLanguages();
-  const [languageFilter, setLanguageFilter] = useState<LanguageFilter>("active");
-  const languages = languageFilter === "all" ? availableLanguages : languageFilter === "selected" ? selectedLanguages : activeLanguages;
+  const [languages, languageFilter, setLanguageFilter] = useLanguageFilter();
 
   const pathname = usePathname();
   const isCreate = pathname.endsWith("/create");
@@ -122,12 +143,8 @@ export default function () {
   const [updates, setUpdates] = useState<EntryUpdate[]>([]);
   const [deletes, setDeletes] = useState<EntryDelete[]>([]);
 
+  const [compare, setCompare] = useState<{ id: number, entries: Entry[] } | undefined>(undefined);
   const router = useRouter();
-  const [compareEntries, setCompareEntries] = useState<Entry[]>([]);
-  const searchParams = useSearchParams();
-  const compareId = Number(searchParams.get("compare") || NaN);
-  const validCompareId = Number.isInteger(compareId) ? compareId : undefined;
-  const hasCompare = validCompareId !== undefined && validCompareId !== currentId;
 
   useEffect(() => {
     setEditing(isCreate);
@@ -135,29 +152,20 @@ export default function () {
     setUpdates([]);
     setDeletes([]);
     setMessage("");
-
-    if (!isCreate && !Number.isInteger(currentId)) {
-      setCurrentEntries([]);
-      setCompareEntries([]);
-      return;
-    }
-
     if (!isCreate) {
-      let mounted = true;
-      setLoading(true);
-      getConceptAction(currentId as number)
-        .then(entries => { if (mounted) { setCurrentEntries(entries); } })
-        .catch(() => { if (mounted) { setMessage("Could not load concept."); } })
-        .finally(() => { if (mounted) { setLoading(false); } });
-      return () => { mounted = false; };
+      if (Number.isInteger(currentId)) {
+        let mounted = true;
+        setLoading(true);
+        getConceptAction(currentId as number)
+          .then(entries => { if (mounted) { setCurrentEntries(entries); } })
+          .catch(() => { if (mounted) { setMessage("Could not load concept."); } })
+          .finally(() => { if (mounted) { setLoading(false); } });
+        return () => { mounted = false; };
+      } else {
+        setCurrentEntries([]);
+      }
     }
   }, [pathname]);
-
-  useEffect(() => {
-    if (validCompareId) {
-      getConceptAction(validCompareId).then(entries => setCompareEntries(entries));
-    }
-  }, [searchParams]);
 
   function updateEntry(update: EntryUpdate) {
     if (update.id < 0) {
@@ -204,6 +212,7 @@ export default function () {
 
   return (
     <article className="concept-card">
+      <Suspense><CompareEntriesLoader currentId={currentId} setCompare={setCompare} /></Suspense>
       {message && <p role="status">{message}</p>}
       <nav className="concept-actions" aria-label="Concept actions">
         <form className="compare-form" onSubmit={event => {
@@ -212,15 +221,14 @@ export default function () {
           const compareId = new FormData(form).get("compare") as string;
           router.replace(compareId ? `${pathname}?compare=${encodeURIComponent(compareId)}` : pathname);
         }}>
-          <input id="compare-id" name="compare" defaultValue={searchParams.get("compare") ?? ""} placeholder="Concept id" />
+          <input id="compare-id" name="compare" placeholder="Concept id" />
           <button type="submit">Compare</button>
         </form>
         {!isCreate && <button type="button" onClick={() => setEditing(value => !value)}>{editing ? "View" : "Edit"}</button>}
-        {!isCreate && <Link href={`/concept/create?compare=${currentId}`}>Create from this</Link>}
         {editing && <button type="button" onClick={submit}>Submit</button>}
       </nav>
       <div className="entries-grid">
-        <div className={hasCompare ? "entry compare" : "entry"}>
+        <div className={compare ? "entry compare" : "entry"}>
           <select className="language-filter" aria-label="Languages to display" value={languageFilter} onChange={event => setLanguageFilter(event.target.value as LanguageFilter)}>
             {
               (["all", "selected", "active"] as LanguageFilter[]).map(option => (
@@ -231,9 +239,9 @@ export default function () {
             }
           </select>
           <span className="concept-title">{isCreate ? "New concept" : `Concept ${currentId}`}</span>
-          {hasCompare && <span className="concept-title concept-compare-title">Concept {validCompareId}</span>}
+          {compare && <span className="concept-title concept-compare-title">Concept {compare.id}</span>}
         </div>
-        <EntryRows languages={languages} entries={currentEntries} editing={editing} creates={creates} updates={updates} deletes={deletes} onUpdate={updateEntry} onCreate={addEntry} onDelete={deleteEntry} compareEntries={hasCompare ? compareEntries : undefined} />
+        <EntryRows languages={languages} entries={currentEntries} editing={editing} creates={creates} updates={updates} deletes={deletes} onUpdate={updateEntry} onCreate={addEntry} onDelete={deleteEntry} compareEntries={compare?.entries} />
       </div>
     </article>
   );

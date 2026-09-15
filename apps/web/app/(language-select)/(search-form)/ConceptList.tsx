@@ -1,5 +1,3 @@
-"use client";
-
 import Link from "next/link";
 import { type LanguageCode, type Entry, languageLabel, groupEntriesByLanguageOrdered } from "@/lib/types";
 
@@ -22,13 +20,13 @@ function LanguageRow({ language, entries, query }: { language: LanguageCode; ent
   );
 }
 
-function ConceptCard({ conceptId, entries, activeLanguages, query }: { conceptId: number; entries: Entry[]; activeLanguages: LanguageCode[]; query: string | undefined; }) {
+function ConceptCard({ conceptId, entries, languages, query }: { conceptId: number; entries: Entry[]; languages: LanguageCode[]; query: string | undefined; }) {
   return (
     <article className="concept-card">
       <Link className="concept-title" href={`/concept/${conceptId}`}>Concept {conceptId}</Link>
       <div className="entries-grid">
         {
-          groupEntriesByLanguageOrdered(entries, activeLanguages).map(row => (
+          groupEntriesByLanguageOrdered(entries, languages).map(row => (
             <LanguageRow key={row.language} language={row.language} entries={row.entries} query={query} />
           ))
         }
@@ -37,12 +35,12 @@ function ConceptCard({ conceptId, entries, activeLanguages, query }: { conceptId
   );
 }
 
-export default function ({ concepts, activeLanguages, query }: { concepts: Map<number, Entry[]>, activeLanguages: LanguageCode[], query?: string }) {
+export default function ({ concepts, languages, query }: { concepts: Map<number, Entry[]>, languages: LanguageCode[], query?: string }) {
   return (
     <>
       {
         Array.from(concepts.entries()).map(([concept_id, entries]) => (
-          <ConceptCard key={concept_id} conceptId={concept_id} entries={entries} activeLanguages={activeLanguages} query={query} />
+          <ConceptCard key={concept_id} conceptId={concept_id} entries={entries} languages={languages} query={query} />
         ))
       }
     </>

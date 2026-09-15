@@ -1,37 +1,27 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, Suspense } from "react";
 import { usePathname, useSearchParams, useRouter } from "next/navigation";
 import { useActiveLanguages } from "../LanguageProvider";
 import "./layout.css";
 
-export default function ({ children }: { children: React.ReactNode }) {
-  const [activeLanguages] = useActiveLanguages();
+function SearchRouter({ setInput, value, activeLanguages }: { setInput: (value: string) => void, value: string, activeLanguages: string[] }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const urlQuery = pathname === "/search" ? searchParams.get("q") ?? "" : "";
-  const urlLanguages = pathname === "/search" ? searchParams.get("lang") ?? "" : "";
-  const [input, setInput] = useState(urlQuery);
-  const [value, setValue] = useState(input);
   const router = useRouter();
-  const composing = useRef(false);
 
   useEffect(() => {
-    setInput(urlQuery);
-  }, [pathname, searchParams]);
+    const query = searchParams.get("q") ?? "";
+    setInput(query);
+  }, [searchParams, setInput]);
 
   useEffect(() => {
-    if (!composing.current) {
-      setValue(input);
-    }
-  }, [input]);
-
-  useEffect(() => {
-    const query = value.trim();
-
     const timeout = setTimeout(() => {
+      const query = value.trim();
       if (query) {
-        if (pathname !== "/search" || query !== urlQuery || activeLanguages.join(",") !== urlLanguages) {
+        const urlQuery = pathname === "/search" ? searchParams.get("q") ?? "" : "";
+        const urlLanguages = pathname === "/search" ? searchParams.get("lang") ?? "" : "";
+        if (pathname !== "/search" || query !== urlQuery || (activeLanguages.length && activeLanguages.join(",") !== urlLanguages)) {
           router.replace(`/search?q=${encodeURIComponent(query)}&lang=${activeLanguages.join(",")}`);
         }
       } else {
@@ -40,12 +30,27 @@ export default function ({ children }: { children: React.ReactNode }) {
         }
       }
     }, 500);
-
     return () => clearTimeout(timeout);
-  }, [activeLanguages, pathname, searchParams, value, router]);
+  }, [pathname, searchParams, value, activeLanguages, router]);
+
+  return null;
+}
+
+export default function ({ children }: { children: React.ReactNode }) {
+  const [activeLanguages] = useActiveLanguages();
+  const [input, setInput] = useState("");
+  const [value, setValue] = useState("");
+  const composing = useRef(false);
+
+  useEffect(() => {
+    if (!composing.current) {
+      setValue(input);
+    }
+  }, [input]);
 
   return (
     <>
+      <Suspense><SearchRouter setInput={setInput} value={value} activeLanguages={activeLanguages} /></Suspense>
       <form className={`search-form ${!activeLanguages.length ? "search-disabled" : ""}`} onSubmit={event => event.preventDefault()}>
         <span className="search-icon" aria-hidden="true">⌕</span>
         <input
@@ -60,7 +65,9 @@ export default function ({ children }: { children: React.ReactNode }) {
         />
         {input && (<button className="clear-button" type="button" onClick={() => setInput("")} aria-label="Clear search">×</button>)}
       </form>
-      {children}
+      <section className="results" aria-live="polite">
+        {children}
+      </section>
     </>
   );
 }

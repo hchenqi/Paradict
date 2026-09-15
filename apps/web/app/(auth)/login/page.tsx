@@ -1,21 +1,29 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/client";
 import { useUserProfile } from "@/app/AuthProvider";
 import "./page.css";
 
+function SearchParamsWatcher({ setMode, setMessage }: { setMode: (mode: "login" | "signup") => void, setMessage: (message: string) => void }) {
+  const searchParams = useSearchParams();
+  useEffect(() => {
+    setMode(searchParams.get("mode") === "signup" ? "signup" : "login");
+    setMessage(searchParams.get("error") ?? "");
+  }, [searchParams]);
+  return null;
+}
+
 export default function () {
   const { userProfile } = useUserProfile();
-  const searchParams = useSearchParams();
   const router = useRouter();
-  const [mode, setMode] = useState<"login" | "signup">(searchParams.get("mode") === "signup" ? "signup" : "login");
+  const [mode, setMode] = useState<"login" | "signup">("login");
   const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [message, setMessage] = useState(searchParams.get("error") ?? "");
+  const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
@@ -48,11 +56,9 @@ export default function () {
 
   return (
     <main className="login-shell">
+      <Suspense><SearchParamsWatcher setMode={setMode} setMessage={setMessage} /></Suspense>
       <div className="login-card">
-        <Link className="brand" href="/">paradict<span>.</span></Link>
-        <p className="eyebrow">Your multilingual dictionary</p>
-        <h1>{mode === "login" ? "Welcome back." : "Join Paradict Community."}</h1>
-        <p className="login-lede">{mode === "login" ? "Sign in to your account." : "Create an account."}</p>
+        <h1>{mode === "login" ? "Welcome back" : "Join as a member"}</h1>
         <form className="login-form" onSubmit={submit}>
           <label>Email<input type="email" value={email} onChange={event => setEmail(event.target.value)} required autoComplete="email" /></label>
           <label>Password<input type="password" value={password} onChange={event => setPassword(event.target.value)} required minLength={6} autoComplete={mode === "login" ? "current-password" : "new-password"} /></label>
@@ -60,7 +66,7 @@ export default function () {
           {message && (<p className="login-message" role="status">{message}</p>)}
           <button className="login-submit" type="submit" disabled={busy}>{busy ? "Processing..." : mode === "login" ? "Sign in" : "Create account"}</button>
         </form>
-        <button className="login-switch" type="button" onClick={() => { setMode(mode === "login" ? "signup" : "login"); setMessage(""); }} >
+        <button className="login-switch" type="button" onClick={() => { router.replace(`/login${mode === "login" ? "?mode=signup" : ""}`); }} >
           {mode === "login" ? "Need an account? Create one" : "Already have an account? Sign in"}
         </button>
         <Link className="back-link login-back" href="/">← Back to dictionary</Link>

@@ -24,9 +24,9 @@ export default function () {
   }, [activeLanguages, entries]);
 
   return (
-    <section className="results">
+    <>
       <div className="results-heading"><span className="eyebrow">Explore</span></div>
-      <ConceptList concepts={concepts} activeLanguages={activeLanguages} />
-    </section>
+      <ConceptList concepts={concepts} languages={activeLanguages} />
+    </>
   );
 }

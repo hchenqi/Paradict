@@ -7,6 +7,7 @@
 
 .concept-title {
   display: block;
+  width: fit-content;
   color: #172320;
   font-size: 18px;
   font-weight: 600;

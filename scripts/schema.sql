@@ -98,17 +98,23 @@ begin
   end if;
 
   return query
-  with candidate_concepts as (
+  with matched_entries as (
     select
-      e.concept_id as id,
-      max(similarity(e.expression, query)) as best_score
+      e.concept_id,
+      similarity(e.expression, query) as score
     from public.entries e
     where e.indexed
       and e.expression % query
       and e.language_id = any(language_list)
-    group by e.concept_id
-    order by best_score desc
+    order by score desc
     limit result_limit
+  ),
+  candidate_concepts as (
+    select
+      e.concept_id as id,
+      max(score) as best_score
+    from matched_entries e
+    group by e.concept_id
   )
   select
     e.concept_id,

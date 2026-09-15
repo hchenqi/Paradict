@@ -16,10 +16,12 @@ function json(data: unknown, init?: ResponseInit) {
 
 export async function GET(request: Request) {
   const url = new URL(request.url);
-  const query = url.searchParams.get("q") ?? "";
-  const languages = url.searchParams.get("lang")?.split(",") ?? [];
+  const q = url.searchParams.get("q");
+  const lang = url.searchParams.get("lang");
+  const query = q?.trim() ?? "";
+  const languages = lang ? lang.split(",") : [];
   const limit = Number(url.searchParams.get("limit"));
-  if (!query.trim() || !languages.length || languages.length > 20 || !Number.isInteger(limit) || limit < 1 || limit > 100) {
+  if (!query || !languages.length || languages.length > 20 || !Number.isInteger(limit) || limit < 1 || limit > 100) {
     return json({ error: "Invalid request" }, { status: 400 });
   }
 

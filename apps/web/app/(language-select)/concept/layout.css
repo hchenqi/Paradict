@@ -1,142 +1,56 @@
-.concept-results {
-  padding-top: 0;
-}
-
-.concept-editor {
-  display: grid;
-  gap: 14px;
-  margin-top: 28px;
-}
-
-.editor-entry {
-  grid-template-columns: 110px 1fr;
-}
-
-.editor-words {
-  display: grid;
+.concept nav {
+  margin-bottom: 16px;
+  display: flex;
+  justify-content: space-between;
   gap: 8px;
+  align-items: center;
 }
 
-.editor-word {
+.concept nav div {
   display: flex;
   gap: 8px;
   align-items: center;
 }
 
-.editor-word input,
-.editor-field input {
+.concept button,
+.concept input,
+.concept select {
+  padding: 7px 9px;
+  border: 1px solid #c9c7be;
+  background: transparent;
+  color: #172320;
+  text-decoration: none;
+}
+
+.concept .row.header {
+  border-top: 0;
+}
+
+.concept .row.compare {
+  grid-template-columns: minmax(110px, 0.7fr) minmax(0, 1.5fr) minmax(0, 1.5fr);
+}
+
+.concept .row .current {
+  grid-column: 2;
+}
+
+.concept .row .compare {
+  grid-column: 3;
+}
+
+.concept .edit input {
   min-width: 0;
   flex: 1;
   padding: 8px 10px;
   border: 1px solid #c9c7be;
   border-radius: 5px;
   background: #f4f1eb;
-  font: 14px "Space Grotesk", sans-serif;
 }
 
-.editor-word button,
-.editor-add {
+.concept .edit button {
   padding: 7px 9px;
   border: 1px solid #c9c7be;
   color: #6d756d;
   background: transparent;
-  font: 11px "DM Mono", monospace;
   cursor: pointer;
-}
-
-.editor-delete {
-  width: 28px;
-  height: 28px;
-  padding: 0 !important;
-  border-radius: 50%;
-}
-
-.editor-word.deleted input {
-  color: #8a8d85;
-  text-decoration: line-through;
-}
-
-.editor-field {
-  display: grid;
-  gap: 6px;
-  color: #6d756d;
-  font: 11px "DM Mono", monospace;
-  text-transform: uppercase;
-}
-
-.concept-actions {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-}
-
-.concept-actions {
-  margin-left: auto;
-}
-
-.concept-actions button,
-.concept-actions a,
-.compare-form button,
-.compare-form input,
-.concept-editor select,
-.concept-editor>button {
-  padding: 7px 9px;
-  border: 1px solid #c9c7be;
-  background: transparent;
-  color: #172320;
-  font: 11px "DM Mono", monospace;
-  text-decoration: none;
-}
-
-.compare-form input {
-  width: 110px;
-  background: #f4f1eb;
-}
-
-.language-filter {
-  padding: 8px;
-  cursor: pointer;
-}
-
-.language-filter:focus-visible {
-  outline: none;
-}
-
-.editor-entry {
-  display: grid;
-  gap: 8px;
-}
-
-.entry.compare {
-  display: grid;
-  grid-template-columns: minmax(110px, 0.7fr) minmax(0, 1.5fr) minmax(0, 1.5fr);
-  gap: 16px;
-  align-items: start;
-}
-
-.entry-language {
-  grid-column: 1;
-  padding-left: 8px;
-}
-
-.entry-current-words {
-  grid-column: 2;
-}
-
-.entry-compare-words {
-  grid-column: 3;
-}
-
-@media (max-width: 700px) {
-  .entry {
-    grid-template-columns: minmax(90px, 0.7fr) minmax(0, 1fr);
-  }
-}
-
-.concept-editor>button {
-  cursor: pointer;
-}
-
-.editor-add {
-  margin-right: 8px;
 }

@@ -1,8 +1,7 @@
 export default function () {
   return (
-    <>
-      <p>About</p>
-      <h1>A dictionary of shared meaning.</h1>
+    <article>
+      <h1>About</h1>
       <p>
         Paradict connects words across languages through the concepts they
         describe, so you can explore meaning instead of translating one word
@@ -12,6 +11,6 @@ export default function () {
         The project is built for clear, searchable language data and
         thoughtful contributions from its community.
       </p>
-    </>
+    </article>
   );
 }

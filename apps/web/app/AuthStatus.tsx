@@ -9,14 +9,14 @@ export default function () {
   const { userProfile } = useUserProfile();
 
   return !userProfile ? (
-    <span>
+    <>
       <Link href="/login">Sign in</Link>
-      <Link href="/login?mode=signup">Sign up</Link>
-    </span>
+      <Link className="signup" href="/login?mode=signup">Sign up</Link>
+    </>
   ) : (
-    <span>
+    <>
       <Link href="/account">{userProfile.username}</Link>
       <button type="button" onClick={() => supabase.auth.signOut()}>Sign out</button>
-    </span>
+    </>
   );
 }

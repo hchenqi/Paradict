@@ -62,69 +62,57 @@ function EntryRows({
   const entriesGroup = groupEntriesByLanguage(entries);
   const createsGroup = Map.groupBy(creates, entry => entry.language);
   const compareEntriesGroup = groupEntriesByLanguage(compareEntries ?? []);
-  return (
-    <>
-      {
-        languages.map(language => (
-          <div key={language}>
-            <div>{languageLabel(language)}</div>
-            <div>
-              {
-                (entriesGroup.get(language) ?? []).map(entry => {
-                  const updated = updates.find(item => item.id === entry.id);
-                  const deleted = deletes.find(item => item.id === entry.id);
-                  return (
-                    <div key={entry.id}>
-                      {
-                        !editing ? (
-                          <span>{entry.expression}</span>
-                        ) : (
-                          <>
-                            <input
-                              value={updated && !deleted && updated.expression !== undefined ? updated.expression : entry.expression}
-                              disabled={!!deleted}
-                              onChange={event => onUpdate({ id: entry.id, expression: event.target.value })}
-                              onBlur={event => { const expression = event.currentTarget.value.trim(); if (expression !== event.currentTarget.value) { onUpdate({ id: entry.id, expression }); } }}
-                            />
-                            <button type="button" onClick={() => onDelete(entry)} aria-label={`${deleted ? "Restore" : "Delete"} ${entry.expression}`}>{deleted ? "+" : "-"}</button>
-                          </>
-                        )
-                      }
-                    </div>
-                  );
-                })
-              }
-              {
-                (createsGroup.get(language) ?? []).map((entry, index) => (
-                  <div key={`new-${index}`}>
-                    <input
-                      value={entry.expression}
-                      onChange={event => onUpdate({ id: entry.id!, expression: event.target.value })}
-                      onBlur={event => { const expression = event.currentTarget.value.trim(); if (expression !== event.currentTarget.value) { onUpdate({ id: entry.id!, expression }); } }}
-                      placeholder="New expression"
-                    />
-                    <button type="button" onClick={() => onDelete({ id: entry.id! })} aria-label="Delete new entry">-</button>
-                  </div>
-                ))
-              }
-              {editing && <button type="button" onClick={() => onCreate(language)}>Add entry</button>}
+  return languages.map(language => (
+    <div className={`row ${compareEntries ? "compare" : ""}`} key={language}>
+      <div className="label">{languageLabel(language)}</div>
+      <div className="entries">
+        {
+          (entriesGroup.get(language) ?? []).map(entry => {
+            const updated = updates.find(item => item.id === entry.id);
+            const deleted = deletes.find(item => item.id === entry.id);
+            return !editing ? (
+              <span className="entry" key={entry.id}>{entry.expression}</span>
+            ) : (
+              <div className="entry edit" key={entry.id}>
+                <input
+                  value={updated && !deleted && updated.expression !== undefined ? updated.expression : entry.expression}
+                  disabled={!!deleted}
+                  onChange={event => onUpdate({ id: entry.id, expression: event.target.value })}
+                  onBlur={event => { const expression = event.currentTarget.value.trim(); if (expression !== event.currentTarget.value) { onUpdate({ id: entry.id, expression }); } }}
+                />
+                <button type="button" onClick={() => onDelete(entry)} aria-label={`${deleted ? "Restore" : "Delete"} ${entry.expression}`}>{deleted ? "+" : "-"}</button>
+              </div>
+            );
+          })
+        }
+        {
+          (createsGroup.get(language) ?? []).map((entry, index) => (
+            <div key={`new-${index}`}>
+              <input
+                value={entry.expression}
+                onChange={event => onUpdate({ id: entry.id!, expression: event.target.value })}
+                onBlur={event => { const expression = event.currentTarget.value.trim(); if (expression !== event.currentTarget.value) { onUpdate({ id: entry.id!, expression }); } }}
+                placeholder="New expression"
+              />
+              <button type="button" onClick={() => onDelete({ id: entry.id! })} aria-label="Delete new entry">-</button>
             </div>
+          ))
+        }
+        {editing && <button type="button" onClick={() => onCreate(language)}>Add entry</button>}
+      </div>
+      {
+        compareEntries && (
+          <div className="entries compare">
             {
-              compareEntries && (
-                <div>
-                  {
-                    (compareEntriesGroup.get(language) ?? []).map(entry => (
-                      <span key={entry.id}>{entry.expression}</span>
-                    ))
-                  }
-                </div>
-              )
+              (compareEntriesGroup.get(language) ?? []).map(entry => (
+                <span className="entry" key={entry.id}>{entry.expression}</span>
+              ))
             }
           </div>
-        ))
+        )
       }
-    </>
-  );
+    </div>
+  ));
 }
 
 export default function () {
@@ -136,7 +124,6 @@ export default function () {
 
   const [currentEntries, setCurrentEntries] = useState<Entry[]>([]);
   const [editing, setEditing] = useState(isCreate);
-  const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
 
   const [creates, setCreates] = useState<EntryCreate[]>([]);
@@ -155,14 +142,13 @@ export default function () {
     if (!isCreate) {
       if (Number.isInteger(currentId)) {
         let mounted = true;
-        setLoading(true);
         getConceptAction(currentId as number)
           .then(entries => { if (mounted) { setCurrentEntries(entries); } })
           .catch(() => { if (mounted) { setMessage("Could not load concept."); } })
-          .finally(() => { if (mounted) { setLoading(false); } });
         return () => { mounted = false; };
       } else {
         setCurrentEntries([]);
+        setMessage("Invalid concept id.");
       }
     }
   }, [pathname]);
@@ -202,19 +188,20 @@ export default function () {
     setMessage(error ? "Submission failed." : "Submitted for review.");
   }
 
-  if (loading) {
-    return <p>Loading...</p>
-  }
-
-  if (!isCreate && !Number.isInteger(currentId)) {
-    return <p>Invalid concept id.</p>
-  }
-
   return (
-    <article>
+    <article className="concept">
       <Suspense><CompareEntriesLoader currentId={currentId} setCompare={setCompare} /></Suspense>
       {message && <p role="status">{message}</p>}
-      <nav aria-label="Concept actions">
+      <nav>
+        <select aria-label="Languages to display" value={languageFilter} onChange={event => setLanguageFilter(event.target.value as LanguageFilter)}>
+          {
+            (["all", "selected", "active"] as LanguageFilter[]).map(option => (
+              <option key={option} value={option}>
+                {option === "all" ? "All languages" : option[0].toUpperCase() + option.slice(1)}
+              </option>
+            ))
+          }
+        </select>
         <form onSubmit={event => {
           event.preventDefault();
           const form = event.currentTarget;
@@ -224,25 +211,16 @@ export default function () {
           <input id="compare-id" name="compare" placeholder="Concept id" />
           <button type="submit">Compare</button>
         </form>
-        {!isCreate && <button type="button" onClick={() => setEditing(value => !value)}>{editing ? "View" : "Edit"}</button>}
-        {editing && <button type="button" onClick={submit}>Submit</button>}
-      </nav>
-      <div>
         <div>
-          <select aria-label="Languages to display" value={languageFilter} onChange={event => setLanguageFilter(event.target.value as LanguageFilter)}>
-            {
-              (["all", "selected", "active"] as LanguageFilter[]).map(option => (
-                <option key={option} value={option}>
-                  {option === "all" ? "All languages" : option[0].toUpperCase() + option.slice(1)}
-                </option>
-              ))
-            }
-          </select>
-          <span>{isCreate ? "New concept" : `Concept ${currentId}`}</span>
-          {compare && <span>Concept {compare.id}</span>}
+          {!isCreate && <button type="button" onClick={() => setEditing(value => !value)}>{editing ? "View" : "Edit"}</button>}
+          {editing && <button type="button" onClick={submit}>Submit</button>}
         </div>
-        <EntryRows languages={languages} entries={currentEntries} editing={editing} creates={creates} updates={updates} deletes={deletes} onUpdate={updateEntry} onCreate={addEntry} onDelete={deleteEntry} compareEntries={compare?.entries} />
+      </nav>
+      <div className={`row header ${compare ? "compare" : ""}`}>
+        <span className="current">{isCreate ? "New concept" : `Concept ${currentId}`}</span>
+        {compare && <span className="compare">Concept {compare.id}</span>}
       </div>
+      <EntryRows languages={languages} entries={currentEntries} editing={editing} creates={creates} updates={updates} deletes={deletes} onUpdate={updateEntry} onCreate={addEntry} onDelete={deleteEntry} compareEntries={compare?.entries} />
     </article>
   );
 }

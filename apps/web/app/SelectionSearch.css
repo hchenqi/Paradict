@@ -1,4 +1,4 @@
-.selection-search {
+.search {
   position: fixed;
   z-index: 20;
   width: max-content;
@@ -6,6 +6,5 @@
   border: 1px solid #b7c5b3;
   color: #172320;
   background: #e3ebdf;
-  font: 11px "DM Mono", monospace;
   cursor: pointer;
 }

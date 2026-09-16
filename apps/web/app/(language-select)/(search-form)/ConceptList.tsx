@@ -9,11 +9,11 @@ function highlight(text: string, query: string) {
 
 function LanguageRow({ language, entries, query }: { language: LanguageCode; entries: Entry[]; query: string | undefined }) {
   return (
-    <div>
-      <div>{languageLabel(language)}</div>
-      <div>
+    <div className="row">
+      <div className="label">{languageLabel(language)}</div>
+      <div className="entries">
         {
-          entries.map(entry => <span key={entry.id}>{query ? highlight(entry.expression, query) : entry.expression}</span>)
+          entries.map(entry => <span className="entry" key={entry.id}>{query ? highlight(entry.expression, query) : entry.expression}</span>)
         }
       </div>
     </div>
@@ -22,8 +22,8 @@ function LanguageRow({ language, entries, query }: { language: LanguageCode; ent
 
 function ConceptCard({ conceptId, entries, languages, query }: { conceptId: number; entries: Entry[]; languages: LanguageCode[]; query: string | undefined; }) {
   return (
-    <article>
-      <Link href={`/concept/${conceptId}`}>Concept {conceptId}</Link>
+    <article className="concept">
+      <Link className="title" href={`/concept/${conceptId}`}>Concept {conceptId}</Link>
       <div>
         {
           groupEntriesByLanguageOrdered(entries, languages).map(row => (

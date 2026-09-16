@@ -3,13 +3,13 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/client";
-import { type Submission } from "@/lib/types";
+import { UserProfile, type Submission } from "@/lib/types";
 import { useUserProfile } from "@/app/AuthProvider";
+import SubmissionArticle from "../SubmissionArticle";
 import "./page.css";
 
-function SubmissionList({ role }: { role: string }) {
+function SubmissionList({ reviewer }: { reviewer: UserProfile }) {
   const [submissions, setSubmissions] = useState<Submission[]>([]);
-  const [message, setMessage] = useState("");
 
   useEffect(() => {
     supabase.from("submissions").select("*").eq("review_status", "pending").order("created_at", { ascending: true }).then(({ data }) => {
@@ -17,47 +17,10 @@ function SubmissionList({ role }: { role: string }) {
     });
   }, []);
 
-  async function review(id: number, action: "approve" | "reject") {
-    const response = await fetch(`/api/submissions/${id}/review`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action }),
-    });
-    setMessage(response.ok ? `Submission ${action}d.` : "Review failed.");
-    if (response.ok) setSubmissions(items => items.filter(item => item.id !== id));
-  }
-
-  async function remove(id: number) {
-    if (!window.confirm("Delete this submission permanently?")) return;
-    const response = await fetch(`/api/submissions/${id}`, { method: "DELETE" });
-    if (response.ok) setSubmissions(items => items.filter(item => item.id !== id));
-  }
-
-  return (
-    <section>
-      {message && <p role="status">{message}</p>}
-      {
-        submissions.map(submission => (
-          <article key={submission.id}>
-            <div>
-              <span>Submission #{submission.id}</span>
-              <span>{submission.review_status}</span>
-            </div>
-            <pre>{JSON.stringify(submission.payload, null, 2)}</pre>
-            {
-              (role === "editor" || role === "admin") && (
-                <div>
-                  <button type="button" onClick={() => review(submission.id, "approve")}>Approve</button>
-                  <button type="button" onClick={() => review(submission.id, "reject")}>Reject</button>
-                  {role === "admin" && (<button type="button" onClick={() => remove(submission.id)}>Delete</button>)}
-                </div>
-              )
-            }
-          </article>
-        ))
-      }
-      {!submissions.length && <p>No pending submissions.</p>}
-    </section>
+  return submissions.length ? (
+    <ul>{submissions.map(submission => <li key={submission.id}><SubmissionArticle submission={submission} reviewer={reviewer} /></li>)}</ul>
+  ) : (
+    <p>No pending submissions.</p>
   );
 }
 
@@ -67,18 +30,14 @@ export default function () {
 
   useEffect(() => {
     if (!userProfile) {
-      router.replace("/login");
+      router.push("/login");
     }
   }, [userProfile, router]);
 
   return (
-    <section>
-      <div>
-        <p>The Paradict Community</p>
-        <h1>Submissions</h1>
-        <p>Help improve the dictionary.</p>
-      </div>
-      {userProfile && <SubmissionList role={userProfile.role} />}
-    </section>
+    <main>
+      <h1>Submissions</h1>
+      {userProfile && <SubmissionList reviewer={userProfile} />}
+    </main>
   );
 }

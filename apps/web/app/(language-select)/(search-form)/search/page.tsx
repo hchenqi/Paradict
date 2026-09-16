@@ -11,26 +11,18 @@ export default async function ({ searchParams }: { searchParams: Promise<{ q?: s
   if (query && languages.length && languages.length <= 20) {
     const entries = await search(query, languages, 20);
     if (entries.length === 0) {
-      return (
-        <div>
-          <h2>No result</h2>
-        </div>
-      );
+      return <div className="empty">No result</div>;
     } else {
       const concepts = groupEntriesByConcept(entries);
       return (
         <>
-          <div><span>Search results</span></div>
+          <div className="heading">Search results</div>
           <ConceptList concepts={concepts} languages={languages} query={query} />
-          <Link href={`/concept/create`}>Suggest a new concept</Link>
+          <Link className="suggest" href={`/concept/create`}>Suggest a new concept</Link>
         </>
       );
     }
   } else {
-    return (
-      <div>
-        <h2>{ languages.length? "Invalid search parameters" : "Select languages to search" }</h2>
-      </div>
-    );
+    return <div className="empty">{languages.length ? "Invalid search parameters" : "Select languages to search"}</div>
   }
 }

@@ -1,17 +1,20 @@
 .search-form {
   display: flex;
   align-items: center;
-  max-width: 680px;
-  margin: 16px auto;
-  padding: 0 14px;
-  height: 52px;
+  padding: 0 8px;
+  height: 40px;
   background: #fffdf9;
   border: 1px solid #c9c7be;
   box-shadow: 4px 4px 0 #dce5d8;
   text-align: left;
 }
 
-.search-icon {
+.search-form.disabled {
+  opacity: 0.65;
+  box-shadow: none;
+}
+
+.search-form .icon {
   color: #eb5e3f;
   font-size: 25px;
 }
@@ -25,19 +28,9 @@
   outline: 0;
   color: #172320;
   background: transparent;
-  font: 15px "Space Grotesk", sans-serif;
 }
 
-kbd {
-  padding: 4px 7px;
-  color: #8b9088;
-  border: 1px solid #dedbd2;
-  border-radius: 3px;
-  font: 11px "DM Mono", monospace;
-}
-
-.clear-button {
-  margin-right: 12px;
+.search-form .clear {
   color: #6d756d;
   border: 0;
   background: transparent;
@@ -45,89 +38,26 @@ kbd {
   cursor: pointer;
 }
 
-.search-form.search-disabled {
-  opacity: 0.65;
-  box-shadow: none;
+.result {
+  padding: 16px 0;
 }
 
-.search-form input:disabled {
-  cursor: not-allowed;
+.result .heading {
+  margin-bottom: 16px;
 }
 
-.search-hint {
-  margin: 10px 0 0;
-  color: #6d756d;
-  font: 11px "DM Mono", monospace;
-}
-
-.result-count,
-.refresh-note {
-  color: #6d756d;
-  font: 11px "DM Mono", monospace;
-}
-
-.refresh-note {
-  color: #8a8d85;
-}
-
-.results {
-  max-width: 680px;
-  margin: 0 auto;
-  padding: 8px 0 48px;
-}
-
-.results-heading {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 14px;
-}
-
-.empty-state {
+.result .empty {
   padding: 75px 20px;
   text-align: center;
   border: 1px dashed #c9c7be;
 }
 
-.empty-mark {
-  color: #eb5e3f;
-  font: 40px "DM Mono", monospace;
-}
-
-.empty-state h2 {
-  margin: 12px 0 4px;
-}
-
-.empty-state p {
-  color: #6d756d;
-}
-
-.loading-state {
-  display: grid;
-  min-height: 160px;
-  place-items: center;
-  color: #6d756d;
-  font: 12px "DM Mono", monospace;
-}
-
-.submission-cta {
+.result .suggest {
   display: inline-block;
   margin-top: 8px;
   padding: 9px 12px;
   border: 1px solid #b7c5b3;
   color: #172320;
   background: #e3ebdf;
-  font: 12px "DM Mono", monospace;
   text-decoration: none;
-}
-
-@media (max-width: 720px) {
-  .result-count {
-    display: block;
-    margin-top: 10px;
-  }
-
-  .search-form kbd {
-    display: none;
-  }
 }

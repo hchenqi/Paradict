@@ -56,7 +56,7 @@ function UserDetails({ userProfile, setUserProfile }: { userProfile: UserProfile
         {message && <p role="status">{message}</p>}
         <button type="submit" disabled={saving}>{saving ? "Saving..." : "Save details"}</button>
       </form>
-      <div>
+      <div className="delete">
         <p>Delete your account and sign out.</p>
         <button type="button" onClick={() => deleteAccount()} disabled={deleting}>{deleting ? "Deleting..." : "Delete account"}</button>
       </div>
@@ -75,12 +75,9 @@ export default function () {
   }, [router, userProfile]);
 
   return (
-    <section>
-      <div>
-        <p>Account details</p>
-        <h1>Your account</h1>
-      </div>
+    <main className="account">
+      <h1>Your account</h1>
       {userProfile && <UserDetails userProfile={userProfile} setUserProfile={setUserProfile} />}
-    </section>
+    </main>
   );
 }

@@ -24,17 +24,11 @@ export default function () {
       }
       const rect = currentSelection.getRangeAt(0).getBoundingClientRect();
       const buttonHeight = 38;
-      const top =
-        rect.bottom + 8 + buttonHeight <= window.innerHeight
-          ? rect.bottom + 8
-          : rect.top - buttonHeight - 8;
+      const top = rect.bottom + 8 + buttonHeight <= window.innerHeight ? rect.bottom + 8 : rect.top - buttonHeight - 8;
       setSelection({
         text,
         top: Math.max(8, top),
-        left: Math.min(
-          Math.max(8, rect.left),
-          Math.max(8, window.innerWidth - 190),
-        ),
+        left: Math.min(Math.max(8, rect.left), Math.max(8, window.innerWidth - 190)),
       });
     }
 
@@ -42,10 +36,13 @@ export default function () {
     return () => document.removeEventListener("selectionchange", onSelectionChange);
   }, []);
 
-  if (!selection) return null;
+  if (!selection) {
+    return null;
+  }
+
   return (
     <button
-
+      className="search"
       style={{ top: selection.top, left: selection.left }}
       type="button"
       onMouseDown={event => event.preventDefault()}

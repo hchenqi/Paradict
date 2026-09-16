@@ -8,7 +8,7 @@ export default function ({ children }: { children: React.ReactNode }) {
   return (
     <LanguageProvider>
       <LanguageSelect />
-      {children}
+      <main>{children}</main>
     </LanguageProvider>
   );
 }

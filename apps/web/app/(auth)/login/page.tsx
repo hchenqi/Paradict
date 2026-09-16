@@ -55,22 +55,20 @@ export default function () {
   }
 
   return (
-    <main>
+    <main className="login">
       <Suspense><SearchParamsWatcher setMode={setMode} setMessage={setMessage} /></Suspense>
-      <div>
-        <h1>{mode === "login" ? "Welcome back" : "Join as a member"}</h1>
-        <form onSubmit={submit}>
-          <label>Email<input type="email" value={email} onChange={event => setEmail(event.target.value)} required autoComplete="email" /></label>
-          <label>Password<input type="password" value={password} onChange={event => setPassword(event.target.value)} required minLength={6} autoComplete={mode === "login" ? "current-password" : "new-password"} /></label>
-          {mode === "signup" && (<label>Username<input value={username} onChange={event => setUsername(event.target.value)} required minLength={6} maxLength={30} pattern="[a-z0-9_]{6,30}" autoComplete="username" /></label>)}
-          {message && (<p role="status">{message}</p>)}
-          <button type="submit" disabled={busy}>{busy ? "Processing..." : mode === "login" ? "Sign in" : "Create account"}</button>
-        </form>
-        <button type="button" onClick={() => { router.replace(`/login${mode === "login" ? "?mode=signup" : ""}`); }} >
-          {mode === "login" ? "Need an account? Create one" : "Already have an account? Sign in"}
-        </button>
-        <Link href="/">← Back to dictionary</Link>
-      </div>
+      <h1>{mode === "login" ? "Welcome back" : "Join as a member"}</h1>
+      <form onSubmit={submit}>
+        <label>Email<input type="email" value={email} onChange={event => setEmail(event.target.value)} required autoComplete="email" /></label>
+        <label>Password<input type="password" value={password} onChange={event => setPassword(event.target.value)} required minLength={6} autoComplete={mode === "login" ? "current-password" : "new-password"} /></label>
+        {mode === "signup" && (<label>Username<input value={username} onChange={event => setUsername(event.target.value)} required minLength={6} maxLength={30} pattern="[a-z0-9_]{6,30}" autoComplete="username" /></label>)}
+        {message && (<p role="status">{message}</p>)}
+        <button type="submit" disabled={busy}>{busy ? "Submitting..." : mode === "login" ? "Sign in" : "Create account"}</button>
+      </form>
+      <button className="switch" type="button" onClick={() => { router.replace(`/login${mode === "login" ? "?mode=signup" : ""}`); }} >
+        {mode === "login" ? "Need an account? Create one" : "Already have an account? Sign in"}
+      </button>
+      <Link className="back" href="/">← Back to dictionary</Link>
     </main>
   );
 }

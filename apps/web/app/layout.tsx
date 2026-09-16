@@ -15,8 +15,8 @@ export const metadata: Metadata = {
 function Header() {
   return (
     <header>
-      <Link href="/">paradict<span>.</span></Link>
-      <div>
+      <Link className="brand" href="/">paradict<span>.</span></Link>
+      <div className="action">
         <Link href="/submissions">Submissions</Link>
         <AuthStatus />
       </div>
@@ -28,11 +28,11 @@ function Footer() {
   return (
     <footer>
       <span>Paradict / your multilingual dictionary</span>
-      <span>
+      <nav>
         <Link href="/about">About</Link> ·{" "}
         <Link href="/impressum">Impressum</Link> ·{" "}
         <Link href="/contact">Contact</Link>
-      </span>
+      </nav>
     </footer>
   );
 }
@@ -41,14 +41,12 @@ export default function ({ children }: { children: React.ReactNode; }) {
   return (
     <html lang="en">
       <body>
-        <main>
-          <AuthProvider>
-            <Header />
-            {children}
-          </AuthProvider>
-          <Footer />
-          <SelectionSearch />
-        </main>
+        <AuthProvider>
+          <Header />
+          {children}
+        </AuthProvider>
+        <Footer />
+        <SelectionSearch />
         <CookieConsent />
       </body>
     </html>

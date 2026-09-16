@@ -25,7 +25,7 @@ export default function () {
 
   return (
     <>
-      <div><span>Explore</span></div>
+      <div className="heading">Explore</div>
       <ConceptList concepts={concepts} languages={activeLanguages} />
     </>
   );

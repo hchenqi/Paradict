@@ -1,27 +1,14 @@
-.auth-link,
-.auth-user button {
-  color: #172320;
-  font: 12px "DM Mono", monospace;
-  text-decoration: none;
-}
-
-.auth-signup {
-  padding: 7px 9px;
-  border: 1px solid #b7c5b3;
-  background: #e3ebdf;
-}
-
-.auth-user {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  color: #6d756d;
-  font: 11px "DM Mono", monospace;
-}
-
-.auth-user button {
+.action button {
   padding: 0;
   border: 0;
   background: transparent;
   cursor: pointer;
+  color: #172320;
+  text-decoration: none;
+}
+
+.action .signup {
+  padding: 7px 9px;
+  border: 1px solid #b7c5b3;
+  background: #e3ebdf;
 }

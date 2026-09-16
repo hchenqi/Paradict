@@ -9,20 +9,17 @@
 
 .submission-item span {
   color: #eb5e3f;
-  font: 11px "DM Mono", monospace;
   text-transform: uppercase;
 }
 
 .submission-item code {
   overflow-wrap: anywhere;
   color: #6d756d;
-  font: 11px "DM Mono", monospace;
 }
 
 .submission-status {
   margin-left: auto;
   color: #eb5e3f;
-  font: 11px "DM Mono", monospace;
   text-transform: uppercase;
 }
 
@@ -35,7 +32,6 @@
 .submission-item time,
 .submission-item > a {
   color: #6d756d;
-  font: 11px "DM Mono", monospace;
 }
 
 .submission-item > a {
@@ -56,7 +52,6 @@
   border: 1px solid #c9c7be;
   color: #172320;
   background: #fffdf9;
-  font: 11px "DM Mono", monospace;
   cursor: pointer;
 }
 
@@ -72,7 +67,6 @@
   padding: 13px;
   color: #4f5b54;
   background: #f3f1ea;
-  font: 12px/1.5 "DM Mono", monospace;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }

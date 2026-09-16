@@ -1,8 +1,7 @@
 export default function () {
   return (
-    <>
-      <p>Contact</p>
-      <h1>Talk to the project.</h1>
+    <article>
+      <h1>Contact</h1>
       <p>
         For corrections, suggestions, data questions, or partnership
         enquiries, email{" "}
@@ -12,6 +11,6 @@ export default function () {
         When reporting a dictionary issue, include the concept link and the
         languages involved.
       </p>
-    </>
+    </article>
   );
 }

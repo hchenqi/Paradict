@@ -1,27 +1,8 @@
-.info-page {
-  min-height: 100vh;
-}
-
-.info-content {
-  max-width: 680px;
-  margin: 0 auto;
-  padding: 58px 0 80px;
-}
-
-.info-content h1 {
-  max-width: 620px;
+.info h1 {
   margin: 12px 0 20px;
-  font-size: 38px;
-  line-height: 1.05;
-  letter-spacing: -1.5px;
+  letter-spacing: -1px;
 }
 
-.info-content p {
-  max-width: 600px;
-  color: #6d756d;
-  font-size: 16px;
-}
-
-.info-content a {
+.info a {
   color: #172320;
 }

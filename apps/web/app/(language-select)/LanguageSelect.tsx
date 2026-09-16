@@ -7,7 +7,7 @@ import "./LanguageSelect.css";
 
 function optionLabel(code: LanguageCode) {
   const name = languageLabel(code);
-  return name === code ? name : `${name} (${code})`;
+  return name === code ? name : <>{name}<span>{code}</span></>;
 }
 
 export default function () {
@@ -76,52 +76,50 @@ export default function () {
   }
 
   return (
-    <section aria-label="Language filters">
-      <div>
-        <div>
-          <span>Search in</span>
-          {
-            selectedLanguages.map(code => (
-              <button
-                draggable
-                key={code}
-                type="button"
-                aria-pressed={activeLanguages.includes(code)}
-                onClick={() => toggleActive(code)}
-                onDragStart={event => { event.dataTransfer.setData("text/plain", code); setDragged(code); }}
-                onDragEnd={() => setDragged(null)}
-                onDragOver={event => event.preventDefault()}
-                onDrop={event => move(event.dataTransfer.getData("text/plain"), code)}
-              >
-                {languageLabel(code)}
-              </button>
-            ))
-          }
-          <button ref={toggleRef} type="button" onClick={() => setOpen(open => !open)} aria-expanded={open}>
-            {open ? "Hide languages" : "Available languages"}
-          </button>
-        </div>
+    <section className="language-select" aria-label="Language select">
+      <div className="row">
+        <span className="label">Search in</span>
         {
-          open && (
-            <div ref={popupRef}>
-              <div>
-                {
-                  availableLanguages.map(language => (
-                    <button
-                      key={language}
-                      type="button"
-                      aria-pressed={selectedLanguages.includes(language)}
-                      onClick={() => toggleSelected(language)}
-                    >
-                      {optionLabel(language)}
-                    </button>
-                  ))
-                }
-              </div>
-            </div>
-          )
+          selectedLanguages.map(code => (
+            <button
+              className={`pill draggable ${dragged === code ? "dragging" : ""} ${activeLanguages.includes(code) ? "active" : "inactive"}`}
+              draggable
+              key={code}
+              type="button"
+              aria-pressed={activeLanguages.includes(code)}
+              onClick={() => toggleActive(code)}
+              onDragStart={event => { event.dataTransfer.setData("text/plain", code); setDragged(code); }}
+              onDragEnd={() => setDragged(null)}
+              onDragOver={event => event.preventDefault()}
+              onDrop={event => move(event.dataTransfer.getData("text/plain"), code)}
+            >
+              {languageLabel(code)}
+            </button>
+          ))
         }
+        <button className="popup" ref={toggleRef} type="button" onClick={() => setOpen(open => !open)} aria-expanded={open}>
+          {open ? "Hide languages" : "Available languages"}
+        </button>
       </div>
+      {
+        open && (
+          <div className="row popup" ref={popupRef}>
+            {
+              availableLanguages.map(language => (
+                <button
+                  className={`pill static ${selectedLanguages.includes(language) ? "selected" : ""}`}
+                  key={language}
+                  type="button"
+                  aria-pressed={selectedLanguages.includes(language)}
+                  onClick={() => toggleSelected(language)}
+                >
+                  {optionLabel(language)}
+                </button>
+              ))
+            }
+          </div>
+        )
+      }
     </section>
   );
 }

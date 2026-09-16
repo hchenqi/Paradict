@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import { supabase } from "@/lib/client";
 import { useUserProfile } from "@/app/AuthProvider";
 import { Submission, UserProfile } from "@/lib/types";
+import SubmissionArticle from "../../SubmissionArticle";
 import "./page.css";
 
 function RoleEdit({ id, role: initialRole }: { id: string; role: string; }) {
@@ -24,7 +25,6 @@ function RoleEdit({ id, role: initialRole }: { id: string; role: string; }) {
 
   return (
     <>
-      <label>role</label>
       <select value={role} onChange={event => updateRole(event.target.value)} >
         <option value="member">Member</option>
         <option value="editor">Editor</option>
@@ -36,20 +36,20 @@ function RoleEdit({ id, role: initialRole }: { id: string; role: string; }) {
 }
 
 export default function () {
-  const { userProfile: myProfile } = useUserProfile();
+  const { userProfile: reviewer } = useUserProfile();
   const { username } = useParams<{ username: string }>();
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [submissions, setSubmissions] = useState<Submission[]>([]);
 
   useEffect(() => {
-    if (myProfile) {
+    if (reviewer) {
       supabase.from("users").select("id, role, username, display_name").eq("username", username.toLowerCase()).single().then(async ({ data }) => {
         if (data) {
           setUserProfile(data);
         }
       });
     }
-  }, [myProfile, username]);
+  }, [reviewer, username]);
 
   useEffect(() => {
     if (userProfile) {
@@ -61,30 +61,24 @@ export default function () {
 
   return !userProfile ? (
     <main>
-      <div>Loading profile...</div>
+      <p>Loading profile...</p>
     </main>
   ) : (
-    <section>
+    <main>
       <p>Public profile</p >
       <h1>{userProfile.display_name || userProfile.username}</h1>
       <p>@{userProfile.username}</p>
-      {myProfile?.role === "admin" && <RoleEdit id={userProfile.id} role={userProfile.role} />}
+      {reviewer?.role === "admin" && <RoleEdit id={userProfile.id} role={userProfile.role} />}
       <section>
-        <div>
-          <span>Submissions</span>
-        </div>
+        <header>Submissions</header>
         {
-          submissions.map(submission =>
-            <article key={submission.id}>
-              <div>
-                <span>Submission #{submission.id}</span>
-                <span>{submission.review_status}</span>
-              </div>
-              <pre>{JSON.stringify(submission.payload, null, 2)}</pre>
-            </article>)
+          submissions.length ? (
+             <ul>{submissions.map(submission => <li key={submission.id}><SubmissionArticle submission={submission} reviewer={reviewer} /></li>)}</ul>
+          ) : (
+            <p>No submissions yet.</p>
+          )
         }
-        {!submissions.length && <p>No submissions yet.</p>}
       </section>
-    </section >
+    </main >
   );
 }

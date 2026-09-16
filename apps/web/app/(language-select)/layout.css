@@ -1,44 +1,53 @@
-.concept-card {
+.concept {
   margin-bottom: 8px;
   padding: 14px;
   background: #fffdf9;
   border: 1px solid #d9d6cd;
 }
 
-.concept-title {
+.concept .title {
   display: block;
+  padding: 8px;
   width: fit-content;
   color: #172320;
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 600;
   text-decoration: none;
-  align-self: center;
 }
 
-.concept-title:hover {
+.concept .title:hover {
   color: #eb5e3f;
 }
 
-.entries-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 0;
-}
-
-.entry {
+.concept .row {
+  padding: 8px 0;
+  border-top: 1px solid #e1dfd8;
   display: grid;
   grid-template-columns: 110px 1fr;
   column-gap: 8px;
-  align-items: baseline;
-  padding: 8px 0;
-  border-top: 1px solid #e1dfd8;
+  align-items: center;
 }
 
-.entry:first-child {
+.concept .row:first-child {
   border-top: 0;
 }
 
-.entry-word {
+.concept .row .label {
+  grid-column: 1;
+  padding: 0 8px;
+  color: #eb5e3f;
+  text-transform: uppercase;
+  font-size: 12px;
+}
+
+.concept .row .entries {
+  grid-column: 2;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 8px;
+}
+
+.concept .entry {
   display: inline-block;
   padding: 4px 8px;
   margin-right: 0;
@@ -49,17 +58,7 @@
   font-weight: 600;
 }
 
-.entry-words {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px 8px;
-}
-
-mark {
+.concept .entry mark {
   color: #172320;
   background: #f4cb78;
-}
-
-.results>.concept-card .concept-title {
-  font-size: 16px;
 }

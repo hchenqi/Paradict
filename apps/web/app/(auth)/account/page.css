@@ -1,103 +1,73 @@
-.account-shell {
-  min-height: 100vh;
-}
-
-.account-content {
-  max-width: 620px;
-  margin: 0 auto;
-  padding: 46px 0 64px;
-}
-
-.account-heading h1 {
-  margin: 10px 0 6px;
-  font-size: 34px;
-  letter-spacing: -1.5px;
-}
-
-.account-heading p:last-child,
-.account-danger p:last-child {
-  color: #6d756d;
-  font-size: 14px;
-}
-
-.account-form {
+.account form {
   display: grid;
   gap: 14px;
   margin-top: 28px;
 }
 
-.account-form label {
+.account form label {
   display: grid;
   gap: 6px;
   color: #6d756d;
-  font: 11px "DM Mono", monospace;
   text-transform: uppercase;
 }
 
-.account-form input {
+.account form input {
   padding: 10px;
   border: 1px solid #c9c7be;
   color: #172320;
   background: #f4f1eb;
-  font: 15px "Space Grotesk", sans-serif;
 }
 
-.account-submit {
-  padding: 11px;
-  border: 0;
-  color: #fffdf9;
-  background: #172320;
-  font: 13px "DM Mono", monospace;
-  cursor: pointer;
-}
-
-.account-submit:disabled {
-  opacity: 0.6;
-  cursor: wait;
-}
-
-.account-message {
+.account form p {
   margin: 0;
   color: #b34f38;
   font-size: 13px;
 }
 
-.account-danger {
+.account form button {
+  padding: 11px;
+  border: 0;
+  color: #fffdf9;
+  background: #172320;
+  cursor: pointer;
+}
+
+.account form button:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.account .delete {
+  margin-top: 16px;
+  border-top: 1px solid #d9d6cd;
+  padding-top: 16px;
   display: flex;
   justify-content: space-between;
-  gap: 20px;
+  gap: 16px;
   align-items: center;
-  margin-top: 42px;
-  padding-top: 18px;
-  border-top: 1px solid #d9d6cd;
 }
 
-.account-danger .eyebrow {
-  margin-bottom: 4px;
+.account .delete p {
+  margin: 0;
 }
 
-.account-danger p {
-  margin-bottom: 0;
-}
-
-.account-danger > button {
+.account .delete button {
   flex: 0 0 auto;
   padding: 10px 12px;
   border: 1px solid #b34f38;
   color: #b34f38;
   background: transparent;
-  font: 12px "DM Mono", monospace;
   cursor: pointer;
 }
 
-.account-danger > button:disabled {
+.account .delete button:disabled {
   opacity: 0.6;
   cursor: wait;
 }
 
-@media (max-width: 720px) {
-  .account-danger {
-    align-items: flex-start;
+@media (max-width: 480px) {
+  .account .delete {
     flex-direction: column;
+    align-items: flex-start;
   }
 }

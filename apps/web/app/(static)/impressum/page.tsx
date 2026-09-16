@@ -1,8 +1,7 @@
 export default function () {
   return (
-    <>
-      <p>Impressum</p>
-      <h1>Legal notice</h1>
+    <article>
+      <h1>Impressum</h1>
       <p>Paradict is an independent dictionary project.</p>
       <p>
         Operator: Paradict Project
@@ -14,6 +13,6 @@ export default function () {
         Replace these placeholder details with the responsible person or
         organisation before publishing the site.
       </p>
-    </>
+    </article>
   );
 }

@@ -51,11 +51,10 @@ export default function ({ children }: { children: React.ReactNode }) {
   return (
     <>
       <Suspense><SearchRouter setInput={setInput} value={value} activeLanguages={activeLanguages} /></Suspense>
-      <form onSubmit={event => event.preventDefault()}>
-        <span aria-hidden="true">⌕</span>
+      <form className={`search-form ${!activeLanguages.length ? "disabled" : ""}`} onSubmit={event => event.preventDefault()}>
+        <span className="icon" aria-hidden="true">⌕</span>
         <input
           aria-label="Search"
-          disabled={!activeLanguages.length}
           value={input}
           onFocus={event => requestAnimationFrame(() => event.target.scrollIntoView({ behavior: "smooth", block: "start" }))}
           onChange={event => setInput(event.target.value)}
@@ -63,9 +62,9 @@ export default function ({ children }: { children: React.ReactNode }) {
           onCompositionEnd={event => { composing.current = false; setValue(event.currentTarget.value); }}
           placeholder={activeLanguages.length ? "Search" : "Select a language first"}
         />
-        {input && (<button type="button" onClick={() => setInput("")} aria-label="Clear search">×</button>)}
+        {input && (<button className="clear" type="button" onClick={() => setInput("")} aria-label="Clear search">×</button>)}
       </form>
-      <section aria-live="polite">
+      <section className="result" aria-live="polite">
         {children}
       </section>
     </>

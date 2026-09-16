@@ -14,7 +14,6 @@
 }
 
 .cookie-notice strong {
-  font: 12px "DM Mono", monospace;
   text-transform: uppercase;
 }
 
@@ -30,7 +29,6 @@
   border: 0;
   color: #fffdf9;
   background: #172320;
-  font: 11px "DM Mono", monospace;
   cursor: pointer;
 }
 

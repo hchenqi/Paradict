@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import { useUserProfile } from "@/app/AuthProvider";
 import { supabase } from "@/lib/client";
 import { UserProfile } from "@/lib/types";
@@ -66,14 +65,6 @@ function UserDetails({ userProfile, setUserProfile }: { userProfile: UserProfile
 
 export default function () {
   const { userProfile, setUserProfile } = useUserProfile();
-  const router = useRouter();
-
-  useEffect(() => {
-    if (!userProfile) {
-      router.replace("/login");
-    }
-  }, [router, userProfile]);
-
   return (
     <main className="account">
       <h1>Your account</h1>

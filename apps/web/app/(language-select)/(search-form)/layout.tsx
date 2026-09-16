@@ -57,6 +57,7 @@ export default function ({ children }: { children: React.ReactNode }) {
           aria-label="Search"
           value={input}
           onFocus={event => requestAnimationFrame(() => event.target.scrollIntoView({ behavior: "smooth", block: "start" }))}
+          onBlur={() => composing.current = false}
           onChange={event => setInput(event.target.value)}
           onCompositionStart={() => composing.current = true}
           onCompositionEnd={event => { composing.current = false; setValue(event.currentTarget.value); }}

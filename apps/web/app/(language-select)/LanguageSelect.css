@@ -60,7 +60,7 @@
   margin-left: auto;
   border: 0;
   border-radius: 0;
-  padding: 0;
+  padding: 8px 0;
   background: 0;
   color: #6d756d;
   cursor: pointer;
@@ -87,10 +87,10 @@
 }
 
 .language-select .pill span {
-  margin-left: 5px;
+  margin: 3px;
   border-radius: 3px;
   padding: 1px;
-  background: #f7f8dd;
+  background: #e4e6c3;
   color: #6d756d;
   cursor: pointer;
 }

@@ -7,7 +7,7 @@ import { UserProfile, type Submission } from "@/lib/types";
 export default function ({ submission, reviewer }: { submission: Submission; reviewer: UserProfile }) {
   const id = submission.id;
   const role = reviewer.role;
-  const [status, setStatus] = useState<"pending" | "submitting" | "approved" | "rejected" | "removed">("pending");
+  const [status, setStatus] = useState<"pending" | "submitting" | "approved" | "rejected" | "removed">(submission.review_status);
   const [message, setMessage] = useState("");
 
   async function review(action: "approved" | "rejected") {
@@ -47,11 +47,9 @@ export default function ({ submission, reviewer }: { submission: Submission; rev
       {
         (role === "editor" || role === "admin") && (
           <footer>
-            <fieldset disabled={status !== "pending"}>
-              <button type="button" onClick={() => review("approved")}>Approve</button>
-              <button type="button" onClick={() => review("rejected")}>Reject</button>
-              {role === "admin" && <button type="button" onClick={() => remove()}>Delete</button>}
-            </fieldset>
+            <button type="button" disabled={status !== "pending"} onClick={() => review("approved")}>Approve</button>
+            <button type="button" disabled={status !== "pending"} onClick={() => review("rejected")}>Reject</button>
+            {role === "admin" && <button type="button" disabled={status === "submitting" || status === "removed"} onClick={() => remove()}>Delete</button>}
             {message && <p role="status">{message}</p>}
           </footer>
         )

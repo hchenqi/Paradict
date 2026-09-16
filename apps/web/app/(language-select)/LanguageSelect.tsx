@@ -7,7 +7,7 @@ import "./LanguageSelect.css";
 
 function optionLabel(code: LanguageCode) {
   const name = languageLabel(code);
-  return name === code ? name : <>{name}<span>{code}</span></>;
+  return name === code ? <span>{name}</span> : <>{name}<span>{code}</span></>;
 }
 
 export default function () {

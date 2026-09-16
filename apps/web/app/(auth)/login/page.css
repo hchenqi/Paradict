@@ -1,11 +1,10 @@
 .login {
-  display: grid;
-  width: min(100%, 400px);
-  padding: 30px;
-  place-items: center;
-  background: #fffdf9;
+  min-width: min(400px, 100%);
   border: 1px solid #d9d6cd;
   box-shadow: 6px 6px 0 #dce5d8;
+  background: #fffdf9;
+  padding: 30px;
+  display: grid;
 }
 
 .login h1 {
@@ -24,7 +23,6 @@
   display: grid;
   gap: 6px;
   color: #6d756d;
-  text-transform: uppercase;
 }
 
 .login form input {

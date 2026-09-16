@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/client";
 import { UserProfile, type Submission } from "@/lib/types";
 import { useUserProfile } from "@/app/AuthProvider";
@@ -26,14 +25,6 @@ function SubmissionList({ reviewer }: { reviewer: UserProfile }) {
 
 export default function () {
   const { userProfile } = useUserProfile();
-  const router = useRouter();
-
-  useEffect(() => {
-    if (!userProfile) {
-      router.push("/login");
-    }
-  }, [userProfile, router]);
-
   return (
     <main>
       <h1>Submissions</h1>

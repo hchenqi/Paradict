@@ -38,16 +38,16 @@ function RoleEdit({ id, role: initialRole }: { id: string; role: string; }) {
 export default function () {
   const { userProfile: reviewer } = useUserProfile();
   const { username } = useParams<{ username: string }>();
-  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [userProfile, setUserProfile] = useState<UserProfile | null | undefined>(undefined);
   const [submissions, setSubmissions] = useState<Submission[]>([]);
 
   useEffect(() => {
     if (reviewer) {
       supabase.from("users").select("id, role, username, display_name").eq("username", username.toLowerCase()).single().then(async ({ data }) => {
-        if (data) {
-          setUserProfile(data);
-        }
+        setUserProfile(data as UserProfile | null);
       });
+    } else {
+      setUserProfile(undefined);
     }
   }, [reviewer, username]);
 
@@ -59,21 +59,25 @@ export default function () {
     }
   }, [userProfile]);
 
-  return !userProfile ? (
+  return (!reviewer || userProfile === undefined) ? (
     <main>
       <p>Loading profile...</p>
+    </main>
+  ) : !userProfile ? (
+    <main>
+      <p>User not found.</p>
     </main>
   ) : (
     <main>
       <p>Public profile</p >
       <h1>{userProfile.display_name || userProfile.username}</h1>
       <p>@{userProfile.username}</p>
-      {reviewer?.role === "admin" && <RoleEdit id={userProfile.id} role={userProfile.role} />}
+      {reviewer.role === "admin" && <RoleEdit id={userProfile.id} role={userProfile.role} />}
       <section>
         <header>Submissions</header>
         {
           submissions.length ? (
-             <ul>{submissions.map(submission => <li key={submission.id}><SubmissionArticle submission={submission} reviewer={reviewer} /></li>)}</ul>
+            <ul>{submissions.map(submission => <li key={submission.id}><SubmissionArticle submission={submission} reviewer={reviewer} /></li>)}</ul>
           ) : (
             <p>No submissions yet.</p>
           )

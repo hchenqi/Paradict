@@ -29,8 +29,8 @@ function Footer() {
     <footer>
       <span>Paradict / your multilingual dictionary</span>
       <nav>
-        <Link href="/about">About</Link> ·{" "}
-        <Link href="/impressum">Impressum</Link> ·{" "}
+        <Link href="/about">About</Link>
+        <Link href="/impressum">Impressum</Link>
         <Link href="/contact">Contact</Link>
       </nav>
     </footer>

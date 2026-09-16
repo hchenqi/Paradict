@@ -28,7 +28,7 @@ export default function () {
 
   useEffect(() => {
     if (userProfile) {
-      router.replace("/account");
+      router.replace("/");
     }
   }, [router, userProfile]);
 

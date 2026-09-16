@@ -36,8 +36,7 @@
   grid-column: 1;
   padding: 0 8px;
   color: #eb5e3f;
-  text-transform: uppercase;
-  font-size: 12px;
+  font-size: 14px;
 }
 
 .concept .row .entries {
@@ -49,11 +48,11 @@
 
 .concept .entry {
   display: inline-block;
-  padding: 4px 8px;
   margin-right: 0;
   border: 1px solid #e1dfd8;
-  color: #172320;
+  padding: 4px 8px;
   background: #f4f1eb;
+  color: #172320;
   font-size: 15px;
   font-weight: 600;
 }

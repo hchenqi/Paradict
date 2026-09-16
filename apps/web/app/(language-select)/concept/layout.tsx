@@ -5,6 +5,7 @@ import { usePathname, useSearchParams, useRouter } from "next/navigation";
 import { getConceptAction } from "@/app/actions";
 import { supabase } from "@/lib/client";
 import { EntryCreate, EntryDelete, EntryUpdate, groupEntriesByLanguage, languageLabel, type Entry, type LanguageCode } from "@/lib/types";
+import { useUserProfile } from "@/app/AuthProvider";
 import { useActiveLanguages, useAvailableLanguages, useSelectedLanguages } from "../LanguageProvider";
 import "./layout.css";
 
@@ -16,7 +17,12 @@ function useLanguageFilter(): [LanguageCode[], LanguageFilter, (languageFilter: 
   const [activeLanguages] = useActiveLanguages();
   const [languageFilter, setLanguageFilter] = useState<LanguageFilter>("active");
   const languages = languageFilter === "all" ? availableLanguages : languageFilter === "selected" ? selectedLanguages : activeLanguages;
-  return [languages, languageFilter, setLanguageFilter];
+
+  useEffect(() => {
+    setLanguageFilter(localStorage.getItem("language-filter") as LanguageFilter | null ?? languageFilter);
+  }, []);
+
+  return [languages, languageFilter, (languageFilter: LanguageFilter) => { localStorage.setItem("language-filter", languageFilter); setLanguageFilter(languageFilter); }];
 }
 
 function CompareEntriesLoader({ currentId, setCompare }: { currentId: number | undefined; setCompare: (compare: { id: number, entries: Entry[] } | undefined) => void; }) {
@@ -87,7 +93,7 @@ function EntryRows({
         }
         {
           (createsGroup.get(language) ?? []).map((entry, index) => (
-            <div key={`new-${index}`}>
+            <div className="entry edit" key={`new-${index}`}>
               <input
                 value={entry.expression}
                 onChange={event => onUpdate({ id: entry.id!, expression: event.target.value })}
@@ -116,6 +122,7 @@ function EntryRows({
 }
 
 export default function () {
+  const { userProfile } = useUserProfile();
   const [languages, languageFilter, setLanguageFilter] = useLanguageFilter();
 
   const pathname = usePathname();
@@ -181,11 +188,15 @@ export default function () {
   }
 
   async function submit() {
-    const payload = isCreate
-      ? { type: "create-concept" as const, entries: creates.filter(entry => entry.expression.trim()).map(entry => ({ ...entry, expression: entry.expression.trim() })) }
-      : { type: "update-concept" as const, id: currentId!, create: creates.filter(entry => entry.expression.trim()).map(entry => ({ ...entry, expression: entry.expression.trim() })), update: updates, delete: deletes };
-    const { error } = await supabase.from("submissions").insert({ payload });
-    setMessage(error ? "Submission failed." : "Submitted for review.");
+    if (userProfile) {
+      const payload = isCreate
+        ? { type: "create-concept" as const, entries: creates.filter(entry => entry.expression.trim()).map(entry => ({ ...entry, id: undefined, expression: entry.expression.trim() })) }
+        : { type: "update-concept" as const, id: currentId!, create: creates.filter(entry => entry.expression.trim()).map(entry => ({ ...entry, id: undefined, expression: entry.expression.trim() })), update: updates, delete: deletes };
+      const { error } = await supabase.from("submissions").insert({ created_by: userProfile.id, payload });
+      setMessage(error ? "Submission failed." : "Submitted for review.");
+    } else {
+      setMessage("Only members could submit.");
+    }
   }
 
   return (
@@ -197,7 +208,7 @@ export default function () {
           {
             (["all", "selected", "active"] as LanguageFilter[]).map(option => (
               <option key={option} value={option}>
-                {option === "all" ? "All languages" : option[0].toUpperCase() + option.slice(1)}
+                {option === "all" ? "All languages" : option === "active" ? "Active languages" : "Selected languages"}
               </option>
             ))
           }
@@ -208,7 +219,7 @@ export default function () {
           const compareId = new FormData(form).get("compare") as string;
           router.replace(compareId ? `${pathname}?compare=${encodeURIComponent(compareId)}` : pathname);
         }}>
-          <input id="compare-id" name="compare" placeholder="Concept id" />
+          <input name="compare" placeholder="Concept id" />
           <button type="submit">Compare</button>
         </form>
         <div>
@@ -220,7 +231,9 @@ export default function () {
         <span className="current">{isCreate ? "New concept" : `Concept ${currentId}`}</span>
         {compare && <span className="compare">Concept {compare.id}</span>}
       </div>
-      <EntryRows languages={languages} entries={currentEntries} editing={editing} creates={creates} updates={updates} deletes={deletes} onUpdate={updateEntry} onCreate={addEntry} onDelete={deleteEntry} compareEntries={compare?.entries} />
+      <div>
+        <EntryRows languages={languages} entries={currentEntries} editing={editing} creates={creates} updates={updates} deletes={deletes} onUpdate={updateEntry} onCreate={addEntry} onDelete={deleteEntry} compareEntries={compare?.entries} />
+      </div>
     </article>
   );
 }

@@ -28,7 +28,7 @@ export function groupEntriesByLanguageOrdered(entries: Entry[], languageList: La
 export type UserProfile = {
   id: string;
   email?: string;
-  role: string;
+  role: "member" | "editor" | "admin";
   username: string;
   display_name: string | null;
 };
@@ -71,7 +71,7 @@ export type Submission = {
   created_by?: string;
   created_at: string;
   payload: SubmissionPayload;
-  review_status: string;
+  review_status: "pending" | "approved" | "rejected";
   reviewed_by?: string;
   review_note?: string;
   reviewed_at?: string;

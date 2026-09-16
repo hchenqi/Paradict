@@ -51,8 +51,8 @@ export default function ({ children }: { children: React.ReactNode }) {
   return (
     <>
       <Suspense><SearchRouter setInput={setInput} value={value} activeLanguages={activeLanguages} /></Suspense>
-      <form className={`search-form ${!activeLanguages.length ? "search-disabled" : ""}`} onSubmit={event => event.preventDefault()}>
-        <span className="search-icon" aria-hidden="true">⌕</span>
+      <form onSubmit={event => event.preventDefault()}>
+        <span aria-hidden="true">⌕</span>
         <input
           aria-label="Search"
           disabled={!activeLanguages.length}
@@ -63,9 +63,9 @@ export default function ({ children }: { children: React.ReactNode }) {
           onCompositionEnd={event => { composing.current = false; setValue(event.currentTarget.value); }}
           placeholder={activeLanguages.length ? "Search" : "Select a language first"}
         />
-        {input && (<button className="clear-button" type="button" onClick={() => setInput("")} aria-label="Clear search">×</button>)}
+        {input && (<button type="button" onClick={() => setInput("")} aria-label="Clear search">×</button>)}
       </form>
-      <section className="results" aria-live="polite">
+      <section aria-live="polite">
         {children}
       </section>
     </>

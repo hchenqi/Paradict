@@ -1,7 +1,7 @@
 export default function () {
   return (
     <>
-      <p className="eyebrow">Contact</p>
+      <p>Contact</p>
       <h1>Talk to the project.</h1>
       <p>
         For corrections, suggestions, data questions, or partnership

@@ -66,18 +66,18 @@ function EntryRows({
     <>
       {
         languages.map(language => (
-          <div className={compareEntries ? "entry compare" : "entry"} key={language}>
-            <div className="entry-language">{languageLabel(language)}</div>
-            <div className="entry-words entry-current-words">
+          <div key={language}>
+            <div>{languageLabel(language)}</div>
+            <div>
               {
                 (entriesGroup.get(language) ?? []).map(entry => {
                   const updated = updates.find(item => item.id === entry.id);
                   const deleted = deletes.find(item => item.id === entry.id);
                   return (
-                    <div className={`editor-word ${deleted ? "deleted" : ""}`} key={entry.id}>
+                    <div key={entry.id}>
                       {
                         !editing ? (
-                          <span className="entry-word">{entry.expression}</span>
+                          <span>{entry.expression}</span>
                         ) : (
                           <>
                             <input
@@ -86,7 +86,7 @@ function EntryRows({
                               onChange={event => onUpdate({ id: entry.id, expression: event.target.value })}
                               onBlur={event => { const expression = event.currentTarget.value.trim(); if (expression !== event.currentTarget.value) { onUpdate({ id: entry.id, expression }); } }}
                             />
-                            <button className="editor-delete" type="button" onClick={() => onDelete(entry)} aria-label={`${deleted ? "Restore" : "Delete"} ${entry.expression}`}>{deleted ? "+" : "-"}</button>
+                            <button type="button" onClick={() => onDelete(entry)} aria-label={`${deleted ? "Restore" : "Delete"} ${entry.expression}`}>{deleted ? "+" : "-"}</button>
                           </>
                         )
                       }
@@ -96,25 +96,25 @@ function EntryRows({
               }
               {
                 (createsGroup.get(language) ?? []).map((entry, index) => (
-                  <div className="editor-word" key={`new-${index}`}>
+                  <div key={`new-${index}`}>
                     <input
                       value={entry.expression}
                       onChange={event => onUpdate({ id: entry.id!, expression: event.target.value })}
                       onBlur={event => { const expression = event.currentTarget.value.trim(); if (expression !== event.currentTarget.value) { onUpdate({ id: entry.id!, expression }); } }}
                       placeholder="New expression"
                     />
-                    <button className="editor-delete" type="button" onClick={() => onDelete({ id: entry.id! })} aria-label="Delete new entry">-</button>
+                    <button type="button" onClick={() => onDelete({ id: entry.id! })} aria-label="Delete new entry">-</button>
                   </div>
                 ))
               }
-              {editing && <button className="editor-add" type="button" onClick={() => onCreate(language)}>Add entry</button>}
+              {editing && <button type="button" onClick={() => onCreate(language)}>Add entry</button>}
             </div>
             {
               compareEntries && (
-                <div className="entry-words entry-compare-words">
+                <div>
                   {
                     (compareEntriesGroup.get(language) ?? []).map(entry => (
-                      <span key={entry.id} className="entry-word">{entry.expression}</span>
+                      <span key={entry.id}>{entry.expression}</span>
                     ))
                   }
                 </div>
@@ -203,19 +203,19 @@ export default function () {
   }
 
   if (loading) {
-    return <p className="concept-empty">Loading...</p>
+    return <p>Loading...</p>
   }
 
   if (!isCreate && !Number.isInteger(currentId)) {
-    return <p className="concept-empty">Invalid concept id.</p>
+    return <p>Invalid concept id.</p>
   }
 
   return (
-    <article className="concept-card">
+    <article>
       <Suspense><CompareEntriesLoader currentId={currentId} setCompare={setCompare} /></Suspense>
       {message && <p role="status">{message}</p>}
-      <nav className="concept-actions" aria-label="Concept actions">
-        <form className="compare-form" onSubmit={event => {
+      <nav aria-label="Concept actions">
+        <form onSubmit={event => {
           event.preventDefault();
           const form = event.currentTarget;
           const compareId = new FormData(form).get("compare") as string;
@@ -227,9 +227,9 @@ export default function () {
         {!isCreate && <button type="button" onClick={() => setEditing(value => !value)}>{editing ? "View" : "Edit"}</button>}
         {editing && <button type="button" onClick={submit}>Submit</button>}
       </nav>
-      <div className="entries-grid">
-        <div className={compare ? "entry compare" : "entry"}>
-          <select className="language-filter" aria-label="Languages to display" value={languageFilter} onChange={event => setLanguageFilter(event.target.value as LanguageFilter)}>
+      <div>
+        <div>
+          <select aria-label="Languages to display" value={languageFilter} onChange={event => setLanguageFilter(event.target.value as LanguageFilter)}>
             {
               (["all", "selected", "active"] as LanguageFilter[]).map(option => (
                 <option key={option} value={option}>
@@ -238,8 +238,8 @@ export default function () {
               ))
             }
           </select>
-          <span className="concept-title">{isCreate ? "New concept" : `Concept ${currentId}`}</span>
-          {compare && <span className="concept-title concept-compare-title">Concept {compare.id}</span>}
+          <span>{isCreate ? "New concept" : `Concept ${currentId}`}</span>
+          {compare && <span>Concept {compare.id}</span>}
         </div>
         <EntryRows languages={languages} entries={currentEntries} editing={editing} creates={creates} updates={updates} deletes={deletes} onUpdate={updateEntry} onCreate={addEntry} onDelete={deleteEntry} compareEntries={compare?.entries} />
       </div>

@@ -25,7 +25,7 @@ export default function () {
 
   return (
     <>
-      <div className="results-heading"><span className="eyebrow">Explore</span></div>
+      <div><span>Explore</span></div>
       <ConceptList concepts={concepts} languages={activeLanguages} />
     </>
   );

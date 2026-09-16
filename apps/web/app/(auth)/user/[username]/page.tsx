@@ -30,7 +30,7 @@ function RoleEdit({ id, role: initialRole }: { id: string; role: string; }) {
         <option value="editor">Editor</option>
         <option value="admin">Admin</option>
       </select>
-      {message && <p className="auth-message">{message}</p>}
+      {message && <p>{message}</p>}
     </>
   );
 }
@@ -60,27 +60,27 @@ export default function () {
   }, [userProfile]);
 
   return !userProfile ? (
-    <main className="account-content">
-      <div className="loading-state">Loading profile...</div>
+    <main>
+      <div>Loading profile...</div>
     </main>
   ) : (
-    <section className="account-content">
-      <p className="eyebrow">Public profile</p >
+    <section>
+      <p>Public profile</p >
       <h1>{userProfile.display_name || userProfile.username}</h1>
-      <p className="profile-username">@{userProfile.username}</p>
+      <p>@{userProfile.username}</p>
       {myProfile?.role === "admin" && <RoleEdit id={userProfile.id} role={userProfile.role} />}
-      <section className="public-submissions profile-submissions">
-        <div className="results-heading">
-          <span className="eyebrow">Submissions</span>
+      <section>
+        <div>
+          <span>Submissions</span>
         </div>
         {
           submissions.map(submission =>
-            <article className="concept-card submission-item" key={submission.id}>
-              <div className="concept-heading">
-                <span className="concept-title">Submission #{submission.id}</span>
-                <span className="submission-status">{submission.review_status}</span>
+            <article key={submission.id}>
+              <div>
+                <span>Submission #{submission.id}</span>
+                <span>{submission.review_status}</span>
               </div>
-              <pre className="submission-raw">{JSON.stringify(submission.payload, null, 2)}</pre>
+              <pre>{JSON.stringify(submission.payload, null, 2)}</pre>
             </article>)
         }
         {!submissions.length && <p>No submissions yet.</p>}

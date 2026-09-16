@@ -34,19 +34,19 @@ function SubmissionList({ role }: { role: string }) {
   }
 
   return (
-    <section className="public-submissions">
-      {message && <p className="auth-message" role="status">{message}</p>}
+    <section>
+      {message && <p role="status">{message}</p>}
       {
         submissions.map(submission => (
-          <article className="concept-card submission-item" key={submission.id}>
-            <div className="concept-heading">
-              <span className="concept-title">Submission #{submission.id}</span>
-              <span className="submission-status">{submission.review_status}</span>
+          <article key={submission.id}>
+            <div>
+              <span>Submission #{submission.id}</span>
+              <span>{submission.review_status}</span>
             </div>
-            <pre className="submission-raw">{JSON.stringify(submission.payload, null, 2)}</pre>
+            <pre>{JSON.stringify(submission.payload, null, 2)}</pre>
             {
               (role === "editor" || role === "admin") && (
-                <div className="submission-actions">
+                <div>
                   <button type="button" onClick={() => review(submission.id, "approve")}>Approve</button>
                   <button type="button" onClick={() => review(submission.id, "reject")}>Reject</button>
                   {role === "admin" && (<button type="button" onClick={() => remove(submission.id)}>Delete</button>)}
@@ -72,9 +72,9 @@ export default function () {
   }, [userProfile, router]);
 
   return (
-    <section className="account-content">
-      <div className="account-heading">
-        <p className="eyebrow">The Paradict Community</p>
+    <section>
+      <div>
+        <p>The Paradict Community</p>
         <h1>Submissions</h1>
         <p>Help improve the dictionary.</p>
       </div>

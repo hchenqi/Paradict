@@ -1,7 +1,7 @@
 export default function () {
   return (
     <>
-      <p className="eyebrow">Impressum</p>
+      <p>Impressum</p>
       <h1>Legal notice</h1>
       <p>Paradict is an independent dictionary project.</p>
       <p>

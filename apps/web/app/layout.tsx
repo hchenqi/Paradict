@@ -14,10 +14,10 @@ export const metadata: Metadata = {
 
 function Header() {
   return (
-    <header className="topbar">
-      <Link className="brand" href="/">paradict<span>.</span></Link>
-      <div className="topbar-actions">
-        <Link className="back-link" href="/submissions">Submissions</Link>
+    <header>
+      <Link href="/">paradict<span>.</span></Link>
+      <div>
+        <Link href="/submissions">Submissions</Link>
         <AuthStatus />
       </div>
     </header>
@@ -41,7 +41,7 @@ export default function ({ children }: { children: React.ReactNode; }) {
   return (
     <html lang="en">
       <body>
-        <main className="shell">
+        <main>
           <AuthProvider>
             <Header />
             {children}

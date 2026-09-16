@@ -1,7 +1,7 @@
 export default function () {
   return (
     <>
-      <p className="eyebrow">About</p>
+      <p>About</p>
       <h1>A dictionary of shared meaning.</h1>
       <p>
         Paradict connects words across languages through the concepts they

@@ -45,7 +45,7 @@ export default function () {
   if (!selection) return null;
   return (
     <button
-      className="selection-search"
+
       style={{ top: selection.top, left: selection.left }}
       type="button"
       onMouseDown={event => event.preventDefault()}

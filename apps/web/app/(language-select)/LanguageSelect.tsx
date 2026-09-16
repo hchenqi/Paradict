@@ -76,14 +76,13 @@ export default function () {
   }
 
   return (
-    <section className="language-bar" aria-label="Language filters">
-      <div className="language-selector-rows">
-        <div className="language-row selected-language-row">
-          <span className="filter-label">Search in</span>
+    <section aria-label="Language filters">
+      <div>
+        <div>
+          <span>Search in</span>
           {
             selectedLanguages.map(code => (
               <button
-                className={`language-pill ${activeLanguages.includes(code) ? "selected" : "language-inactive"} ${dragged === code ? "dragging" : ""}`}
                 draggable
                 key={code}
                 type="button"
@@ -98,18 +97,17 @@ export default function () {
               </button>
             ))
           }
-          <button ref={toggleRef} className="available-toggle" type="button" onClick={() => setOpen(open => !open)} aria-expanded={open}>
+          <button ref={toggleRef} type="button" onClick={() => setOpen(open => !open)} aria-expanded={open}>
             {open ? "Hide languages" : "Available languages"}
           </button>
         </div>
         {
           open && (
-            <div ref={popupRef} className="language-popup">
-              <div className="language-row">
+            <div ref={popupRef}>
+              <div>
                 {
                   availableLanguages.map(language => (
                     <button
-                      className={`language-add ${selectedLanguages.includes(language) ? "added" : ""}`}
                       key={language}
                       type="button"
                       aria-pressed={selectedLanguages.includes(language)}

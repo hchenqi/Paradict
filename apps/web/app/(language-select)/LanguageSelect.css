@@ -62,8 +62,9 @@
   border-radius: 0;
   padding: 8px 0;
   background: 0;
-  color: #6d756d;
   cursor: pointer;
+  color: #6d756d;
+  font-size: 14px;
 }
 
 .language-select div.popup {

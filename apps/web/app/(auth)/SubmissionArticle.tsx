@@ -49,7 +49,7 @@ export default function ({ submission, reviewer }: { submission: Submission; rev
           <footer>
             <button type="button" disabled={status !== "pending"} onClick={() => review("approved")}>Approve</button>
             <button type="button" disabled={status !== "pending"} onClick={() => review("rejected")}>Reject</button>
-            {role === "admin" && <button type="button" disabled={status === "submitting" || status === "removed"} onClick={() => remove()}>Delete</button>}
+            {role === "admin" && <button type="button" disabled={status === "submitting" || status === "removed"} onClick={() => remove()}>Remove</button>}
             {message && <p role="status">{message}</p>}
           </footer>
         )

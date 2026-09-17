@@ -2,11 +2,11 @@
 
 import { Suspense, useEffect, useState } from "react";
 import { usePathname, useSearchParams, useRouter } from "next/navigation";
-import { getConceptAction } from "@/app/actions";
 import { supabase } from "@/lib/client";
-import { EntryCreate, EntryDelete, EntryUpdate, groupEntriesByLanguage, languageLabel, type Entry, type LanguageCode } from "@/lib/types";
+import { EntryCreate, EntryRemove, EntryUpdate, groupEntriesByLanguage, languageLabel, SubmissionPayload, type Entry, type LanguageCode } from "@/lib/types";
 import { useUserProfile } from "@/app/AuthProvider";
 import { useActiveLanguages, useAvailableLanguages, useSelectedLanguages } from "@/app/LanguageProvider";
+import { getConceptAction } from "@/app/actions";
 import "./layout.css";
 
 type LanguageFilter = "all" | "selected" | "active";
@@ -42,27 +42,29 @@ function CompareEntriesLoader({ currentId, setCompare }: { currentId: number | u
   return null;
 }
 
+type EntryCreateTemp = EntryCreate & { id: number; };
+
 function EntryRows({
   languages,
   entries,
   editing,
   creates,
   updates,
-  deletes,
+  removes,
   onCreate,
   onUpdate,
-  onDelete,
+  onRemove,
   compareEntries,
 }: {
   languages: LanguageCode[];
   entries: Entry[];
   editing: boolean;
-  creates: EntryCreate[];
+  creates: EntryCreateTemp[];
   updates: EntryUpdate[];
-  deletes: EntryDelete[];
+  removes: EntryRemove[];
   onCreate: (language: LanguageCode) => void;
-  onUpdate: (entry: EntryUpdate) => void;
-  onDelete: (entry: EntryDelete) => void;
+  onUpdate: (expression: string, entry: EntryUpdate) => void;
+  onRemove: (removed: boolean, entry: EntryRemove) => void;
   compareEntries?: Entry[];
 }) {
   const entriesGroup = groupEntriesByLanguage(entries);
@@ -73,36 +75,26 @@ function EntryRows({
       <div className="label">{languageLabel(language)}</div>
       <div className="entries">
         {
-          (entriesGroup.get(language) ?? []).map(entry => {
+          [...(entriesGroup.get(language) ?? []), ...(createsGroup.get(language) ?? [])].map(entry => {
             const updated = updates.find(item => item.id === entry.id);
-            const deleted = deletes.find(item => item.id === entry.id);
-            return !editing ? (
-              <span className="entry" key={entry.id}>{entry.expression}</span>
-            ) : (
-              <div className="entry edit" key={entry.id}>
-                <input
-                  value={updated && !deleted && updated.expression !== undefined ? updated.expression : entry.expression}
-                  disabled={!!deleted}
-                  onChange={event => onUpdate({ id: entry.id, expression: event.target.value })}
-                  onBlur={event => { const expression = event.currentTarget.value.trim(); if (expression !== event.currentTarget.value) { onUpdate({ id: entry.id, expression }); } }}
-                />
-                <button type="button" onClick={() => onDelete(entry)} aria-label={`${deleted ? "Restore" : "Delete"} ${entry.expression}`}>{deleted ? "+" : "-"}</button>
+            const removed = removes.find(item => item.id === entry.id);
+            return (
+              <div key={entry.id} className={`entry ${editing ? "edit" : ""} ${entry.id < 0 ? "created" : ""} ${updated ? "updated" : ""} ${removed ? "removed" : ""}`}>
+                <span
+                  contentEditable={editing && !removed}
+                  suppressContentEditableWarning
+                  style={{ cursor: removed ? "default" : "text" }}
+                  onKeyDown={event => { if (event.key === "Enter" || event.key === "NumpadEnter") { event.preventDefault(); } }}
+                  onPaste={event => { event.preventDefault(); const text = (event.clipboardData.getData("text/plain") ?? "").replace(/\r?\n|\r/g, " "); document.execCommand("insertText", false, text); }}
+                  onInput={event => onUpdate(entry.expression, { id: entry.id, expression: event.currentTarget.textContent })}
+                  onBlur={event => { const expression = event.currentTarget.textContent.replace(/\s+/g, " ").trim(); if (expression !== event.currentTarget.textContent) { event.currentTarget.textContent = expression; onUpdate(entry.expression, { id: entry.id, expression }); } }}
+                >
+                  {entry.expression}
+                </span>
+                {editing && <button type="button" onClick={() => onRemove(!!removed, { id: entry.id })} aria-label={`${removed ? "Restore" : "Remove"}`}>{removed ? "+" : "-"}</button>}
               </div>
             );
           })
-        }
-        {
-          (createsGroup.get(language) ?? []).map((entry, index) => (
-            <div className="entry edit" key={`new-${index}`}>
-              <input
-                value={entry.expression}
-                onChange={event => onUpdate({ id: entry.id!, expression: event.target.value })}
-                onBlur={event => { const expression = event.currentTarget.value.trim(); if (expression !== event.currentTarget.value) { onUpdate({ id: entry.id!, expression }); } }}
-                placeholder="New expression"
-              />
-              <button type="button" onClick={() => onDelete({ id: entry.id! })} aria-label="Delete new entry">-</button>
-            </div>
-          ))
         }
         {editing && <button type="button" onClick={() => onCreate(language)}>Add entry</button>}
       </div>
@@ -133,9 +125,9 @@ export default function () {
   const [editing, setEditing] = useState(isCreate);
   const [message, setMessage] = useState("");
 
-  const [creates, setCreates] = useState<EntryCreate[]>([]);
+  const [creates, setCreates] = useState<EntryCreateTemp[]>([]);
   const [updates, setUpdates] = useState<EntryUpdate[]>([]);
-  const [deletes, setDeletes] = useState<EntryDelete[]>([]);
+  const [removes, setRemoves] = useState<EntryRemove[]>([]);
 
   const [compare, setCompare] = useState<{ id: number, entries: Entry[] } | undefined>(undefined);
   const router = useRouter();
@@ -144,7 +136,7 @@ export default function () {
     setEditing(isCreate);
     setCreates([]);
     setUpdates([]);
-    setDeletes([]);
+    setRemoves([]);
     setMessage("");
     if (!isCreate) {
       if (Number.isInteger(currentId)) {
@@ -160,40 +152,53 @@ export default function () {
     }
   }, [pathname]);
 
-  function updateEntry(update: EntryUpdate) {
-    if (update.id < 0) {
-      setCreates(items => items.map(item => item.id === update.id ? { ...item, expression: update.expression ?? item.expression } : item));
-      return;
+  useEffect(() => {
+    if (userProfile === null && editing) {
+      router.push("/login");
     }
-    setUpdates(items => {
-      const existing = items.findIndex(item => item.id === update.id);
-      if (existing < 0) return [...items, update];
-      return items.map((item, index) => index === existing ? { ...item, ...update } : item);
-    });
+  }, [userProfile, editing, router]);
+
+  function onCreate(language: LanguageCode) {
+    const id = creates.reduce((min, entry) => Math.min(min, entry.id), 0) - 1;
+    setCreates(entries => [...entries, { id, language, expression: "", indexed: true }]);
   }
 
-  function addEntry(language: LanguageCode) {
-    const id = -Math.floor(Math.random() * 2_000_000_000) - 1;
-    setCreates(items => [...items, { id, language, expression: "", indexed: true }]);
-  }
-
-  function deleteEntry(entry: EntryDelete) {
-    if (entry.id < 0) {
-      setCreates(items => items.filter(item => item.id !== entry.id));
-    } else if (deletes.some(item => item.id === entry.id)) {
-      setDeletes(items => items.filter(item => item.id !== entry.id));
+  function onUpdate(expression: string, entryUpdate: EntryUpdate) {
+    if (entryUpdate.expression !== expression) {
+      setUpdates(entries => {
+        const existing = entries.findIndex(entry => entry.id === entryUpdate.id);
+        return existing < 0 ? [...entries, entryUpdate] : entries.map((entry, index) => index === existing ? { ...entry, ...entryUpdate } : entry);
+      });
     } else {
-      setDeletes(items => [...items, entry]);
+      setUpdates(entries => entries.filter(entry => entry.id !== entryUpdate.id));
+    }
+  }
+
+  function onRemove(removed: boolean, entryRemove: EntryRemove) {
+    if (!removed) {
+      setRemoves(entries => [...entries, entryRemove]);
+    } else {
+      setRemoves(entries => entries.filter(entry => entry.id !== entryRemove.id));
     }
   }
 
   async function submit() {
     if (userProfile) {
-      const payload = isCreate
-        ? { type: "create-concept" as const, entries: creates.filter(entry => entry.expression.trim()).map(entry => ({ ...entry, id: undefined, expression: entry.expression.trim() })) }
-        : { type: "update-concept" as const, id: currentId!, create: creates.filter(entry => entry.expression.trim()).map(entry => ({ ...entry, id: undefined, expression: entry.expression.trim() })), update: updates, delete: deletes };
-      const { error } = await supabase.from("submissions").insert({ created_by: userProfile.id, payload });
-      setMessage(error ? "Submission failed." : "Submitted for review.");
+      const updatesMap = new Map(updates.map(entry => [entry.id, entry]));
+      const removesMap = new Map(removes.map(entry => [entry.id, entry]));
+      const create = creates.filter(entry => removesMap.has(entry.id) ? (updatesMap.delete(entry.id), removesMap.delete(entry.id), false) : true).map(entry => { const update = updatesMap.get(entry.id); return update ? (updatesMap.delete(entry.id), { ...entry, ...update }) : entry; }).filter(entry => entry.expression);
+      const update = [...updatesMap.values()];
+      const remove = [...removesMap.values()];
+      setCreates(create);
+      setUpdates(update);
+      setRemoves(remove);
+      if ((isCreate && create.length) || (!isCreate && (create.length || update.length || remove.length))) {
+        const payload: SubmissionPayload = { concept_id: currentId, concept_merge_id: undefined, create: create.map(entry => ({ ...entry, id: undefined })), update, remove };
+        const { error } = await supabase.from("submissions").insert({ created_by: userProfile.id, payload });
+        setMessage(error ? "Submission failed." : "Submitted for review.");
+      } else {
+        setMessage("No changes to submit.")
+      }
     } else {
       setMessage("Only members could submit.");
     }
@@ -232,7 +237,7 @@ export default function () {
         {compare && <span className="compare">Concept {compare.id}</span>}
       </div>
       <div>
-        <EntryRows languages={languages} entries={currentEntries} editing={editing} creates={creates} updates={updates} deletes={deletes} onUpdate={updateEntry} onCreate={addEntry} onDelete={deleteEntry} compareEntries={compare?.entries} />
+        <EntryRows languages={languages} entries={currentEntries} editing={editing} creates={creates} updates={updates} removes={removes} onCreate={onCreate} onUpdate={onUpdate} onRemove={onRemove} compareEntries={compare?.entries} />
       </div>
     </article>
   );

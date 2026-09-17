@@ -13,7 +13,7 @@ export default async function ({ searchParams }: { searchParams: Promise<{ q?: s
     const concepts = groupEntriesByConcept(entries);
     return (
       <>
-        <div className="heading">Search result: {concepts.size}</div>
+        <div className="heading">Search results: {concepts.size}</div>
         <ConceptList concepts={concepts} languages={languages} query={query} />
         <Link className="suggest" href={`/concept/create`}>Suggest a new concept</Link>
       </>

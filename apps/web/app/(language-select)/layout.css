@@ -1,6 +1,6 @@
 .concept {
   margin-bottom: 8px;
-  padding: 14px;
+  padding: 8px 16px;
   background: #fffdf9;
   border: 1px solid #d9d6cd;
 }
@@ -41,6 +41,7 @@
 
 .concept .row .entries {
   grid-column: 2;
+  min-width: 0;
   display: flex;
   flex-wrap: wrap;
   gap: 6px 8px;

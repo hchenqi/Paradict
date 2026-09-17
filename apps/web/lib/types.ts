@@ -34,7 +34,6 @@ export type UserProfile = {
 };
 
 export type EntryCreate = {
-  id?: number;
   language: LanguageCode;
   expression: string;
   indexed: boolean;
@@ -46,25 +45,17 @@ export type EntryUpdate = {
   indexed?: boolean;
 };
 
-export type EntryDelete = {
+export type EntryRemove = {
   id: number;
 };
 
-export type CreateConceptPayload = {
-  type: "create-concept";
-  entries: EntryCreate[];
-};
-
-export type UpdateConceptPayload = {
-  type: "update-concept";
-  id: number;
-  merge?: number;
-  create: EntryCreate[];
-  update: EntryUpdate[];
-  delete: EntryDelete[];
-};
-
-export type SubmissionPayload = CreateConceptPayload | UpdateConceptPayload;
+export type SubmissionPayload = {
+  concept_id?: number;
+  concept_merge_id?: number;
+  create?: EntryCreate[];
+  update?: EntryUpdate[];
+  remove?: EntryRemove[];
+}
 
 export type Submission = {
   id: number;

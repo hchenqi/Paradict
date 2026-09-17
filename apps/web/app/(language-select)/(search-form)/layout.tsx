@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, Suspense } from "react";
 import { usePathname, useSearchParams, useRouter } from "next/navigation";
-import { useActiveLanguages } from "../LanguageProvider";
+import { useActiveLanguages } from "@/app/LanguageProvider";
 import "./layout.css";
 
 function SearchRouter({ setInput, value, activeLanguages }: { setInput: (value: string) => void, value: string, activeLanguages: string[] }) {

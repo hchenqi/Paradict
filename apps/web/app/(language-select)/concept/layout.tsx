@@ -6,13 +6,13 @@ import { getConceptAction } from "@/app/actions";
 import { supabase } from "@/lib/client";
 import { EntryCreate, EntryDelete, EntryUpdate, groupEntriesByLanguage, languageLabel, type Entry, type LanguageCode } from "@/lib/types";
 import { useUserProfile } from "@/app/AuthProvider";
-import { useActiveLanguages, useAvailableLanguages, useSelectedLanguages } from "../LanguageProvider";
+import { useActiveLanguages, useAvailableLanguages, useSelectedLanguages } from "@/app/LanguageProvider";
 import "./layout.css";
 
 type LanguageFilter = "all" | "selected" | "active";
 
 function useLanguageFilter(): [LanguageCode[], LanguageFilter, (languageFilter: LanguageFilter) => void] {
-  const [availableLanguages] = useAvailableLanguages();
+  const availableLanguages = useAvailableLanguages();
   const [selectedLanguages] = useSelectedLanguages();
   const [activeLanguages] = useActiveLanguages();
   const [languageFilter, setLanguageFilter] = useState<LanguageFilter>("active");

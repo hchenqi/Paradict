@@ -2,6 +2,8 @@ import React from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { AuthProvider } from "./AuthProvider";
+import { LanguageProvider } from "./LanguageProvider";
+import { ExploreProvider } from "./ExploreProvider";
 import AuthStatus from "./AuthStatus";
 import SelectionSearch from "./SelectionSearch";
 import CookieConsent from "./CookieConsent";
@@ -43,7 +45,11 @@ export default function ({ children }: { children: React.ReactNode; }) {
       <body>
         <AuthProvider>
           <Header />
-          {children}
+          <LanguageProvider>
+            <ExploreProvider>
+              {children}
+            </ExploreProvider>
+          </LanguageProvider>
         </AuthProvider>
         <Footer />
         <SelectionSearch />

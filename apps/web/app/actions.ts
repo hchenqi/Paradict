@@ -1,6 +1,10 @@
 "use server";
 
-import { explore, getConcept } from "@/lib/server";
+import { explore, getConcept, getLanguageList } from "@/lib/server";
+
+export async function languagesAction() {
+  return getLanguageList();
+}
 
 export async function exploreAction() {
   return explore();

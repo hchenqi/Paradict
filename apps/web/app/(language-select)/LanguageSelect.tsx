@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { languageLabel, type LanguageCode } from "@/lib/types";
-import { useAvailableLanguages, useSelectedLanguages, useActiveLanguages } from "./LanguageProvider";
+import { useAvailableLanguages, useSelectedLanguages, useActiveLanguages } from "@/app/LanguageProvider";
 import "./LanguageSelect.css";
 
 function optionLabel(code: LanguageCode) {
@@ -11,36 +11,13 @@ function optionLabel(code: LanguageCode) {
 }
 
 export default function () {
-  const [availableLanguages, setAvailableLanguages] = useAvailableLanguages();
+  const availableLanguages = useAvailableLanguages();
   const [selectedLanguages, setSelectedLanguages] = useSelectedLanguages();
   const [activeLanguages, setActiveLanguages] = useActiveLanguages();
   const [dragged, setDragged] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
   const popupRef = useRef<HTMLDivElement>(null);
   const toggleRef = useRef<HTMLButtonElement>(null);
-
-  function updateSelectedLanguages(selectedLanguages: LanguageCode[]) {
-    setSelectedLanguages(selectedLanguages);
-    localStorage.setItem("selected-languages", JSON.stringify(selectedLanguages));
-  }
-
-  function updateActiveLanguages(activeLanguages: LanguageCode[]) {
-    setActiveLanguages(activeLanguages);
-    localStorage.setItem("active-languages", JSON.stringify(activeLanguages));
-  }
-
-  useEffect(() => {
-    (async function () {
-      const response = await fetch("/api/languages");
-      const languages = await response.json() as LanguageCode[];
-      setAvailableLanguages(languages.sort((a, b) => languageLabel(a).localeCompare(languageLabel(b))));
-      const availableLanguagesSet = new Set(languages);
-      const selectedLanguages = (JSON.parse(localStorage.getItem("selected-languages") ?? "[]") as string[]).filter(language => availableLanguagesSet.has(language));
-      const activeLanguages = (JSON.parse(localStorage.getItem("active-languages") ?? "[]") as string[]).filter(language => selectedLanguages.includes(language));
-      updateSelectedLanguages(selectedLanguages);
-      updateActiveLanguages(activeLanguages);
-    })();
-  }, []);
 
   useEffect(() => {
     if (open) {
@@ -56,12 +33,12 @@ export default function () {
 
   function toggleSelected(code: LanguageCode) {
     const nextSelected = selectedLanguages.includes(code) ? selectedLanguages.filter(item => item !== code) : [...selectedLanguages, code];
-    updateSelectedLanguages(nextSelected);
-    updateActiveLanguages(selectedLanguages.includes(code) ? activeLanguages.filter(item => item !== code) : [...activeLanguages, code]);
+    setSelectedLanguages(nextSelected);
+    setActiveLanguages(selectedLanguages.includes(code) ? activeLanguages.filter(item => item !== code) : [...activeLanguages, code]);
   }
 
   function toggleActive(code: LanguageCode) {
-    updateActiveLanguages(activeLanguages.includes(code) ? activeLanguages.filter(item => item !== code) : selectedLanguages.filter(curr => curr === code || activeLanguages.includes(curr)));
+    setActiveLanguages(activeLanguages.includes(code) ? activeLanguages.filter(item => item !== code) : selectedLanguages.filter(curr => curr === code || activeLanguages.includes(curr)));
   }
 
   function move(code: string, target: string) {
@@ -71,8 +48,8 @@ export default function () {
     if (sourceIndex < 0 || targetIndex < 0 || sourceIndex === targetIndex) { return; }
     nextSelected.splice(sourceIndex, 1);
     nextSelected.splice(targetIndex, 0, code);
-    updateSelectedLanguages(nextSelected);
-    updateActiveLanguages(nextSelected.filter(code => activeLanguages.includes(code)));
+    setSelectedLanguages(nextSelected);
+    setActiveLanguages(nextSelected.filter(code => activeLanguages.includes(code)));
   }
 
   return (

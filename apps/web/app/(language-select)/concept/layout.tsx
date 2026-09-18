@@ -121,7 +121,7 @@ export default function () {
   const isCreate = pathname.endsWith("/create");
   const currentId = isCreate ? undefined : Number(pathname.split("/").pop());
 
-  const [currentEntries, setCurrentEntries] = useState<Entry[]>([]);
+  const [entries, setEntries] = useState<Entry[]>([]);
   const [editing, setEditing] = useState(isCreate);
   const [message, setMessage] = useState("");
 
@@ -133,30 +133,50 @@ export default function () {
   const router = useRouter();
 
   useEffect(() => {
+    setEntries([]);
     setEditing(isCreate);
     setCreates([]);
     setUpdates([]);
     setRemoves([]);
-    setMessage("");
     if (!isCreate) {
       if (Number.isInteger(currentId)) {
         let mounted = true;
         getConceptAction(currentId as number)
-          .then(entries => { if (mounted) { setCurrentEntries(entries); } })
-          .catch(() => { if (mounted) { setMessage("Could not load concept."); } })
+          .then(entries => {
+            if (mounted) {
+              if (entries.length) {
+                setEntries(entries);
+              } else {
+                setMessage("Concept does not exist.");
+                router.push("/concept/create");
+              }
+            }
+          })
+          .catch(() => {
+            if (mounted) {
+              setMessage("Could not load concept.");
+            }
+          });
         return () => { mounted = false; };
       } else {
-        setCurrentEntries([]);
         setMessage("Invalid concept id.");
+        router.push("/concept/create");
       }
     }
   }, [pathname]);
 
   useEffect(() => {
     if (userProfile === null && editing) {
-      router.push("/login");
+      router.push(`/login?redirect=${pathname}`);
     }
   }, [userProfile, editing, router]);
+
+  useEffect(() => {
+    if (message) {
+      const timeout = setTimeout(() => setMessage(""), 5000);
+      return () => clearTimeout(timeout);
+    }
+  }, [message]);
 
   function onCreate(language: LanguageCode) {
     const id = creates.reduce((min, entry) => Math.min(min, entry.id), 0) - 1;
@@ -184,20 +204,20 @@ export default function () {
 
   async function submit() {
     if (userProfile) {
-      const updatesMap = new Map(updates.map(entry => [entry.id, entry]));
       const removesMap = new Map(removes.map(entry => [entry.id, entry]));
-      const create = creates.filter(entry => removesMap.has(entry.id) ? (updatesMap.delete(entry.id), removesMap.delete(entry.id), false) : true).map(entry => { const update = updatesMap.get(entry.id); return update ? (updatesMap.delete(entry.id), { ...entry, ...update }) : entry; }).filter(entry => entry.expression);
+      const updatesMap = new Map(updates.filter(entry => !removesMap.has(entry.id)).map(entry => [entry.id, entry]));
+      const create = creates.filter(entry => removesMap.has(entry.id) ? (removesMap.delete(entry.id), false) : true).map(entry => { const update = updatesMap.get(entry.id); return update ? (updatesMap.delete(entry.id), { ...entry, ...update }) : entry; }).filter(entry => entry.expression);
       const update = [...updatesMap.values()];
       const remove = [...removesMap.values()];
       setCreates(create);
       setUpdates(update);
       setRemoves(remove);
       if ((isCreate && create.length) || (!isCreate && (create.length || update.length || remove.length))) {
-        const payload: SubmissionPayload = { concept_id: currentId, concept_merge_id: undefined, create: create.map(entry => ({ ...entry, id: undefined })), update, remove };
+        const payload: SubmissionPayload = { concept_id: Number.isInteger(currentId) ? currentId : undefined, concept_merge_id: undefined, create: create.map(entry => ({ ...entry, id: undefined })), update, remove };
         const { error } = await supabase.from("submissions").insert({ created_by: userProfile.id, payload });
         setMessage(error ? "Submission failed." : "Submitted for review.");
       } else {
-        setMessage("No changes to submit.")
+        setMessage("No changes to submit.");
       }
     } else {
       setMessage("Only members could submit.");
@@ -237,7 +257,7 @@ export default function () {
         {compare && <span className="compare">Concept {compare.id}</span>}
       </div>
       <div>
-        <EntryRows languages={languages} entries={currentEntries} editing={editing} creates={creates} updates={updates} removes={removes} onCreate={onCreate} onUpdate={onUpdate} onRemove={onRemove} compareEntries={compare?.entries} />
+        <EntryRows languages={languages} entries={entries} editing={editing} creates={creates} updates={updates} removes={removes} onCreate={onCreate} onUpdate={onUpdate} onRemove={onRemove} compareEntries={compare?.entries} />
       </div>
     </article>
   );

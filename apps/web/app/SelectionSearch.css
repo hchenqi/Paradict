@@ -2,7 +2,8 @@
   position: fixed;
   z-index: 3;
   width: max-content;
-  padding: 8px 10px;
+  height: 32px;
+  padding: 0 8px;
   border: 1px solid #b7c5b3;
   color: #172320;
   background: #e3ebdf;

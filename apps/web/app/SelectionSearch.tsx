@@ -22,13 +22,14 @@ export default function () {
         setSelection(null);
         return;
       }
+      const buttonWidth = 190;
+      const buttonHeight = 32;
       const rect = currentSelection.getRangeAt(0).getBoundingClientRect();
-      const buttonHeight = 38;
       const top = rect.bottom + 8 + buttonHeight <= window.innerHeight ? rect.bottom + 8 : rect.top - buttonHeight - 8;
       setSelection({
         text,
         top: Math.max(8, top),
-        left: Math.min(Math.max(8, rect.left), Math.max(8, window.innerWidth - 190)),
+        left: Math.min(Math.max(8, rect.left), Math.max(8, window.innerWidth - buttonWidth)),
       });
     }
 

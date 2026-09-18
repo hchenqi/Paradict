@@ -23,9 +23,10 @@
 
 .language-select .pill {
   margin: 0;
-  padding: 8px 11px;
+  height: 34px;
+  padding: 0 12px;
   border: 1px solid transparent;
-  border-radius: 20px;
+  border-radius: 17px;
   background: transparent;
   color: #6d756d;
   cursor: pointer;
@@ -60,11 +61,23 @@
   margin-left: auto;
   border: 0;
   border-radius: 0;
-  padding: 8px 0;
+  padding: 8px 4px;
   background: 0;
   cursor: pointer;
   color: #6d756d;
-  font-size: 14px;
+  font-size: 15px;
+}
+
+.language-select button.popup.hint {
+  border: 2px orange solid;
+  border-radius: 5px;
+  animation: blink 2s infinite;
+}
+
+@keyframes blink {
+  50% {
+    border-color: olivedrab;
+  }
 }
 
 .language-select div.popup {

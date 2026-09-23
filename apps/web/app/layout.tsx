@@ -43,17 +43,17 @@ export default function ({ children }: { children: React.ReactNode; }) {
   return (
     <html lang="en">
       <body>
-        <AuthProvider>
-          <Header />
-          <LanguageProvider>
+        <LanguageProvider>
+          <AuthProvider>
+            <Header />
             <ExploreProvider>
               {children}
             </ExploreProvider>
-          </LanguageProvider>
-        </AuthProvider>
-        <Footer />
-        <SelectionSearch />
-        <CookieConsent />
+          </AuthProvider>
+          <Footer />
+          <CookieConsent />
+          <SelectionSearch />
+        </LanguageProvider>
       </body>
     </html>
   );

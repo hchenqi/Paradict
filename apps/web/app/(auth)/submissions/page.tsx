@@ -16,11 +16,11 @@ function SubmissionList({ reviewer }: { reviewer: UserProfile }) {
     });
   }, []);
 
-  return submissions.length ? (
-    <ul>{submissions.map(submission => <li key={submission.id}><SubmissionArticle submission={submission} reviewer={reviewer} /></li>)}</ul>
-  ) : (
-    <p>No pending submissions.</p>
-  );
+  if (!submissions.length) {
+    return <p>No pending submissions.</p>;
+  }
+
+  return <>{submissions.map(submission => <SubmissionArticle key={submission.id} submission={submission} reviewer={reviewer} />)}</>;
 }
 
 export default function () {

@@ -62,3 +62,20 @@
   color: #172320;
   background: #f4cb78;
 }
+
+.concept .entry.updated {
+  background: #edf4ff;
+  color: #234d8d;
+}
+
+.concept .entry.created {
+  background: #edf9ee;
+  color: #25633d;
+}
+
+.concept .entry.removed {
+  background: #ffe9e8;
+  color: #7c857e;
+  text-decoration: line-through;
+  opacity: 0.75;
+}

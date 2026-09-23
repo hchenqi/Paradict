@@ -25,7 +25,7 @@ function useLanguageFilter(): [LanguageCode[], LanguageFilter, (languageFilter: 
   return [languages, languageFilter, (languageFilter: LanguageFilter) => { localStorage.setItem("language-filter", languageFilter); setLanguageFilter(languageFilter); }];
 }
 
-function CompareEntriesLoader({ currentId, setCompare }: { currentId: number | undefined; setCompare: (compare: { id: number, entries: Entry[] } | undefined) => void; }) {
+function CompareEntriesLoader({ currentId, setCompare, setMessage }: { currentId: number | undefined; setCompare: (compare: { id: number, entries: Entry[] } | undefined) => void; setMessage: (message: string) => void }) {
   const searchParams = useSearchParams();
   const compareId = Number(searchParams.get("compare") || NaN);
   const validCompareId = Number.isInteger(compareId) ? compareId : undefined;
@@ -33,7 +33,14 @@ function CompareEntriesLoader({ currentId, setCompare }: { currentId: number | u
 
   useEffect(() => {
     if (hasCompare) {
-      getConceptAction(validCompareId).then(entries => setCompare({ id: validCompareId, entries }));
+      getConceptAction(validCompareId).then(entries => {
+        if (entries.length) {
+          setCompare({ id: validCompareId, entries });
+        } else {
+          setCompare(undefined);
+          setMessage("Concept to compare does not exist.");
+        }
+      });
     } else {
       setCompare(undefined);
     }
@@ -203,30 +210,31 @@ export default function () {
   }
 
   async function submit() {
-    if (userProfile) {
-      const removesMap = new Map(removes.map(entry => [entry.id, entry]));
-      const updatesMap = new Map(updates.filter(entry => !removesMap.has(entry.id)).map(entry => [entry.id, entry]));
-      const create = creates.filter(entry => removesMap.has(entry.id) ? (removesMap.delete(entry.id), false) : true).map(entry => { const update = updatesMap.get(entry.id); return update ? (updatesMap.delete(entry.id), { ...entry, ...update }) : entry; }).filter(entry => entry.expression);
-      const update = [...updatesMap.values()];
-      const remove = [...removesMap.values()];
-      setCreates(create);
-      setUpdates(update);
-      setRemoves(remove);
-      if ((isCreate && create.length) || (!isCreate && (create.length || update.length || remove.length))) {
-        const payload: SubmissionPayload = { concept_id: Number.isInteger(currentId) ? currentId : undefined, concept_merge_id: undefined, create: create.map(entry => ({ ...entry, id: undefined })), update, remove };
-        const { error } = await supabase.from("submissions").insert({ created_by: userProfile.id, payload });
-        setMessage(error ? "Submission failed." : "Submitted for review.");
-      } else {
-        setMessage("No changes to submit.");
-      }
-    } else {
+    if (!userProfile) {
       setMessage("Only members could submit.");
+      return;
+    }
+    const removesMap = new Map(removes.map(entry => [entry.id, entry]));
+    const updatesMap = new Map(updates.filter(entry => !removesMap.has(entry.id)).map(entry => [entry.id, entry]));
+    const create = creates.filter(entry => removesMap.has(entry.id) ? (removesMap.delete(entry.id), false) : true).map(entry => { const update = updatesMap.get(entry.id); return update ? (updatesMap.delete(entry.id), { ...entry, ...update }) : entry; }).filter(entry => entry.expression);
+    const update = [...updatesMap.values()];
+    const remove = [...removesMap.values()];
+    setCreates(create);
+    setUpdates(update);
+    setRemoves(remove);
+    if ((isCreate && create.length) || (!isCreate && (create.length || update.length || remove.length))) {
+      const payload: SubmissionPayload = { concept_id: Number.isInteger(currentId) ? currentId : undefined, concept_merge_id: undefined, create: create.map(entry => ({ ...entry, id: undefined })), update, remove };
+      const { error } = await supabase.from("submissions").insert({ created_by: userProfile.id, payload });
+      setMessage(error ? "Submission failed." : "Submitted for review.");
+      !error && setEditing(false);
+    } else {
+      setMessage("No changes to submit.");
     }
   }
 
   return (
     <article className="concept">
-      <Suspense><CompareEntriesLoader currentId={currentId} setCompare={setCompare} /></Suspense>
+      <Suspense><CompareEntriesLoader currentId={currentId} setCompare={setCompare} setMessage={setMessage} /></Suspense>
       {message && <p role="status">{message}</p>}
       <nav>
         <select aria-label="Languages to display" value={languageFilter} onChange={event => setLanguageFilter(event.target.value as LanguageFilter)}>

@@ -1,7 +1,7 @@
 .search-form {
   display: flex;
-  padding: 0 12px;
   height: 40px;
+  padding: 0 12px;
   background: #fffdf9;
   border: 1px solid #c9c7be;
   box-shadow: 4px 4px 0 #dce5d8;

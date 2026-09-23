@@ -1,7 +1,7 @@
 "use client";
 
 import LanguageSelect from "./LanguageSelect";
-import "./layout.css";
+import "../Concept.css";
 
 export default function ({ children }: { children: React.ReactNode }) {
   return (

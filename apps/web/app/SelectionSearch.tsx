@@ -2,11 +2,13 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useActiveLanguages } from "./LanguageProvider";
 import "./SelectionSearch.css";
 
 type SelectionState = { text: string; top: number; left: number } | null;
 
 export default function () {
+  const [activeLanguages] = useActiveLanguages();
   const [selection, setSelection] = useState<SelectionState>(null);
   const router = useRouter();
 
@@ -47,7 +49,7 @@ export default function () {
       style={{ top: selection.top, left: selection.left }}
       type="button"
       onMouseDown={event => event.preventDefault()}
-      onClick={() => { router.push(`/search?q=${encodeURIComponent(selection.text)}`); setSelection(null); }}
+      onClick={() => { router.push(`/search?q=${encodeURIComponent(selection.text)}&lang=${activeLanguages.join(",")}`); setSelection(null); }}
     >
       Search selected text
     </button>

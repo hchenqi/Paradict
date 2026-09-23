@@ -39,25 +39,10 @@
   grid-column: 3;
 }
 
-.concept .entry.updated {
-  background: #edf4ff;
-  color: #234d8d;
-}
-
-.concept .entry.removed {
-  color: #7c857e;
-  text-decoration: line-through;
-  opacity: 0.75;
-}
-
-.concept .entry.created {
-  background: #edf9ee;
-  color: #25633d;
-}
-
 .concept .entry.edit {
   min-width: 0;
   display: flex;
+  align-items: center;
   gap: 4px;
   padding: 4px;
 }
@@ -70,7 +55,8 @@
 }
 
 .concept .entry.edit button {
-  padding: 2px 6px;
+  height: 20px;
+  padding: 0 6px;
   color: #6d756d;
   background: transparent;
   cursor: pointer;

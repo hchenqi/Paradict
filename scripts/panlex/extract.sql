@@ -41,7 +41,7 @@ CREATE OR REPLACE VIEW raw AS
 -- ---------------------------------------------------------------------------
 
 COPY (
-    SELECT DISTINCT langvar AS id, langvar_uid AS iso_code
+    SELECT DISTINCT langvar AS id, langvar_uid AS code
     FROM raw
 ) TO 'data/languages.tsv' (HEADER, DELIMITER '\t');
 
@@ -52,9 +52,9 @@ COPY (
 
 COPY (
     SELECT DISTINCT
-        meaning AS concept_id,
-        langvar AS language_id,
-        txt     AS expression
+        meaning AS concept,
+        langvar AS lang,
+        txt     AS expr
     FROM raw
     WHERE txt IS NOT NULL
 ) TO 'data/entries.tsv' (HEADER, DELIMITER '\t');

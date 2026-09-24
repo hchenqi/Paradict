@@ -15,14 +15,14 @@ CREATE VIEW entries AS
 
 CREATE TEMP TABLE languages_entry_count AS
     SELECT
-        e.language_id AS id,
-        regexp_replace(l.iso_code, '-000$', '') AS iso_code,
+        e.lang AS id,
+        regexp_replace(l.code, '-000$', '') AS code,
         COUNT(*) AS entry_count
     FROM entries e
     JOIN languages l
-        ON e.language_id = l.id
-    WHERE l.iso_code LIKE '%-000'
-    GROUP BY e.language_id, l.iso_code
+        ON e.lang = l.id
+    WHERE l.code LIKE '%-000'
+    GROUP BY e.lang, l.code
     ORDER BY entry_count DESC;
 -- COPY (
 --     SELECT *
@@ -30,60 +30,86 @@ CREATE TEMP TABLE languages_entry_count AS
 -- ) TO 'data/languages_entry_count.tsv' (HEADER, DELIMITER '\t');
 
 
-CREATE TEMP TABLE concepts_entry_count_all_top_10_languages AS
+CREATE TEMP TABLE concepts_entry_count_all_top_9_languages AS
     SELECT
-        e.concept_id AS id,
+        e.concept AS id,
         COUNT(*) AS entry_count
     FROM entries e
     JOIN (
         SELECT id
         FROM languages_entry_count
         ORDER BY entry_count DESC
-        LIMIT 10
+        LIMIT 9
     ) l
-        ON e.language_id = l.id
-    GROUP BY e.concept_id
-    HAVING COUNT(DISTINCT e.language_id) = 10
+        ON e.lang = l.id
+    GROUP BY e.concept
+    HAVING COUNT(DISTINCT e.lang) = 9
     ORDER BY entry_count DESC;
 -- COPY (
 --     SELECT *
---     FROM concepts_entry_count_all_top_10_languages
--- ) TO 'data/concepts_entry_count_all_top_10_languages.tsv' (HEADER, DELIMITER '\t');
+--     FROM concepts_entry_count_all_top_9_languages
+-- ) TO 'data/concepts_entry_count_all_top_9_languages.tsv' (HEADER, DELIMITER '\t');
 
-CREATE TEMP TABLE entries_concepts_all_top_10_languages AS
-    SELECT e.*
-    FROM entries e
-    JOIN concepts_entry_count_all_top_10_languages c
-        ON e.concept_id = c.id;
+-- CREATE TEMP TABLE concepts_entry_count_7_in_top_10_languages AS
+--     SELECT
+--         e.concept AS id,
+--         COUNT(*) AS entry_count
+--     FROM entries e
+--     JOIN (
+--         SELECT id
+--         FROM languages_entry_count
+--         ORDER BY entry_count DESC
+--         LIMIT 10
+--     ) l
+--         ON e.lang = l.id
+--     GROUP BY e.concept
+--     HAVING COUNT(DISTINCT e.lang) >= 7
+--     ORDER BY entry_count DESC;
 -- COPY (
 --     SELECT *
---     FROM entries_concepts_all_top_10_languages
--- ) TO 'data/entries_concepts_all_top_10_languages.tsv' (HEADER, DELIMITER '\t');
+--     FROM concepts_entry_count_7_in_top_10_languages
+-- ) TO 'data/concepts_entry_count_7_in_top_10_languages.tsv' (HEADER, DELIMITER '\t');
 
-CREATE TEMP TABLE languages_entry_count_entries_concepts_all_top_10_languages AS
+
+CREATE VIEW concepts_entry_count_selected AS
+    SELECT * FROM concepts_entry_count_all_top_9_languages;
+    -- SELECT * FROM concepts_entry_count_7_in_top_10_languages;
+
+
+CREATE TEMP TABLE entries_concepts_selected AS
+    SELECT e.*
+    FROM entries e
+    JOIN concepts_entry_count_selected c
+        ON e.concept = c.id;
+-- COPY (
+--     SELECT *
+--     FROM entries_concepts_selected
+-- ) TO 'data/entries_concepts_selected.tsv' (HEADER, DELIMITER '\t');
+
+CREATE TEMP TABLE languages_entry_count_entries_concepts_selected AS
     SELECT
         l.*,
         COUNT(*) AS entry_count
     FROM languages l
-    JOIN entries_concepts_all_top_10_languages e
-        ON l.id = e.language_id
+    JOIN entries_concepts_selected e
+        ON l.id = e.lang
     GROUP BY ALL
     ORDER BY entry_count DESC;
 -- COPY (
 --     SELECT *
---     FROM languages_entry_count_entries_concepts_all_top_10_languages
--- ) TO 'data/languages_entry_count_entries_concepts_all_top_10_languages.tsv' (HEADER, DELIMITER '\t');
+--     FROM languages_entry_count_entries_concepts_selected
+-- ) TO 'data/languages_entry_count_entries_concepts_selected.tsv' (HEADER, DELIMITER '\t');
 
 
 COPY (
     SELECT id
-    FROM concepts_entry_count_all_top_10_languages
+    FROM concepts_entry_count_selected
 ) TO 'data/concepts_final.tsv' (HEADER, DELIMITER '\t');
 
 CREATE TEMP TABLE languages_final AS
-    SELECT id, regexp_replace(iso_code, '-000$', '') AS iso_code
-    FROM languages_entry_count_entries_concepts_all_top_10_languages
-    WHERE entry_count > 1000 and iso_code LIKE '%-000';
+    SELECT id, regexp_replace(code, '-000$', '') AS code
+    FROM languages_entry_count_entries_concepts_selected
+    WHERE entry_count > 1000 and code LIKE '%-000';
 COPY (
     SELECT *
     FROM languages_final
@@ -91,7 +117,7 @@ COPY (
 
 COPY (
     SELECT e.*
-    FROM entries_concepts_all_top_10_languages e
+    FROM entries_concepts_selected e
     JOIN languages_final l
-        ON e.language_id = l.id
+        ON e.lang = l.id
 ) TO 'data/entries_final.tsv' (HEADER, DELIMITER '\t');

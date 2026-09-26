@@ -1,28 +1,30 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState } from "react";
-import { languageLabel, type LanguageCode } from "@/lib/types";
+import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { languageLabel } from "@/lib/types";
 import { languagesAction } from "./actions";
 
-const AvailableLanguagesContext = createContext<LanguageCode[]>([]);
-const SelectedLanguagesContext = createContext<[LanguageCode[], (languages: LanguageCode[]) => void]>([[], () => undefined]);
-const ActiveLanguagesContext = createContext<[LanguageCode[], (languages: LanguageCode[]) => void]>([[], () => undefined]);
+const LanguagesContext = createContext<{ languages: [number, string][]; languageIdCodeMap: Map<number, string>; languageCodeIdMap: Map<string, number>; }>({ languages: [], languageIdCodeMap: new Map(), languageCodeIdMap: new Map() });
+const SelectedLanguagesContext = createContext<[string[], (languages: string[]) => void]>([[], () => undefined]);
+const ActiveLanguagesContext = createContext<[string[], (languages: string[]) => void]>([[], () => undefined]);
 
-export function useAvailableLanguages() { return useContext(AvailableLanguagesContext); }
+export function useLanguages() { return useContext(LanguagesContext); }
 export function useSelectedLanguages() { return useContext(SelectedLanguagesContext); }
 export function useActiveLanguages() { return useContext(ActiveLanguagesContext); }
 
 export function LanguageProvider({ children }: { children: React.ReactNode; }) {
-  const [availableLanguages, setAvailableLanguages] = useState<LanguageCode[]>([]);
-  const [selectedLanguages, setSelectedLanguages] = useState<LanguageCode[]>([]);
-  const [activeLanguages, setActiveLanguages] = useState<LanguageCode[]>([]);
+  const [languages, setLanguages] = useState<[number, string][]>([]);
+  const languageIdCodeMap = useMemo(() => new Map(languages), [languages]);
+  const languageCodeIdMap = useMemo(() => new Map(languages.map(([id, code]) => [code, id])), [languages]);
+  const [selectedLanguages, setSelectedLanguages] = useState<string[]>([]);
+  const [activeLanguages, setActiveLanguages] = useState<string[]>([]);
 
-  function updateSelectedLanguages(selectedLanguages: LanguageCode[]) {
+  function updateSelectedLanguages(selectedLanguages: string[]) {
     setSelectedLanguages(selectedLanguages);
     localStorage.setItem("selected-languages", JSON.stringify(selectedLanguages));
   }
 
-  function updateActiveLanguages(activeLanguages: LanguageCode[]) {
+  function updateActiveLanguages(activeLanguages: string[]) {
     setActiveLanguages(activeLanguages);
     localStorage.setItem("active-languages", JSON.stringify(activeLanguages));
   }
@@ -30,8 +32,8 @@ export function LanguageProvider({ children }: { children: React.ReactNode; }) {
   useEffect(() => {
     (async function () {
       const languages = await languagesAction();
-      setAvailableLanguages(languages.sort((a, b) => languageLabel(a).localeCompare(languageLabel(b))));
-      const availableLanguagesSet = new Set(languages);
+      setLanguages(languages.sort(([, a], [, b]) => languageLabel(a).localeCompare(languageLabel(b))));
+      const availableLanguagesSet = new Set(languages.map(([, code]) => code));
       const selectedLanguages = (JSON.parse(localStorage.getItem("selected-languages") ?? "[]") as string[]).filter(language => availableLanguagesSet.has(language));
       const activeLanguages = (JSON.parse(localStorage.getItem("active-languages") ?? "[]") as string[]).filter(language => selectedLanguages.includes(language));
       updateSelectedLanguages(selectedLanguages);
@@ -40,12 +42,12 @@ export function LanguageProvider({ children }: { children: React.ReactNode; }) {
   }, []);
 
   return (
-    <AvailableLanguagesContext.Provider value={availableLanguages}>
+    <LanguagesContext.Provider value={{ languages, languageIdCodeMap, languageCodeIdMap }}>
       <SelectedLanguagesContext.Provider value={[selectedLanguages, updateSelectedLanguages]}>
         <ActiveLanguagesContext.Provider value={[activeLanguages, updateActiveLanguages]} >
           {children}
         </ActiveLanguagesContext.Provider>
       </SelectedLanguagesContext.Provider>
-    </AvailableLanguagesContext.Provider>
+    </LanguagesContext.Provider>
   );
 }

@@ -1,33 +1,47 @@
-import Link from "next/link";
-import { type LanguageCode, type Entry, languageLabel, groupEntriesByLanguageOrdered } from "@/lib/types";
+"use client";
 
-function highlight(text: string, query: string) {
-  return text
+import { useMemo, useState } from "react";
+import Link from "next/link";
+import { Entry, languageLabel } from "@/lib/types";
+import { useActiveLanguages, useLanguages } from "@/app/LanguageProvider";
+import "./ConceptList.css"
+
+function groupEntriesByLanguageOrdered(entries: Entry[], list: [number, string][]) {
+  const group = Map.groupBy(entries, entry => entry.lang);
+  return list.map(([id, code]) => ({ lang: code, entries: group.get(id) ?? [] }));
+}
+
+function highlight(expr: string, query: string) {
+  return expr
     .split(new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})`, "ig"))
     .map((part, index) => part.toLocaleLowerCase() === query.toLocaleLowerCase() ? <mark key={`${part}-${index}`}>{part}</mark> : part);
 }
 
-function LanguageRow({ language, entries, query }: { language: LanguageCode; entries: Entry[]; query: string | undefined }) {
+function LanguageRow({ lang, entries, query }: { lang: string; entries: Entry[]; query: string | undefined }) {
   return (
     <div className="row">
-      <div className="label">{languageLabel(language)}</div>
+      <div className="label">{languageLabel(lang)}</div>
       <div className="entries">
         {
-          entries.map(entry => <span className="entry" key={entry.id}>{query ? highlight(entry.expression, query) : entry.expression}</span>)
+          entries.map(entry => <span className="entry" key={entry.id}>{query ? highlight(entry.expr, query) : entry.expr}</span>)
         }
       </div>
     </div>
   );
 }
 
-function ConceptCard({ conceptId, entries, languages, query }: { conceptId: number; entries: Entry[]; languages: LanguageCode[]; query: string | undefined; }) {
+function ConceptCard({ conceptId, rows, query, compare, setCompare }: { conceptId: number; rows: { lang: string; entries: Entry[]; }[]; query: string | undefined; compare: number | undefined; setCompare: (compare: number | undefined) => void; }) {
   return (
     <article className="concept">
-      <Link className="title" href={`/concept/${conceptId}`}>Concept {conceptId}</Link>
+      <header>
+        <Link className="title" href={`/concept/${conceptId}${compare !== undefined && compare !== conceptId ? `?compare=${compare}` : ""}`}>Concept {conceptId}</Link>
+        <span>{compare === conceptId && "selected for compare"}</span>
+        <button onClick={() => setCompare(compare === conceptId ? undefined : conceptId)}>{compare === conceptId ? "unselect" : "select for compare"}</button>
+      </header>
       <div>
         {
-          groupEntriesByLanguageOrdered(entries, languages).map(row => (
-            <LanguageRow key={row.language} language={row.language} entries={row.entries} query={query} />
+          rows.map(row => (
+            <LanguageRow key={row.lang} lang={row.lang} entries={row.entries} query={query} />
           ))
         }
       </div>
@@ -35,12 +49,18 @@ function ConceptCard({ conceptId, entries, languages, query }: { conceptId: numb
   );
 }
 
-export default function ({ concepts, languages, query }: { concepts: Map<number, Entry[]>, languages: LanguageCode[], query?: string }) {
+export default function ({ entries, query }: { entries: Entry[], query?: string }) {
+  const concepts = useMemo(() => Map.groupBy(entries, entry => entry.concept), [entries]);
+  const { languageCodeIdMap } = useLanguages();
+  const [activeLanguages] = useActiveLanguages();
+  const languages = useMemo(() => activeLanguages.map(code => [languageCodeIdMap.get(code)!, code] as [number, string]), [languageCodeIdMap, activeLanguages]);
+  const [compare, setCompare] = useState<number | undefined>(undefined);
+
   return (
     <>
       {
-        Array.from(concepts.entries()).map(([concept_id, entries]) => (
-          <ConceptCard key={concept_id} conceptId={concept_id} entries={entries} languages={languages} query={query} />
+        Array.from(concepts.entries()).map(([conceptId, entries]) => (
+          <ConceptCard key={conceptId} conceptId={conceptId} rows={groupEntriesByLanguageOrdered(entries, languages)} query={query} compare={compare} setCompare={setCompare} />
         ))
       }
     </>

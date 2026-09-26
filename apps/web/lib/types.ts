@@ -1,29 +1,13 @@
-export type LanguageCode = string;
-
-export function languageLabel(code: LanguageCode) {
+export function languageLabel(code: string) {
   return new Intl.DisplayNames([code], { type: "language" }).of(code) ?? code;
 }
 
 export type Entry = {
-  concept: number;
-  language: LanguageCode;
   id: number;
-  expression: string;
-  indexed: boolean;
+  concept: number;
+  lang: number;
+  expr: string;
 };
-
-export function groupEntriesByConcept(entries: Entry[]) {
-  return Map.groupBy(entries, entry => entry.concept);
-}
-
-export function groupEntriesByLanguage(entries: Entry[]) {
-  return Map.groupBy(entries, entry => entry.language);
-}
-
-export function groupEntriesByLanguageOrdered(entries: Entry[], languageList: LanguageCode[]) {
-  const group = Map.groupBy(entries, entry => entry.language);
-  return languageList.map(language => ({ language, entries: group.get(language) ?? [] }));
-}
 
 export type UserProfile = {
   id: string;
@@ -34,15 +18,8 @@ export type UserProfile = {
 };
 
 export type EntryCreate = {
-  language: LanguageCode;
-  expression: string;
-  indexed: boolean;
-};
-
-export type EntryUpdate = {
-  id: number;
-  expression?: string;
-  indexed?: boolean;
+  lang: number;
+  expr: string;
 };
 
 export type EntryRemove = {
@@ -50,11 +27,10 @@ export type EntryRemove = {
 };
 
 export type SubmissionPayload = {
-  concept_id?: number;
-  concept_merge_id?: number;
-  create?: EntryCreate[];
-  update?: EntryUpdate[];
-  remove?: EntryRemove[];
+  concept?: number;
+  merge?: number;
+  removes?: EntryRemove[];
+  creates?: EntryCreate[];
 }
 
 export type Submission = {

@@ -5,8 +5,7 @@ import { useParams } from "next/navigation";
 import { supabase } from "@/lib/client";
 import { useUserProfile } from "@/app/AuthProvider";
 import { Submission, UserProfile } from "@/lib/types";
-import SubmissionArticle from "../../SubmissionArticle";
-import "./page.css";
+import SubmissionList from "../../SubmissionList";
 
 function RoleEdit({ id, role: initialRole }: { id: string; role: string; }) {
   const [role, setRole] = useState(initialRole);
@@ -75,13 +74,7 @@ export default function () {
       {reviewer.role === "admin" && <RoleEdit id={userProfile.id} role={userProfile.role} />}
       <section>
         <header>Submissions</header>
-        {
-          submissions.length ? (
-            <ul>{submissions.map(submission => <li key={submission.id}><SubmissionArticle submission={submission} reviewer={reviewer} /></li>)}</ul>
-          ) : (
-            <p>No submissions yet.</p>
-          )
-        }
+        {submissions.length ? <SubmissionList submissions={submissions} reviewer={reviewer} /> : <p>No submissions.</p>}
       </section>
     </main >
   );

@@ -1,5 +1,5 @@
 import React from "react";
-import type { Metadata } from "next";
+import { Metadata } from "next";
 import Link from "next/link";
 import { AuthProvider } from "./AuthProvider";
 import { LanguageProvider } from "./LanguageProvider";
@@ -8,6 +8,7 @@ import AuthStatus from "./AuthStatus";
 import SelectionSearch from "./SelectionSearch";
 import CookieConsent from "./CookieConsent";
 import "./layout.css";
+import "./Concept.css";
 
 export const metadata: Metadata = {
   title: "Paradict",

@@ -33,6 +33,8 @@ data/                  locally processed PanLex dataset files
 2. Run [`scripts/schema.sql`](scripts/schema.sql) in the Supabase SQL Editor.
 3. Copy [`apps/web/.env.example`](apps/web/.env.example) to `apps/web/.env.local`.
 4. Set `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` to the project values.
+5. Run `npx supabase gen types typescript --project-id "the-project-id" --schema public > database.types.ts` to download `database.types.ts` and copy it to `apps/lib/`.
+6. Optionally run `ALTER ROLE anon SET statement_timeout = '30s'; ALTER ROLE authenticated SET statement_timeout = '30s'; NOTIFY pgrst, 'reload config';` to increase the query timeout.
 
 ### PanLex Dataset
 
@@ -54,7 +56,7 @@ npm run dev
 The core tables:
 - `concepts`: identity `id` for a language-neutral meaning.
 - `languages`: identity `id` and unique ISO language code.
-- `entries`: a unique row per (concept, language, expression) with an `indexed` flag.
+- `entries`: a unique row per (concept, language, expression).
 
 The `users` and `submissions` tables:
 - `users`: one row per Supabase Auth user, with `member`, `editor`, or `admin` role and username/display name.
@@ -70,25 +72,17 @@ The `users` and `submissions` tables:
 
 Possible proposals can be:
 - concept creation
-- concept updates with entry additions/updates/deletions which could optionally merge another concept
+- concept updates with entry creations/removals which could optionally merge another concept
 
-Proposals are stored as JSON payloads. Direct dictionary writes are not exposed as a public API.
+Proposals are stored as JSON payloads.
 
 ### API
 
-All endpoints are served by Next.js under `/api` and return JSON.
+All endpoints are served by Next.js under `/api` and return JSON. They can be used by brower extension or other clients.
 
 #### `GET /api/languages`
 
-List available languages.
-
-Returns a list of language codes as string.
-
-#### `GET /api/search?q=&lang=&limit=`
-
-Search concepts from text filtered by given languages.
-
-Returns a list of entries that can be grouped by concept_id ordered by similarity to the query text.
+Get list of all languages as language code strings.
 
 ### Pages
 

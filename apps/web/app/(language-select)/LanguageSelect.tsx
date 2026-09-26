@@ -1,17 +1,17 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { languageLabel, type LanguageCode } from "@/lib/types";
-import { useAvailableLanguages, useSelectedLanguages, useActiveLanguages } from "@/app/LanguageProvider";
+import { languageLabel } from "@/lib/types";
+import { useLanguages, useSelectedLanguages, useActiveLanguages } from "@/app/LanguageProvider";
 import "./LanguageSelect.css";
 
-function optionLabel(code: LanguageCode) {
+function optionLabel(code: string) {
   const name = languageLabel(code);
-  return name === code ? <span>{name}</span> : <>{name}<span>{code}</span></>;
+  return <>{name === code ? "" : name}<span>{code}</span></>;
 }
 
 export default function () {
-  const availableLanguages = useAvailableLanguages();
+  const { languages } = useLanguages();
   const [selectedLanguages, setSelectedLanguages] = useSelectedLanguages();
   const [activeLanguages, setActiveLanguages] = useActiveLanguages();
   const [dragged, setDragged] = useState<string | null>(null);
@@ -31,13 +31,13 @@ export default function () {
     }
   }, [open]);
 
-  function toggleSelected(code: LanguageCode) {
+  function toggleSelected(code: string) {
     const nextSelected = selectedLanguages.includes(code) ? selectedLanguages.filter(item => item !== code) : [...selectedLanguages, code];
     setSelectedLanguages(nextSelected);
     setActiveLanguages(selectedLanguages.includes(code) ? activeLanguages.filter(item => item !== code) : [...activeLanguages, code]);
   }
 
-  function toggleActive(code: LanguageCode) {
+  function toggleActive(code: string) {
     setActiveLanguages(activeLanguages.includes(code) ? activeLanguages.filter(item => item !== code) : selectedLanguages.filter(curr => curr === code || activeLanguages.includes(curr)));
   }
 
@@ -82,15 +82,15 @@ export default function () {
         open && (
           <div className="row popup" ref={popupRef}>
             {
-              availableLanguages.map(language => (
+              languages.map(([id, code]) => (
                 <button
-                  className={`pill static ${selectedLanguages.includes(language) ? "selected" : ""}`}
-                  key={language}
+                  key={id}
+                  className={`pill static ${selectedLanguages.includes(code) ? "selected" : ""}`}
                   type="button"
-                  aria-pressed={selectedLanguages.includes(language)}
-                  onClick={() => toggleSelected(language)}
+                  aria-pressed={selectedLanguages.includes(code)}
+                  onClick={() => toggleSelected(code)}
                 >
-                  {optionLabel(language)}
+                  {optionLabel(code)}
                 </button>
               ))
             }

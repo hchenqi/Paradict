@@ -1,0 +1,45 @@
+.submission {
+  display: grid;
+  gap: 14px;
+  padding: 18px;
+  border: 1px solid #d9d6cd;
+  background: #fffdf9;
+  box-shadow: 4px 4px 0 #e3ebdf;
+}
+
+.submission header {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.submission header .status {
+  margin-left: auto;
+  color: #eb5e3f;
+  text-transform: uppercase;
+}
+
+.submission .actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  padding-top: 2px;
+}
+
+.submission .actions button {
+  padding: 5px 8px;
+  border: 1px solid #c9c7be;
+  background: #fffdf9;
+  color: #172320;
+  cursor: pointer;
+}
+
+.submission .actions button:hover {
+  border-color: #172320;
+  background: #e3ebdf;
+}
+
+.submission .actions p {
+  margin: 0;
+}

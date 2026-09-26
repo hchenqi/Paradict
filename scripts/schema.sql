@@ -159,9 +159,8 @@ create table public.submissions (
   payload jsonb not null check (pg_column_size(payload) <= 16 * 1024),
   review_status text not null default 'pending' check (review_status in ('pending', 'approved', 'rejected')),
   reviewed_by uuid references public.users(id) on delete set null,
-  review_note text check (char_length(review_note) <= 300),
-  reviewed_at timestamptz,
-  check (review_status = 'pending' or (reviewed_by is not null and reviewed_at is not null))
+  review_note jsonb,
+  reviewed_at timestamptz
 );
 
 create index idx_submissions_created_by on public.submissions(created_by) where created_by is not null;

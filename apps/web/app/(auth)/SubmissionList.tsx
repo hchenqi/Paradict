@@ -33,7 +33,9 @@ function SubmissionArticle({ submission, reviewer }: { submission: Submission; r
   }
 
   async function remove() {
-    if (!confirm("Are you sure you want to delete this submission? This action cannot be undone.")) { return; }
+    if (!confirm("Are you sure you want to delete this submission? This action cannot be undone.")) {
+      return;
+    }
     setStatus("submitting");
     const { error } = await supabase.from("submissions").delete().eq("id", submission.id);
     setStatus(error ? "pending" : "removed");

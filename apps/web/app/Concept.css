@@ -48,28 +48,20 @@
 }
 
 .concept .entry {
-  display: inline-block;
+  min-width: 0;
   margin-right: 0;
+  padding: 4px;
   border: 1px solid #e1dfd8;
-  padding: 4px 8px;
   background: #f4f1eb;
   color: #172320;
   font-size: 15px;
   font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .concept .entry mark {
   color: #172320;
   background: #f4cb78;
-}
-
-.concept .entry.removed {
-  background: #ffe9e8;
-  color: #7c857e;
-  text-decoration: line-through;
-  opacity: 0.75;
-}
-.concept .entry.created {
-  background: #edf9ee;
-  color: #25633d;
 }

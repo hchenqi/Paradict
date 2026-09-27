@@ -38,8 +38,8 @@ function LanguageRow({
           entries.map(entry => {
             const removed = removes.find(item => item.id === entry.id);
             return (
-              <div className={`entry ${editing ? "edit" : ""} ${removed ? "removed" : ""}`} key={entry.id}>
-                {entry.expr}
+              <div className={`entry ${removed ? "removed" : ""}`} key={entry.id}>
+                <span>{entry.expr}</span>
                 {editing && <button type="button" onClick={() => onRemove(!removed, { id: entry.id })} aria-label={`${removed ? "Restore" : "Remove"}`}>{removed ? "+" : "-"}</button>}
                 {!editing && canCommit && removed && <button type="button" onClick={() => commitRemove(entry)}>Commit</button>}
               </div>
@@ -48,8 +48,8 @@ function LanguageRow({
         }
         {
           creates.map(entry => (
-            <div className={`entry ${editing ? "edit" : ""} created`} key={entry.expr}>
-              {entry.expr}
+            <div className={`entry created`} key={entry.expr}>
+              <span>{entry.expr}</span>
               {editing && <button type="button" onClick={() => onCreate(true, entry)} aria-label="Remove">-</button>}
               {!editing && canCommit && <button type="button" onClick={() => commitCreate(entry)}>Commit</button>}
             </div>
@@ -73,14 +73,20 @@ function LanguageRow({
         compare && (
           <div className="entries compare">
             {
-              compare.map(entry => (
-                <span className="entry" key={entry.id}>{entry.expr}</span>
-              ))
+              compare.map(entry => {
+                const add = !entries.find(({ expr }) => entry.expr === expr) && !creates.find(({ expr }) => entry.expr === expr);
+                return (
+                  <div className={`entry ${add ? "created" : ""}`} key={entry.id}>
+                    <span>{entry.expr}</span>
+                    {editing && add && <button type="button" onClick={() => onCreate(false, { lang: lang.id, expr: entry.expr })}>Add</button>}
+                  </div>
+                )
+              })
             }
           </div>
         )
       }
-    </div>
+    </div >
   );
 }
 
@@ -113,7 +119,8 @@ export default function ({
 
   const createGroups = useMemo(() => Map.groupBy(creates, entry => entry.lang), [creates]);
 
-  const hasCompare = compare && compare !== concept;
+  const [compareDeleted, setCompareDeleted] = useState(false);
+  const hasCompare = compare && compare !== concept && !compareDeleted;
   const [compareEntries, setCompareEntries] = useState<Entry[]>([]);
   const compareEntryGroups = useMemo(() => Map.groupBy(compareEntries, entry => entry.lang), [compareEntries]);
 
@@ -187,17 +194,39 @@ export default function ({
     }
   }
 
+  async function deleteCompare() {
+    if (!hasCompare) {
+      return;
+    }
+    if (!confirm("Are you sure you want to delete this concept? This action cannot be undone.")) {
+      return;
+    }
+    const { error } = await supabase.from("concepts").delete().eq("id", compare);
+    if (error) {
+      setMessage("Delete concept failed.");
+    } else {
+      setCompareDeleted(true);
+    }
+  }
+
   return (
     <>
       {message && <p role="status">{message}</p>}
       <div className={`row header ${compare ? "compare" : ""}`}>
         <span className="current">{concept ? `Concept ${concept}` : "New concept"}</span>
-        {compare && <span className="compare">Concept {compare}</span>}
+        {
+          hasCompare && (
+            <div className="compare">
+              <span>Concept {compare}</span>
+              {canCommit && <button type="button" onClick={deleteCompare}>Delete</button>}
+            </div>
+          )
+        }
       </div>
       <div>
         {
           languages.map(([id, code]) => (
-            <LanguageRow key={id} lang={{ id, code }} entries={entryGroups.get(id) ?? []} removes={removes} creates={createGroups.get(id) ?? []} onRemove={onRemove} onCreate={onCreate} commitRemove={commitRemove} commitCreate={commitCreate} compare={compare ? compareEntryGroups.get(id) ?? [] : undefined} editing={editing} canCommit={canCommit} />
+            <LanguageRow key={id} lang={{ id, code }} entries={entryGroups.get(id) ?? []} removes={removes} creates={createGroups.get(id) ?? []} onRemove={onRemove} onCreate={onCreate} commitRemove={commitRemove} commitCreate={commitCreate} compare={hasCompare ? compareEntryGroups.get(id) ?? [] : undefined} editing={editing} canCommit={canCommit} />
           ))
         }
       </div>

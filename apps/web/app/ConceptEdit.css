@@ -8,6 +8,11 @@
   text-decoration: none;
 }
 
+.concept button,
+.concept select {
+  cursor: pointer;
+}
+
 .concept .row.header {
   border-top: 0;
 }
@@ -22,27 +27,32 @@
 
 .concept .row .compare {
   grid-column: 3;
-}
-
-.concept .entry.edit {
-  min-width: 0;
   display: flex;
+  gap: 8px;
   align-items: center;
-  gap: 4px;
-  padding: 4px;
 }
 
-.concept .entry.edit span {
-  min-width: 0;
-  outline: none;
-  padding-left: 4px;
-  padding-right: 12px;
+.concept .row .compare button {
+  padding: 2px;
 }
 
-.concept .entry.edit button {
+.concept .entry.removed {
+  background: #ffe9e8;
+  color: #7c857e;
+}
+
+.concept .entry.removed span {
+  text-decoration: line-through;
+}
+
+.concept .entry.created {
+  background: #edf9ee;
+  color: #25633d;
+}
+
+.concept .entry button {
   height: 20px;
-  padding: 0 6px;
+  padding: 2px;
   color: #6d756d;
   background: transparent;
-  cursor: pointer;
 }

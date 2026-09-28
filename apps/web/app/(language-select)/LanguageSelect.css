@@ -59,9 +59,9 @@
 
 .language-select button.popup {
   margin-left: auto;
-  border: 0;
-  border-radius: 0;
-  padding: 8px 4px;
+  border: 2px #b7c5b3 solid;
+  border-radius: 5px;
+  padding: 8px;
   background: 0;
   cursor: pointer;
   color: #6d756d;

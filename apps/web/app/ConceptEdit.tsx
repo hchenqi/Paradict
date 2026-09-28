@@ -194,11 +194,16 @@ export default function ({
     }
   }
 
-  async function deleteCompare() {
+  async function subsumeCompare() {
     if (!hasCompare) {
       return;
     }
-    if (!confirm("Are you sure you want to delete this concept? This action cannot be undone.")) {
+    if (creates.length) {
+      setMessage("Commit created entries before subsuming.")
+      return;
+    }
+    const subsumed = !compareEntries.find(entry => !entries.find(({ expr }) => entry.expr === expr) && !creates.find(({ expr }) => entry.expr === expr));
+    if (!subsumed && !confirm("Are you sure you want to delete this concept? This action cannot be undone.")) {
       return;
     }
     const { error } = await supabase.from("concepts").delete().eq("id", compare);
@@ -218,7 +223,7 @@ export default function ({
           hasCompare && (
             <div className="compare">
               <span>Concept {compare}</span>
-              {canCommit && <button type="button" onClick={deleteCompare}>Delete</button>}
+              {canCommit && <button type="button" onClick={subsumeCompare}>Subsume</button>}
             </div>
           )
         }

@@ -72,7 +72,7 @@ The `users` and `submissions` tables:
 
 Possible proposals can be:
 - concept creation
-- concept updates with entry creations/removals which could optionally merge another concept
+- concept updates with entry creations/removals which could optionally subsume another concept
 
 Proposals are stored as JSON payloads.
 

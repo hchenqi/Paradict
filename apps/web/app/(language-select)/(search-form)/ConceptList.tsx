@@ -23,7 +23,7 @@ function LanguageRow({ lang, entries, query }: { lang: string; entries: Entry[];
       <div className="label">{languageLabel(lang)}</div>
       <div className="entries">
         {
-          entries.map(entry => <span className="entry" key={entry.id}>{query ? highlight(entry.expr, query) : entry.expr}</span>)
+          entries.map(entry => <div className="entry" key={entry.id}><span>{query ? highlight(entry.expr, query) : entry.expr}</span></div>)
         }
       </div>
     </div>

@@ -11,8 +11,10 @@ function SearchRouter({ setInput, value, activeLanguages }: { setInput: (value: 
   const router = useRouter();
 
   useEffect(() => {
-    const query = searchParams.get("q") ?? "";
-    setInput(query);
+    if (!value.trim()) {
+      const query = searchParams.get("q");
+      query && setInput(query);
+    }
   }, [searchParams, setInput]);
 
   useEffect(() => {

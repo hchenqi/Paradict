@@ -76,13 +76,13 @@ export default function () {
     }
   }, [message]);
 
-  async function submit(merge: number | undefined) {
+  async function submit(subsume: number | undefined) {
     if (!userProfile) {
       setMessage("Only members could submit.");
       return;
     }
     if ((isCreate && creates.length) || (!isCreate && (removes.length || creates.length))) {
-      const payload: SubmissionPayload = { concept, merge, removes, creates };
+      const payload: SubmissionPayload = { concept, subsume, removes, creates };
       const { error } = await supabase.from("submissions").insert({ created_by: userProfile.id, payload });
       setMessage(error ? "Submission failed." : "Submitted for review.");
       !error && setEditing(false);
@@ -122,7 +122,7 @@ export default function () {
               <>
                 <button type="button" onClick={() => setEditing(false)}>View</button>
                 <button type="button" onClick={() => submit(undefined)}>Submit</button>
-                {compare && <button type="button" onClick={() => submit(compare)}>Merge and Submit</button>}
+                {compare && <button type="button" onClick={() => submit(compare)}>Submit subsuming</button>}
               </>
             )
           }

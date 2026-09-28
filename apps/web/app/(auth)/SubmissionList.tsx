@@ -15,7 +15,7 @@ function PayloadView({ payload, canCommit }: { payload: SubmissionPayload; canCo
   const [removes, setRemoves] = useState<EntryRemove[]>(payload.removes ?? []);
   const [creates, setCreates] = useState<EntryCreate[]>(payload.creates ?? []);
 
-  const compare = payload.merge;
+  const compare = payload.subsume;
 
   return <ConceptEdit languages={languages} concept={concept} removes={removes} creates={creates} setRemoves={setRemoves} setCreates={setCreates} compare={compare} editing={false} canCommit={canCommit} />;
 }

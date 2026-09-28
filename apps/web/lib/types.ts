@@ -28,7 +28,7 @@ export type EntryRemove = {
 
 export type SubmissionPayload = {
   concept?: number;
-  merge?: number;
+  subsume?: number;
   removes?: EntryRemove[];
   creates?: EntryCreate[];
 }

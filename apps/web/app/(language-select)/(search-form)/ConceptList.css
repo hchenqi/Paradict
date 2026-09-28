@@ -15,3 +15,8 @@
   color: #172320;
   cursor: pointer;
 }
+
+.concept .entry mark {
+  color: #172320;
+  background: #f4cb78;
+}

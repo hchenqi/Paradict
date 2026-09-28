@@ -21,7 +21,7 @@ create table public.languages (
 create table public.entries (
   id bigint generated always as identity primary key,
   concept bigint not null references public.concepts(id) on delete cascade,
-  lang bigint not null references public.languages(id),
+  lang bigint not null references public.languages(id) on delete cascade,
   expr text not null,
   unique (concept, lang, expr)
 );

@@ -1,31 +1,38 @@
-# Processing PanLex Dataset
+# PanLex Dataset Process Pipeline
 
-## Load Dataset
+## Prerequisits
+
+- Install:
+  - python
+  - duckdb
+
+(All data files are under `data/`)
+
+## Download Panlex Dataset
 
 ```sh
 pip install -U datasets
 python scripts/panlex/load.py
 ```
 
-output file:
+Output:
+- `00_panlex_meanings.parquet`: (id, langvar, text, text_degr, meaning, langvar_uid)
 
-- `data/panlex_meanings.parquet`
-
-## Extract Data
-
-install duckdb
+## Extract Columns with Statistics
 
 ```sh
 duckdb -c ".read scripts/panlex/extract.sql"
 ```
 
-output files:
+Output:
+- `10_languages.tsv`: (id, code)
+- `10_entries.tsv`: (concept, lang, expr)
 
-- `data/concepts.tsv`
-- `data/languages.tsv`
-- `data/entries.tsv`
+## Merge Concept Duplicates
 
-## Filter Data
+
+
+## Filter
 
 ```sh
 duckdb -c ".read scripts/panlex/filter.sql"

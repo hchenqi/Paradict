@@ -124,7 +124,7 @@ The queue of submitted proposals.
 
 #### `LanguageSelector`
 
-Displays available languages, chooses and reorders selected languages, and toggles active languages for displaying and searching.
+Displays all available languages, chooses and reorders selected languages, and toggles active languages for displaying and searching.
 
 A page including `LanguageSelector` updates the active languages the same list as the search parameter `lang`.
 

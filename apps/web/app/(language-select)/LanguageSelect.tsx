@@ -74,9 +74,7 @@ export default function () {
             </button>
           ))
         }
-        <button className={`popup ${selectedLanguages.length ? "" : "hint"}`} ref={toggleRef} type="button" onClick={() => setOpen(open => !open)} aria-expanded={open}>
-          {open ? "Hide languages" : "Available languages"}
-        </button>
+        <button className={`popup ${selectedLanguages.length ? "" : "hint"}`} ref={toggleRef} type="button" onClick={() => setOpen(open => !open)} aria-expanded={open}>All languages</button>
       </div>
       {
         open && (

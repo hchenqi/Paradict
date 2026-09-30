@@ -18,9 +18,6 @@ function Search({ setQuery, setEntries, setMessage }: { setQuery: (query: string
     const lang = searchParams.get("lang");
     const languages = lang ? lang.split(",") : [];
 
-    setQuery(query);
-    setEntries([]);
-
     if (!query) {
       return setMessage("Invalid search parameters.");
     }
@@ -38,12 +35,14 @@ function Search({ setQuery, setEntries, setMessage }: { setQuery: (query: string
       return setMessage("Invalid language codes.");
     }
 
+    setEntries([]);
     setMessage("Searching...");
 
     supabase.rpc("search", { query, language_list, result_limit: 20 }).then(({ data, error }) => {
       if (error) {
         setMessage(error.message);
       } else {
+        setQuery(query);
         setEntries(data);
         setMessage("");
       }

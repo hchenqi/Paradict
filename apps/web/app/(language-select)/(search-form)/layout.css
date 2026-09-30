@@ -1,20 +1,13 @@
 .search-form {
   display: flex;
   height: 40px;
-  padding: 0 12px;
+  padding: 0 4px;
   background: #fffdf9;
   border: 1px solid #c9c7be;
-  box-shadow: 4px 4px 0 #dce5d8;
 }
 
 .search-form.disabled {
   opacity: 0.65;
-  box-shadow: none;
-}
-
-.search-form .icon {
-  color: #eb5e3f;
-  font-size: 24px;
 }
 
 .search-form input {
@@ -22,17 +15,18 @@
   min-width: 0;
   border: 0;
   outline: 0;
-  padding: 0 12px;
+  padding: 0 8px;
   background: transparent;
   color: #172320;
 }
 
-.search-form .clear {
-  color: #6d756d;
+.search-form .icon {
+  background: none;
   border: 0;
-  background: transparent;
-  font-size: 20px;
+  margin: auto 0;
   cursor: pointer;
+  color: #eb5e3f;
+  font-size: 24px;
 }
 
 .result {

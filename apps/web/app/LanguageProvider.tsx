@@ -33,8 +33,8 @@ export function LanguageProvider({ children }: { children: React.ReactNode; }) {
     (async function () {
       const languages = await languagesAction();
       setLanguages(languages.sort(([, a], [, b]) => languageLabel(a).localeCompare(languageLabel(b))));
-      const availableLanguagesSet = new Set(languages.map(([, code]) => code));
-      const selectedLanguages = (JSON.parse(localStorage.getItem("selected-languages") ?? "[]") as string[]).filter(language => availableLanguagesSet.has(language));
+      const languagesSet = new Set(languages.map(([, code]) => code));
+      const selectedLanguages = (JSON.parse(localStorage.getItem("selected-languages") ?? "[]") as string[]).filter(language => languagesSet.has(language));
       const activeLanguages = (JSON.parse(localStorage.getItem("active-languages") ?? "[]") as string[]).filter(language => selectedLanguages.includes(language));
       updateSelectedLanguages(selectedLanguages);
       updateActiveLanguages(activeLanguages);

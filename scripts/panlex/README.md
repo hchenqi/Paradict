@@ -16,30 +16,19 @@ python scripts/panlex/load.py
 ```
 
 Output:
-- `00_panlex_meanings.parquet`: (id, langvar, text, text_degr, meaning, langvar_uid)
+- `panlex_meanings.parquet`: (id, langvar, text, text_degr, meaning, langvar_uid)
 
-## Extract Columns with Statistics
-
-```sh
-duckdb -c ".read scripts/panlex/extract.sql"
-```
-
-Output:
-- `10_languages.tsv`: (id, code)
-- `10_entries.tsv`: (concept, lang, expr)
-
-## Merge Concept Duplicates
-
-
-
-## Filter
+## Process the Dataset
 
 ```sh
-duckdb -c ".read scripts/panlex/filter.sql"
+python scripts/process.py
 ```
 
-output files:
+## Import Tables
 
-- `data/concepts_final.tsv`
-- `data/languages_final.tsv`
-- `data/entries_final.tsv`
+```psql
+SET statement_timeout = '1h';
+\copy public.concepts(id) FROM 'concepts.tsv' (FORMAT csv, HEADER true);
+\copy public.languages(id, code) FROM 'languages.tsv' (FORMAT csv, HEADER true, DELIMITER E'\t');
+\copy public.entries(concept, lang, expr) FROM 'entries.tsv' (FORMAT csv, HEADER true, DELIMITER E'\t');
+```

@@ -1,5 +1,6 @@
 .next
 .turbo
+__pycache__
 *.tsbuildinfo
 *.local
 next-env.d.ts

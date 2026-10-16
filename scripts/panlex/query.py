@@ -1,7 +1,6 @@
 from pathlib import Path
 from dataclasses import dataclass
 import shutil
-import sys
 import json
 import hashlib
 import re
@@ -14,7 +13,7 @@ def remove(path: Path) -> None:
 	else:
 		path.unlink(missing_ok=True)
 
-def sql_path(path: Path) -> str:
+def sql_path(path: str) -> str:
 	return "'" + str(path).replace("'", "''") + "'"
 
 
@@ -22,18 +21,29 @@ CACHE = Path("data/.cache")
 CACHE.mkdir(exist_ok=True)
 
 
+class Node:
+	def evaluate(self) -> str:
+		raise NotImplementedError
+
+
 @dataclass(frozen=True)
-class Query:
-	inputs: tuple[tuple[str, Query], ...]
+class String(Node):
+	value: str
+
+	def __init__(self, value):
+		object.__setattr__(self, "value", str(value))
+		object.__setattr__(self, "id", value)
+
+	def evaluate(self) -> str:
+		return self.value
+
+
+@dataclass(frozen=True)
+class Query(Node):
+	inputs: tuple[tuple[str, Node], ...]
 	sql: str
 
-	def __init__(self, inputs: dict[str, Query], sql: str):
-		input_names = set(re.findall(r"\{(\w+)(?:\.\w+)?\}", sql)) - {"output"}
-		if input_names - inputs.keys():
-			raise ValueError(f"Query uses undefined inputs: {sorted(input_names - inputs.keys())}")
-		if inputs.keys() - input_names:
-			raise ValueError(f"Query does not use inputs: {sorted(inputs.keys() - input_names)}")
-		object.__setattr__(self, "scope", sys._getframe(1).f_globals)
+	def __init__(self, inputs: dict[str, Node], sql: str):
 		object.__setattr__(self, "inputs", tuple(sorted(inputs.items())))
 		object.__setattr__(self, "sql", sql)
 		object.__setattr__(self, "output_names", tuple(sorted(set(re.findall(r"\{output\.(\w+)\}", sql)))))
@@ -43,73 +53,86 @@ class Query:
 		return (CACHE / self.id).exists()
 
 	@property
-	def name(self) -> str:
-		for name, value in self.scope.items():
-			if value is self:
-				return name
-		return ""
-
-	@property
 	def label(self) -> str:
-		parts = [self.id[:12], "HIT" if self.cached() else "MIS", self.name, f"({", ".join(self.output_names)})" if self.output_names else ""]
+		parts = [self.id[:12], "HIT" if self.cached() else "MIS", f"({", ".join(self.output_names)})" if self.output_names else ""]
 		return " ".join([s for s in parts if s])
 
 	def dependency(self) -> dict[str, Query]:
 		result = {}
-		for _, query in self.inputs:
-			result.update(query.dependency())
-			result[query.id] = query
+		for _, node in self.inputs:
+			if isinstance(node, Output):
+				node = node.query
+			if isinstance(node, Query):
+				result.update(node.dependency())
+				result[node.id] = node
 		return result
 
-	def print_trace(self) -> None:
-		for query in self.dependency().values():
-			print(query.label)
-		print(self.label)
+	def __getitem__(self, key: str) -> Output:
+		if key not in self.output_names:
+			raise KeyError(f"{self.label} has no output {key!r}")
+		return Output(self, key)
 
-	def prune(self) -> None:
-		trace = {self.id, *self.dependency()}
-		for path in CACHE.iterdir():
-			if path.name not in trace:
-				print("DELETE ", path.name[:12])
-				remove(path)
-
-	def materialize(self) -> Path:
+	def evaluate(self) -> str:
 		print(self.label)
 
 		output = CACHE / self.id
 		if output.exists():
-			return output
+			return sql_path(output)
 
 		output_tmp = CACHE / (self.id + ".tmp") 
-		outputs = [output_tmp / name for name in self.output_names] or [output_tmp]
 		sql = self.sql
 
-		for name, query in self.inputs:
-			path = query.materialize()
-			sql = sql.replace("{" + name + "}", sql_path(path))
-			sql = re.sub(r"\{" + name + r"\.(\w+)\}", lambda m: sql_path(path / m[1]), sql)
-
-		for name in self.output_names:
-			sql = sql.replace("{output." + name + "}", sql_path(output_tmp / name))
+		for name, node in self.inputs:
+			sql = sql.replace("{" + name + "}", node.evaluate())
 
 		sql = sql.replace("{output}", sql_path(output_tmp))
+		for name in self.output_names:
+			sql = sql.replace("{output." + name + "}", sql_path(output_tmp / name))
 
 		remove(output_tmp)
 
 		if self.output_names:
 			output_tmp.mkdir()
+		else:
+			open(output_tmp, 'x').close()
 
 		try:
-			subprocess.run(["duckdb", "-c", sql], check=True)
-
-			for path in outputs:
-				if not path.exists():
-					raise RuntimeError(f"Query did not create its output: {path}")
-
+			subprocess.run(["duckdb"], input=f".maxrows -1\n{sql}\n", text=True, check=True)
 			output_tmp.rename(output)
-
 		except BaseException:
 			remove(output_tmp)
 			raise
 
-		return output
+		return sql_path(output)
+
+
+@dataclass(frozen=True)
+class Output(Node):
+	query: Query
+	key: str
+
+	def __init__(self, query: Query, key: str):
+		object.__setattr__(self, "query", query)
+		object.__setattr__(self, "key", key)
+		object.__setattr__(self, "id", f"{query.id}:{key}")
+
+	def evaluate(self) -> str:
+		return sql_path(Path(self.query.evaluate().strip("'")) / self.key)
+
+
+def print_trace(query: Query) -> None:
+	for depencency in query.dependency().values():
+		print(depencency.label)
+	print(query.label)
+
+
+def prune(*queries: Query) -> None:
+	keep = set()
+
+	for query in queries:
+		keep |= {query.id, *query.dependency()}
+
+	for path in CACHE.iterdir():
+		if path.name not in keep:
+			print("DELETE ", path.name[:12])
+			remove(path)

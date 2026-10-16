@@ -21,8 +21,13 @@ Output:
 ## Process the Dataset
 
 ```sh
-python scripts/process.py
+python scripts/panlex/process.py
 ```
+
+Output:
+- `concepts.tsv`
+- `languages.tsv`
+- `entries.tsv`
 
 ## Import Tables
 

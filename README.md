@@ -36,11 +36,9 @@ data/                  locally processed PanLex dataset files
 5. Run `npx supabase gen types typescript --project-id "the-project-id" --schema public > database.types.ts` to download `database.types.ts` and copy it to `apps/lib/`.
 6. Optionally run `ALTER ROLE anon SET statement_timeout = '30s'; ALTER ROLE authenticated SET statement_timeout = '30s'; NOTIFY pgrst, 'reload config';` to increase the query timeout.
 
-### PanLex Dataset
+### PanLex Dataset Process
 
-1. Generate importable tables from the PanLex dataset. (See [`scripts/panlex/README.md`](scripts/panlex/README.md) for instructions)
-2. Import the generated `*_final.tsv` in Supabase.
-3. Optionally run `vacuum analyze;` once after importing all data.
+(See [`scripts/panlex/README.md`](scripts/panlex/README.md) for instructions)
 
 ### Local Development
 

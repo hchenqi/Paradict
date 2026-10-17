@@ -4,7 +4,7 @@ from helper import *
 
 
 def build_mapping(entries):
-	mapping = Query({ "entries": entries }, """--sql
+	return Query({ "entries": entries }, """--sql
 		CREATE VIEW entries AS
 			SELECT * FROM read_parquet({entries});
 
@@ -32,31 +32,23 @@ def build_mapping(entries):
 			JOIN eid_lang_expr USING (lang, expr)
 		) TO {output.concept_eid} (FORMAT parquet);
 	""")
-	return { "concept_eid": mapping["concept_eid"], "eid_lang_expr": mapping["eid_lang_expr"] }
 
 
 def restore_from_mapping(concept_eid, eid_lang_expr):
-	entries = Query({ "concept_eid": concept_eid, "eid_lang_expr": eid_lang_expr }, """--sql
-		CREATE VIEW concept_eid AS
-			SELECT * FROM read_parquet({concept_eid});
-
-		CREATE VIEW eid_lang_expr AS
-			SELECT * FROM read_parquet({eid_lang_expr});
-
+	return Query({ "concept_eid": concept_eid, "eid_lang_expr": eid_lang_expr }, """--sql
 		COPY (
 			SELECT
 				concept,
 				lang,
 				expr
-			FROM concept_eid
-			JOIN eid_lang_expr USING (eid)
+			FROM read_parquet({concept_eid})
+			JOIN read_parquet({eid_lang_expr}) USING (eid)
 		) TO {output} (FORMAT parquet);
 	""")
-	return entries
 
 
 def map_stats(concept_eid):
-	stats = Query({ "concept_eid": concept_eid }, """--sql
+	return Query({ "concept_eid": concept_eid }, """--sql
 		CREATE VIEW concept_eid AS
 			SELECT * FROM read_parquet({concept_eid});
 
@@ -116,7 +108,6 @@ def map_stats(concept_eid):
 			ORDER BY count DESC
 		) TO {output.count_eid_n};
 	""")
-	return { "concept_count": stats["concept_count"] }
 
 
 def dedup_exact(concept_eid, max_count: int):
@@ -227,18 +218,12 @@ def dedup_overlapping(concept_eid, min_count: int, min_jaccard: int, min_overlap
 	#output_readable(concept_pair.query["discard"]).evaluate()
 	concept_canonical = find_canonical(concept_pair)
 	return Query({ "concept_eid": concept_eid, "concept_canonical": concept_canonical }, """--sql
-		CREATE VIEW concept_eid AS
-			SELECT * FROM read_parquet({concept_eid});
-
-		CREATE VIEW concept_canonical AS
-			SELECT * FROM read_parquet({concept_canonical});
-
 		COPY (
 			SELECT DISTINCT
 				coalesce(canonical, concept) as concept,
 				eid
-			FROM concept_eid
-			LEFT JOIN concept_canonical
+			FROM read_parquet({concept_eid})
+			LEFT JOIN read_parquet({concept_canonical})
 				ON concept = id
 		) TO {output} (FORMAT parquet);
 	""")

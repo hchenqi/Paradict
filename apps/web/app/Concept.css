@@ -1,8 +1,8 @@
 .concept {
-  margin-bottom: 8px;
   padding: 8px 16px;
   background: #fffdf9;
   border: 1px solid #d9d6cd;
+  border-radius: 8px;
 }
 
 .concept .title {
@@ -52,6 +52,7 @@
   margin-right: 0;
   padding: 4px;
   border: 1px solid #e1dfd8;
+  border-radius: 4px;
   background: #f4f1eb;
   color: #172320;
   font-size: 15px;

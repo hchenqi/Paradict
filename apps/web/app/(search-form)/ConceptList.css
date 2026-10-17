@@ -4,16 +4,22 @@
 }
 
 .concept header span {
-  color: #f07450;
+  color: #eb5e3f;
   padding: 0 8px;
 }
 
 .concept header button {
   padding: 7px 9px;
-  border: none;
-  background: transparent;
+  border: 1px solid #d9d6cd;
+  border-radius: 4px;
+  background: #fffdf9;
   color: #172320;
   cursor: pointer;
+}
+
+.concept .entry.matched {
+  border-color: #ffc655;
+  background: #f9edd5;
 }
 
 .concept .entry mark {

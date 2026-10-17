@@ -3,9 +3,11 @@
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useActiveLanguages } from "@/app/LanguageProvider";
+import LanguageSelect from "./LanguageSelect";
 import "./layout.css";
 
-function SearchRouter({ setInput, query, setQuery, activeLanguages }: { setInput: (input: string) => void, query: string, setQuery: (query: string) => void, activeLanguages: string[] }) {
+function SearchRouter({ setInput, query, setQuery }: { setInput: (input: string) => void, query: string, setQuery: (query: string) => void }) {
+  const [activeLanguages] = useActiveLanguages();
   const searchParams = useSearchParams();
   const router = useRouter();
 
@@ -22,7 +24,7 @@ function SearchRouter({ setInput, query, setQuery, activeLanguages }: { setInput
       const urlQuery = pathname === "/search" ? searchParams.get("q") ?? "" : "";
       const urlLanguages = pathname === "/search" ? searchParams.get("lang") ?? "" : "";
       if (pathname !== "/search" || query !== urlQuery || (activeLanguages.length && activeLanguages.join(",") !== urlLanguages)) {
-        router.replace(`/search?q=${encodeURIComponent(query)}&lang=${activeLanguages.join(",")}`);
+        router.replace(`/search?q=${encodeURIComponent(query)}${activeLanguages.length ? `&lang=${activeLanguages.join(",")}` : ""}`);
       }
     }
   }, [query, activeLanguages, router]);
@@ -31,20 +33,20 @@ function SearchRouter({ setInput, query, setQuery, activeLanguages }: { setInput
 }
 
 export default function ({ children }: { children: React.ReactNode }) {
-  const [activeLanguages] = useActiveLanguages();
   const [input, setInput] = useState("");
   const [query, setQuery] = useState("");
 
   return (
-    <>
-      <Suspense><SearchRouter setInput={setInput} query={query} setQuery={setQuery} activeLanguages={activeLanguages} /></Suspense>
-      <form className={`search-form ${!activeLanguages.length ? "disabled" : ""}`} onSubmit={event => { event.preventDefault(); setQuery(input.trim()); }}>
-        <input aria-label="Search" value={input} onChange={event => setInput(event.target.value)} placeholder={activeLanguages.length ? "Search" : "Select a language first"} />
+    <main>
+      <Suspense><SearchRouter setInput={setInput} query={query} setQuery={setQuery} /></Suspense>
+      <form className="search-form" onSubmit={event => { event.preventDefault(); setQuery(input.trim()); }}>
+        <input aria-label="Search" value={input} onChange={event => setInput(event.target.value)} placeholder="Search" />
         <button type="submit" className="icon">⌕</button>
       </form>
+      <LanguageSelect />
       <section className="result" aria-live="polite">
         {children}
       </section>
-    </>
+    </main>
   );
 }

@@ -6,9 +6,10 @@ import { Entry, languageLabel } from "@/lib/types";
 import { useActiveLanguages, useLanguages } from "@/app/LanguageProvider";
 import "./ConceptList.css"
 
-function groupEntriesByLanguageOrdered(entries: Entry[], list: [number, string][]) {
+function groupEntriesByLanguageOrdered(entries: Entry[], list: [number, string][], filter: boolean, languageIdCodeMap: Map<number, string>) {
   const group = Map.groupBy(entries, entry => entry.lang);
-  return list.map(([id, code]) => ({ lang: code, entries: group.get(id) ?? [] }));
+  const rows = list.map(([id, code]) => { const entries = group.get(id) ?? []; group.delete(id); return { lang: code, entries }; });
+  return filter ? rows : [...rows, ...[...group].map(([id, entries]) => ({ lang: languageIdCodeMap.get(id)!, entries }))];
 }
 
 function highlight(expr: string, query: string) {
@@ -23,7 +24,7 @@ function LanguageRow({ lang, entries, query }: { lang: string; entries: Entry[];
       <div className="label">{languageLabel(lang)}</div>
       <div className="entries">
         {
-          entries.map(entry => <div className="entry" key={entry.id}><span>{query ? highlight(entry.expr, query) : entry.expr}</span></div>)
+          entries.map(entry => <div className={`entry ${entry.score ? "matched" : ""}`} key={entry.id}><span>{query ? highlight(entry.expr, query) : entry.expr}</span></div>)
         }
       </div>
     </div>
@@ -51,7 +52,7 @@ function ConceptCard({ conceptId, rows, query, compare, setCompare }: { conceptI
 
 export default function ({ entries, query }: { entries: Entry[], query?: string }) {
   const concepts = useMemo(() => Map.groupBy(entries, entry => entry.concept), [entries]);
-  const { languageCodeIdMap } = useLanguages();
+  const { languageCodeIdMap, languageIdCodeMap } = useLanguages();
   const [activeLanguages] = useActiveLanguages();
   const languages = useMemo(() => activeLanguages.map(code => [languageCodeIdMap.get(code)!, code] as [number, string]), [languageCodeIdMap, activeLanguages]);
   const [compare, setCompare] = useState<number | undefined>(undefined);
@@ -60,7 +61,7 @@ export default function ({ entries, query }: { entries: Entry[], query?: string 
     <>
       {
         Array.from(concepts.entries()).map(([conceptId, entries]) => (
-          <ConceptCard key={conceptId} conceptId={conceptId} rows={groupEntriesByLanguageOrdered(entries, languages)} query={query} compare={compare} setCompare={setCompare} />
+          <ConceptCard key={conceptId} conceptId={conceptId} rows={groupEntriesByLanguageOrdered(entries, languages, !query, languageIdCodeMap)} query={query} compare={compare} setCompare={setCompare} />
         ))
       }
     </>

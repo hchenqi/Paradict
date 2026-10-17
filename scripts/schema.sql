@@ -71,10 +71,6 @@ begin
     raise exception 'query must not exceed 100 characters';
   end if;
 
-  if language_list is null or cardinality(language_list) = 0 then
-    raise exception 'language_list must not be empty';
-  end if;
-
   if cardinality(language_list) > 20 then
     raise exception 'language_list must not contain more than 20 languages';
   end if;

@@ -49,7 +49,7 @@ export default function () {
       style={{ top: selection.top, left: selection.left }}
       type="button"
       onMouseDown={event => event.preventDefault()}
-      onClick={() => { router.push(`/search?q=${encodeURIComponent(selection.text)}&lang=${activeLanguages.join(",")}`); setSelection(null); }}
+      onClick={() => { router.push(`/search?q=${encodeURIComponent(selection.text)}${activeLanguages.length ? `&lang=${activeLanguages.join(",")}` : ""}`); setSelection(null); }}
     >
       Search selected text
     </button>

@@ -7,6 +7,7 @@ export type Entry = {
   concept: number;
   lang: number;
   expr: string;
+  score?: number;
 };
 
 export type UserProfile = {

@@ -5,6 +5,7 @@
   max-width: 440px;
   z-index: 2;
   border: 1px solid #c9c7be;
+  border-radius: 8px;
   box-shadow: 5px 5px 0 #dce5d8;
   background: #fffdf9;
   padding: 16px;
@@ -24,6 +25,7 @@
   flex: 0 0 auto;
   padding: 8px 12px;
   border: 0;
+  border-radius: 4px;
   color: #fffdf9;
   background: #172320;
   cursor: pointer;

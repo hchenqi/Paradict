@@ -3,6 +3,7 @@
 .concept select {
   padding: 7px 9px;
   border: 1px solid #c9c7be;
+  border-radius: 4px;
   background: transparent;
   color: #172320;
   text-decoration: none;

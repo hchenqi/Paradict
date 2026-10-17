@@ -5,6 +5,10 @@ import { getConceptEntries, supabase } from "@/lib/client";
 import { Entry, EntryCreate, EntryRemove, languageLabel } from "@/lib/types";
 import "./ConceptEdit.css";
 
+function normalizeExpr(expr: string) {
+  return expr.normalize('NFC').replace(/[\t\n\r]/g, ' ').replace(/\p{Cc}/gu, '').replace(/ {2,}/g, ' ').trim();
+}
+
 function LanguageRow({
   lang,
   entries,
@@ -60,8 +64,8 @@ function LanguageRow({
             <form onSubmit={event => {
               event.preventDefault();
               const form = event.currentTarget;
-              const expr = new FormData(form).get("create") as string;
-              onCreate(false, { lang: lang.id, expr });
+              const expr = normalizeExpr(new FormData(form).get("create") as string);
+              expr && onCreate(false, { lang: lang.id, expr });
             }}>
               <input name="create" />
               <button type="submit">Add</button>

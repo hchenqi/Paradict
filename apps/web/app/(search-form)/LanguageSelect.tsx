@@ -55,7 +55,6 @@ export default function () {
   return (
     <section className="language-select" aria-label="Language select">
       <div className="row">
-        <span className="label">Search in</span>
         {
           selectedLanguages.map(code => (
             <button

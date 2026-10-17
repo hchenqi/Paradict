@@ -29,6 +29,14 @@ Output:
 - `languages.tsv`
 - `entries.tsv`
 
+## Normalize Expressions
+
+(can be skipped because already normalized) 
+
+```sh
+python scripts/panlex/normalize.py
+```
+
 ## Import Tables
 
 ```psql

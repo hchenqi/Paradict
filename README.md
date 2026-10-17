@@ -30,7 +30,7 @@ data/                  locally processed PanLex dataset files
 ### Supabase Setup
 
 1. Create a Supabase project.
-2. Run [`scripts/schema.sql`](scripts/schema.sql) in the Supabase SQL Editor.
+2. Run [`scripts/schema.sql`](scripts/schema.sql) in the Supabase SQL Editor. (line `create index idx_entries_expr_trgm` could be run after importing the dataset to speed up the import)
 3. Copy [`apps/web/.env.example`](apps/web/.env.example) to `apps/web/.env.local`.
 4. Set `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` to the project values.
 5. Run `npx supabase gen types typescript --project-id "the-project-id" --schema public > database.types.ts` to download `database.types.ts` and copy it to `apps/lib/`.

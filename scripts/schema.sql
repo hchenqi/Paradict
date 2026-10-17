@@ -22,11 +22,11 @@ create table public.entries (
   id bigint generated always as identity primary key,
   concept bigint not null references public.concepts(id) on delete cascade,
   lang bigint not null references public.languages(id) on delete cascade,
-  expr text not null,
+  expr text not null check (expr <> '' and expr = btrim(expr) and expr !~ '[\u0001-\u001F\u007F-\u009F]' and expr is nfc normalized),
   unique (concept, lang, expr)
 );
 
-create index idx_entries_expr_trgm on public.entries using gin (expr extensions.gin_trgm_ops);
+-- create index idx_entries_expr_trgm on public.entries using gin (expr extensions.gin_trgm_ops);
 
 
 grant select on public.languages, public.concepts, public.entries to anon, authenticated;
@@ -49,12 +49,19 @@ create policy entries_public_read on public.entries for select
 
 
 create function public.search(query text, language_list bigint[], result_limit integer)
-returns setof public.entries
+returns table (
+  id bigint,
+  concept bigint,
+  lang bigint,
+  expr text,
+  score real
+)
 language plpgsql
 stable
 security invoker
 set search_path = extensions
 as $$
+#variable_conflict use_column
 begin
   if nullif(trim(query), '') is null then
     raise exception 'query must not be empty';
@@ -83,25 +90,35 @@ begin
   return query
   with matched_entries as (
     select
+      e.id,
       e.concept,
+      e.lang,
       similarity(e.expr, query) as score
     from public.entries e
     where e.expr % query
-      and e.lang = any(language_list)
     order by score desc
     limit result_limit
   ),
   candidate_concepts as (
     select
-      e.concept as id,
-      max(score) as best_score
-    from matched_entries e
-    group by e.concept
+      m.concept as id,
+      max(m.score) as best_score
+    from matched_entries m
+    group by m.concept
   )
-  select e.* from public.entries e
+  select
+    e.*,
+    m.score
+  from public.entries e
   join candidate_concepts c on c.id = e.concept
-  where e.lang = any(language_list)
-  order by c.best_score desc;
+  left join matched_entries m on m.id = e.id
+  where e.lang = any(language_list) or exists (
+    select 1
+    from matched_entries me
+    where me.concept = e.concept
+      and me.lang = e.lang
+  )
+  order by c.best_score desc, m.score desc nulls last;
 end;
 $$;
 

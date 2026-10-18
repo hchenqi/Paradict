@@ -114,7 +114,7 @@ begin
     where me.concept = e.concept
       and me.lang = e.lang
   )
-  order by c.best_score desc, m.score desc nulls last;
+  order by c.best_score desc, e.concept asc, m.score desc nulls last;
 end;
 $$;
 

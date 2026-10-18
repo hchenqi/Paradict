@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useUserProfile } from "@/app/AuthProvider";
 import { supabase } from "@/lib/client";
 import { UserProfile } from "@/lib/types";
@@ -48,6 +49,7 @@ function UserDetails({ userProfile, setUserProfile }: { userProfile: UserProfile
 
   return (
     <>
+      <Link className="profile-link" href={`/user/${userProfile.username}`}>View public profile<span aria-hidden="true">→</span></Link>
       <form onSubmit={saveProfile}>
         <label>Email<input value={userProfile.email ?? ""} readOnly /></label>
         <label>Username<input value={username} onChange={event => setUsername(event.target.value)} minLength={6} maxLength={30} pattern="[a-z0-9_]{6,30}" /></label>

@@ -24,6 +24,7 @@ function SubmissionArticle({ submission, reviewer }: { submission: Submission; r
   const [status, setStatus] = useState<"pending" | "submitting" | "approved" | "rejected" | "removed">(submission.review_status);
   const [message, setMessage] = useState("");
   const canReview = reviewer.role === "editor" || reviewer.role === "admin";
+  const canRemove = reviewer.id === submission.created_by || reviewer.role === "admin";
 
   async function review(action: "approved" | "rejected") {
     setStatus("submitting");
@@ -47,11 +48,11 @@ function SubmissionArticle({ submission, reviewer }: { submission: Submission; r
       <header>Submission #{submission.id}<span className="status">{status}</span></header>
       <PayloadView payload={submission.payload} canCommit={canReview} />
       {
-        canReview && (
+        (canReview || canRemove) && (
           <footer className="actions">
-            <button type="button" disabled={status !== "pending"} onClick={() => review("approved")}>Approve</button>
-            <button type="button" disabled={status !== "pending"} onClick={() => review("rejected")}>Reject</button>
-            {reviewer.role === "admin" && <button type="button" disabled={status === "submitting" || status === "removed"} onClick={remove}>Remove</button>}
+            {canReview && <button type="button" disabled={status !== "pending"} onClick={() => review("approved")}>Approve</button>}
+            {canReview && <button type="button" disabled={status !== "pending"} onClick={() => review("rejected")}>Reject</button>}
+            {canRemove && <button type="button" disabled={status === "submitting" || status === "removed"} onClick={remove}>Remove</button>}
             {message && <p role="status">{message}</p>}
           </footer>
         )

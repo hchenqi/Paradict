@@ -1,3 +1,32 @@
+.account {
+  width: min(500px, 100%);
+}
+
+.account .profile-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  padding: 9px 12px;
+  border: 1px solid #c9c7be;
+  border-radius: 4px;
+  color: #172320;
+  background: #f4f1eb;
+  font-size: 14px;
+  text-decoration: none;
+  transition: background-color 150ms ease, border-color 150ms ease;
+}
+
+.account .profile-link:hover {
+  border-color: #172320;
+  background: #e9e6dd;
+}
+
+.account .profile-link:focus-visible {
+  outline: 2px solid #172320;
+  outline-offset: 2px;
+}
+
 .account form {
   display: grid;
   gap: 14px;
@@ -8,12 +37,12 @@
   display: grid;
   gap: 6px;
   color: #6d756d;
-  text-transform: uppercase;
 }
 
 .account form input {
   padding: 10px;
   border: 1px solid #c9c7be;
+  border-radius: 4px;
   color: #172320;
   background: #f4f1eb;
 }
@@ -27,6 +56,7 @@
 .account form button {
   padding: 11px;
   border: 0;
+  border-radius: 4px;
   color: #fffdf9;
   background: #172320;
   cursor: pointer;
@@ -53,8 +83,9 @@
 
 .account .delete button {
   flex: 0 0 auto;
-  padding: 10px 12px;
+  padding: 8px;
   border: 1px solid #b34f38;
+  border-radius: 4px;
   color: #b34f38;
   background: transparent;
   cursor: pointer;

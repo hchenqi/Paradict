@@ -94,7 +94,6 @@ export default function () {
   return (
     <article className="concept">
       <Suspense><CompareIdLoader setCompare={setCompare} /></Suspense>
-      {message && <p role="status">{message}</p>}
       <nav>
         <select aria-label="Languages to display" value={languageFilter} onChange={event => setLanguageFilter(event.target.value as LanguageFilter)}>
           {
@@ -128,6 +127,7 @@ export default function () {
           }
         </div>
       </nav>
+      {message && <p role="status">{message}</p>}
       <ConceptEdit languages={languages} concept={concept} removes={removes} creates={creates} setRemoves={setRemoves} setCreates={setCreates} compare={compare} editing={editing} canCommit={userProfile ? (userProfile.role === "editor" || userProfile.role === "admin") : false} />
     </article>
   );

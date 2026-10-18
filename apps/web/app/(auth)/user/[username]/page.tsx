@@ -52,7 +52,7 @@ export default function () {
 
   useEffect(() => {
     if (userProfile) {
-      supabase.from("submissions").select("id, created_at, payload, review_status").eq("created_by", userProfile.id).order("created_at", { ascending: false }).then(({ data }) => {
+      supabase.from("submissions").select("*").eq("created_by", userProfile.id).order("created_at", { ascending: false }).then(({ data }) => {
         setSubmissions(data as Submission[]);
       });
     }

@@ -10,5 +10,5 @@ export default function () {
     router.replace("/explore");
   }, []);
 
-  return <main></main>;
+  return null;
 }

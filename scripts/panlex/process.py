@@ -18,9 +18,12 @@ entries = entries_of_languages(entries, languages)
 
 # dedup
 mapping = build_mapping(entries)
-concept_eid = dedup_exact(mapping["concept_eid"], 20)
+concept_eid = mapping["concept_eid"]
+#map_stats(concept_eid).evaluate()
+concept_eid = dedup_exact(concept_eid, 20)
+concept_eid = dedup_overlapping(concept_eid, 3, 0.3, 0.9)
 concept_eid = dedup_overlapping(concept_eid, 3, 0.2, 0.8)
-#map_stats(concept_eid)["concept_count"].evaluate()
+#map_stats(concept_eid).evaluate()
 concepts = concepts_distinct(concept_eid)
 entries = restore_from_mapping(concept_eid, mapping["eid_lang_expr"])
 

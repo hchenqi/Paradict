@@ -83,15 +83,17 @@ begin
     raise exception 'result_limit must not exceed 100';
   end if;
 
+  perform set_config('pg_trgm.word_similarity_threshold', '0.5', true);
+
   return query
   with matched_entries as (
     select
       e.id,
       e.concept,
       e.lang,
-      similarity(e.expr, query) as score
+      similarity(query, e.expr) as score
     from public.entries e
-    where e.expr % query
+    where query <% e.expr
     order by score desc
     limit result_limit
   ),

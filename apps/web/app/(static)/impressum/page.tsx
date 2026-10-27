@@ -1,18 +1,38 @@
-export default function () {
+import { legalInfo } from "@/lib/legal-info";
+
+export default function LegalNoticePage() {
   return (
     <article>
-      <h1>Impressum</h1>
-      <p>Paradict is an independent dictionary project.</p>
+      <h1>Legal Notice</h1>
       <p>
-        Operator: Paradict Project
+        Service provider information under section 5 of the German Digital
+        Services Act (DDG).
+      </p>
+      <p>
+        <strong>Service provider</strong>
         <br />
-        Contact:{" "}
-        <a href="mailto:hello@paradict.example">hello@paradict.example</a>
+        {legalInfo.name || "[Set LEGAL_INFO_NAME]"}
+        <br />
+        {legalInfo.address?.split(/\r?\n/).map((line, index) => (
+          <span key={line + index}>
+            {line}
+            <br />
+          </span>
+        )) || "[Set LEGAL_INFO_ADDRESS]"}
       </p>
       <p>
-        Replace these placeholder details with the responsible person or
-        organisation before publishing the site.
+        <strong>Contact</strong>
+        <br />
+        Email: {legalInfo.contactEmail ? (
+          <a href={`mailto:${legalInfo.contactEmail}`}>{legalInfo.contactEmail}</a>
+        ) : "[Set LEGAL_INFO_CONTACT_EMAIL]"}
       </p>
+      {(legalInfo.registerDetails || legalInfo.vatId) && (
+        <p>
+          {legalInfo.registerDetails && <>Register details: {legalInfo.registerDetails}<br /></>}
+          {legalInfo.vatId && <>VAT identification number: {legalInfo.vatId}</>}
+        </p>
+      )}
     </article>
   );
 }

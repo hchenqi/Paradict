@@ -113,19 +113,16 @@ export default function () {
           <input name="compare" placeholder="Concept id" />
           <button type="submit">Compare</button>
         </form>
-        <div>
-          {
-            !editing ? (
-              <button type="button" onClick={() => setEditing(true)}>Edit</button>
-            ) : (
-              <>
-                <button type="button" onClick={() => setEditing(false)}>View</button>
-                <button type="button" onClick={() => submit(undefined)}>Submit</button>
-                {compare && <button type="button" onClick={() => submit(compare)}>Submit subsuming</button>}
-              </>
-            )
-          }
-        </div>
+        <button type="button" onClick={() => setEditing(!editing)}>{!editing ? "Edit" : "View"}</button>
+        {
+          editing && (
+            <div className="agreement">
+              <span>By submitting, you agree to the{" "}<a href="/terms" target="_blank" rel="noopener noreferrer">Terms and Conditions</a></span>
+              <button type="button" onClick={() => submit(undefined)}>Submit</button>
+              {compare && <button type="button" onClick={() => submit(compare)}>Submit subsuming</button>}
+            </div>
+          )
+        }
       </nav>
       {message && <p role="status">{message}</p>}
       <ConceptEdit languages={languages} concept={concept} removes={removes} creates={creates} setRemoves={setRemoves} setCreates={setCreates} compare={compare} editing={editing} canCommit={userProfile ? (userProfile.role === "editor" || userProfile.role === "admin") : false} />

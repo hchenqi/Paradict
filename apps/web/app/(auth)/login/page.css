@@ -22,14 +22,37 @@
 .login form label {
   display: grid;
   gap: 6px;
-  color: #6d756d;
+  color: #010101;
 }
+
+.login form label.agreement {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
 
 .login form input {
   padding: 10px;
   border: 1px solid #c9c7be;
+  border-radius: 4px;
   color: #172320;
   background: #f4f1eb;
+}
+
+.login form label.agreement input {
+  flex: 0 0 auto;
+  margin: 3px 0 0;
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  background: #fffdf9;
+}
+
+.login form label.agreement a {
+  color: #172320;
 }
 
 .login form p {
@@ -41,6 +64,7 @@
 .login form button {
   padding: 11px;
   border: 0;
+  border-radius: 4px;
   color: #fffdf9;
   background: #172320;
   cursor: pointer;

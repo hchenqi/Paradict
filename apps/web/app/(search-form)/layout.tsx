@@ -13,8 +13,10 @@ function SearchRouter({ setInput, query, setQuery }: { setInput: (input: string)
 
   useEffect(() => {
     const query = searchParams.get("q") ?? "";
-    setInput(query);
-    setQuery(query);
+    if (query) {
+      setInput(query);
+      setQuery(query);
+    }
   }, [searchParams]);
 
   useEffect(() => {

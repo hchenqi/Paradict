@@ -1,5 +1,6 @@
 import React from "react";
 import { Metadata } from "next";
+import { headers } from "next/headers";
 import Link from "next/link";
 import { AuthProvider } from "./AuthProvider";
 import { LanguageProvider } from "./LanguageProvider";
@@ -27,13 +28,18 @@ function Header() {
   );
 }
 
-function Footer() {
+async function Footer() {
+  const country = (await headers()).get("x-vercel-ip-country");
+  const showLegalNotice = !country || country === "DE";
+
   return (
     <footer>
       <span>Paradict / your multilingual dictionary</span>
       <nav>
         <Link href="/about">About</Link>
-        <Link href="/impressum">Impressum</Link>
+        <Link href="/terms">Terms and Conditions</Link>
+        <Link href="/privacy">Privacy Policy</Link>
+        {showLegalNotice && <Link href="/impressum">Legal Notice</Link>}
         <Link href="/contact">Contact</Link>
       </nav>
     </footer>

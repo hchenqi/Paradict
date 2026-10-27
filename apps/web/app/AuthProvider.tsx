@@ -23,7 +23,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (user) {
-      supabase.from("users").select("id, role, username, display_name").eq("id", user.id).single()
+      supabase.from("users").select("*").eq("id", user.id).single()
         .then(({ data }) => setUserProfile(data && { ...(data as UserProfile), email: user.email }));
     } else {
       setUserProfile(null);

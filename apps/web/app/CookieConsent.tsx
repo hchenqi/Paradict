@@ -42,7 +42,7 @@ export default function () {
     <aside className="cookie-notice" role="dialog" aria-label="Cookie notice">
       <div>
         <strong>Essential cookies only</strong>
-        <p>This website uses a session cookie only when you sign in. It keeps your account secure; no advertising or tracking cookies are used.</p>
+        <p>This website uses essential authentication cookies when you sign in. No advertising or tracking cookies are used.</p>
       </div>
       <button type="button" onClick={hideNotice}>Continue ({countdown}s)</button>
     </aside>

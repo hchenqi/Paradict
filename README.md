@@ -32,8 +32,8 @@ data/                  locally processed PanLex dataset files
 1. Create a Supabase project.
 2. Run [`scripts/schema.sql`](scripts/schema.sql) in the Supabase SQL Editor. (line `create index idx_entries_expr_trgm` could be run after importing the dataset to speed up the import)
 3. Copy [`apps/web/.env.example`](apps/web/.env.example) to `apps/web/.env.local`.
-4. Set `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` to the project values.
-5. Run `npx supabase gen types typescript --project-id "the-project-id" --schema public > database.types.ts` to download `database.types.ts` and copy it to `apps/lib/`.
+4. Set `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` to the project values. Replace the `LEGAL_INFO_*` examples with current operator and project details before launch.
+5. Run `npx supabase gen types typescript --project-id "the-project-id" --schema public > database.types.ts` then copy the generated file to `apps/web/lib/database.types.ts`.
 6. Optionally run `ALTER ROLE anon SET statement_timeout = '30s'; ALTER ROLE authenticated SET statement_timeout = '30s'; NOTIFY pgrst, 'reload config';` to increase the query timeout.
 
 ### PanLex Dataset Process

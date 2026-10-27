@@ -1,15 +1,14 @@
+import { legalInfo } from "@/lib/legal-info";
+
 export default function () {
   return (
     <article>
       <h1>Contact</h1>
       <p>
-        For corrections, suggestions, data questions, or partnership
-        enquiries, email{" "}
-        <a href="mailto:hello@paradict.example">hello@paradict.example</a>.
-      </p>
-      <p>
-        When reporting a dictionary issue, include the concept link and the
-        languages involved.
+        For questions or suggestions of the website, email{" "}
+        {legalInfo.contactEmail ? (
+          <a href={`mailto:${legalInfo.contactEmail}`}>{legalInfo.contactEmail}</a>
+        ) : "[Set LEGAL_INFO_CONTACT_EMAIL]"}.
       </p>
     </article>
   );

@@ -21,7 +21,7 @@ function Header() {
     <header>
       <Link className="brand" href="/">paradict<span>.</span></Link>
       <div className="action">
-        <Link href="/submissions">Submissions</Link>
+        <Link href="/submissions">submissions</Link>
         <AuthStatus />
       </div>
     </header>

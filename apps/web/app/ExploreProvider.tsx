@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useEffect, useState } from "react";
 import { Entry } from "@/lib/types";
-import { exploreAction } from "./actions";
+import { supabase } from "@/lib/client";
 
 const ExploreContext = createContext<Entry[]>([]);
 
@@ -14,7 +14,8 @@ export function ExploreProvider({ children }: { children: React.ReactNode }) {
   const [entries, setEntries] = useState<Entry[]>([]);
 
   useEffect(() => {
-    exploreAction().then(entries => setEntries(entries));
+    supabase.rpc("explore", { result_limit: 10 })
+      .then(({ data: entries, error }) => { if (!error) { setEntries(entries); } });
   }, []);
 
   return (

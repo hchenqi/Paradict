@@ -68,14 +68,17 @@ export default function () {
     </main>
   ) : (
     <main>
-      <p>Public profile</p >
       <h1>{userProfile.display_name || userProfile.username}</h1>
       <p>@{userProfile.username}</p>
       {reviewer.role === "admin" && <RoleEdit id={userProfile.id} role={userProfile.role} />}
-      <section>
-        <header>Submissions</header>
-        {submissions.length ? <SubmissionList submissions={submissions} reviewer={reviewer} /> : <p>No submissions.</p>}
-      </section>
+      {
+        submissions.length > 0 && (
+          <section>
+            <header>Submissions</header>
+            <SubmissionList submissions={submissions} reviewer={reviewer} />
+          </section>
+        )
+      }
     </main >
   );
 }

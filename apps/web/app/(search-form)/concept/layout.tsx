@@ -99,7 +99,7 @@ export default function () {
           {
             (["all", "selected", "active"] as LanguageFilter[]).map(option => (
               <option key={option} value={option}>
-                {option === "all" ? "All languages" : option === "active" ? "Active languages" : "Selected languages"}
+                {option === "all" ? "all languages" : option === "active" ? "active languages" : "selected languages"}
               </option>
             ))
           }

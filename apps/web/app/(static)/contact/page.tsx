@@ -5,7 +5,7 @@ export default function () {
     <article>
       <h1>Contact</h1>
       <p>
-        For questions or suggestions of the website, email{" "}
+        For questions or suggestions of this website, email{" "}
         {legalInfo.contactEmail ? (
           <a href={`mailto:${legalInfo.contactEmail}`}>{legalInfo.contactEmail}</a>
         ) : "[Set LEGAL_INFO_CONTACT_EMAIL]"}.

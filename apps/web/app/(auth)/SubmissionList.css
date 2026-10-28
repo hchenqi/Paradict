@@ -20,8 +20,9 @@
 
 .submission .actions {
   display: flex;
+  justify-content: flex-end;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 4px;
   align-items: center;
   padding-top: 2px;
 }
@@ -37,6 +38,14 @@
 .submission .actions button:hover {
   border-color: #172320;
   background: #e3ebdf;
+}
+
+.submission .actions button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  border-color: #c9c7be;
+  background: #fffdf9;
+  color: #6d756d;
 }
 
 .submission .actions p {

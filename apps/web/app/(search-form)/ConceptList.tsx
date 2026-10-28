@@ -36,8 +36,8 @@ function ConceptCard({ conceptId, rows, query, compare, setCompare }: { conceptI
     <article className="concept">
       <header>
         <Link className="title" href={`/concept/${conceptId}${compare !== undefined && compare !== conceptId ? `?compare=${compare}` : ""}`}>Concept {conceptId}</Link>
-        <span>{compare === conceptId && "selected for compare"}</span>
-        <button onClick={() => setCompare(compare === conceptId ? undefined : conceptId)}>{compare === conceptId ? "unselect" : "select for compare"}</button>
+        {compare === conceptId && <span>selected for compare</span>}
+        {query && <button onClick={() => setCompare(compare === conceptId ? undefined : conceptId)}>{compare === conceptId ? "unselect" : "select for compare"}</button>}
       </header>
       <div>
         {

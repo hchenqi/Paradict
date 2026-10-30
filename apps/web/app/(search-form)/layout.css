@@ -1,11 +1,12 @@
 .search-form {
-  display: flex;
+  margin: 4px 0;
   height: 40px;
   padding: 0 4px;
   background: #fffdf9;
   border: 1px solid #c9c7be;
   border-radius: 4px;
   transition: border-color 120ms ease, box-shadow 120ms ease;
+  display: flex;
 }
 
 .search-form:focus-within {

@@ -24,7 +24,7 @@ body {
 main {
   flex: 1;
   width: min(680px, 100%);
-  margin: 32px auto;
+  margin: 16px auto;
 }
 
 header {

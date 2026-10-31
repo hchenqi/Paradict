@@ -2,7 +2,6 @@
 
 import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import Link from "next/link";
 import { Entry } from "@/lib/types";
 import { useLanguages } from "@/app/LanguageProvider";
 import { supabase } from "@/lib/client";
@@ -53,7 +52,6 @@ export default function () {
         ) : (
           <>
             <ConceptList entries={entries} query={query} />
-            <Link className="suggest" href={`/concept/create`}>Suggest a new concept</Link>
           </>
         )
       }

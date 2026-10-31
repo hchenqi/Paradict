@@ -64,6 +64,7 @@ export default function ({ entries, query }: { entries: Entry[], query?: string 
           <ConceptCard key={conceptId} conceptId={conceptId} rows={groupEntriesByLanguageOrdered(entries, languages, !query, languageIdCodeMap)} query={query} compare={compare} setCompare={setCompare} />
         ))
       }
+      {query && <Link className="suggest" href={`/concept/create${compare !== undefined ? `?compare=${compare}` : ""}`}>Suggest a new concept</Link>}
     </>
   );
 }

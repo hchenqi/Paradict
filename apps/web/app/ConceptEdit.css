@@ -14,12 +14,33 @@
   cursor: pointer;
 }
 
+.concept button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  border-color: #c9c7be;
+  background: #fffdf9;
+  color: #6d756d;
+}
+
 .concept .row.header {
   border-top: 0;
 }
 
 .concept .row.compare {
   grid-template-columns: minmax(110px, 0.7fr) minmax(0, 1.5fr) minmax(0, 1.5fr);
+}
+
+.concept .row .filter {
+  grid-column: 1;
+  justify-self: start;
+  background: transparent;
+  border-radius: 16px;
+  padding: 4px 6px;
+  transition: background-color 120ms ease;
+}
+
+.concept .row .filter.active {
+  background: #e3ebdf;
 }
 
 .concept .row .current {
@@ -34,10 +55,6 @@
   display: flex;
   gap: 8px;
   align-items: center;
-}
-
-.concept .row .compare button {
-  padding: 2px;
 }
 
 .concept .entry.removed {

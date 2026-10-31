@@ -119,6 +119,7 @@ export default function ({
 }) {
   const [message, setMessage] = useState("");
   const [creatingConcept, setCreatingConcept] = useState(false);
+  const [showEmptyRows, setShowEmptyRows] = useState(false);
 
   const [entries, setEntries] = useState<Entry[]>([]);
   const entryGroups = useMemo(() => Map.groupBy(entries, entry => entry.lang), [entries]);
@@ -239,22 +240,23 @@ export default function ({
     <>
       {message && <p role="status">{message}</p>}
       <div className={`row header ${compare ? "compare" : ""}`}>
+        <button className={`filter ${showEmptyRows ? "active" : ""}`} type="button" aria-pressed={showEmptyRows} onClick={() => setShowEmptyRows(!showEmptyRows)}>empty rows</button>
         <div className="current">
           <span>{concept ? `Concept ${concept}` : "New concept"}</span>
-          {concept === undefined && canCommit && <button type="button" disabled={!creates.length || creatingConcept} onClick={createConcept}>{creatingConcept ? "Creating..." : "Create"}</button>}
+          {!editing && concept === undefined && canCommit && <button type="button" disabled={!creates.length || creatingConcept} onClick={createConcept}>{creatingConcept ? "Creating..." : "Create"}</button>}
         </div>
         {
           hasCompare && (
             <div className="compare">
               <span>Concept {compare}</span>
-              {canCommit && <button type="button" onClick={subsumeCompare}>Subsume</button>}
+              {!editing && canCommit && <button type="button" onClick={subsumeCompare}>Subsume</button>}
             </div>
           )
         }
       </div>
       <div>
         {
-          languages.map(([id, code]) => (
+          languages.filter(([id]) => showEmptyRows || (entryGroups.get(id)?.length ?? 0) > 0 || (createGroups.get(id)?.length ?? 0) > 0 || (hasCompare && (compareEntryGroups.get(id)?.length ?? 0) > 0)).map(([id, code]) => (
             <LanguageRow key={id} lang={{ id, code }} entries={entryGroups.get(id) ?? []} removes={removes} creates={createGroups.get(id) ?? []} onRemove={onRemove} onCreate={onCreate} commitRemove={commitRemove} commitCreate={commitCreate} compare={hasCompare ? compareEntryGroups.get(id) ?? [] : undefined} editing={editing} canCommit={canCommit && concept !== undefined} />
           ))
         }

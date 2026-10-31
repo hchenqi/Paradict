@@ -65,7 +65,7 @@ export default function () {
 
   useEffect(() => {
     if (userProfile === null && editing) {
-      router.push(`/login?redirect=${pathname}`);
+      router.push(`/login?redirect=${encodeURIComponent(`${pathname}${window.location.search}`)}`);
     }
   }, [userProfile, editing, router]);
 
@@ -81,7 +81,7 @@ export default function () {
       setMessage("Only members could submit.");
       return;
     }
-    if ((isCreate && creates.length) || (!isCreate && (removes.length || creates.length))) {
+    if ((isCreate && creates.length) || (!isCreate && (removes.length || creates.length)) || subsume) {
       const payload: SubmissionPayload = { concept, subsume, removes, creates };
       const { error } = await supabase.from("submissions").insert({ created_by: userProfile.id, payload });
       setMessage(error ? "Submission failed." : "Submitted for review.");

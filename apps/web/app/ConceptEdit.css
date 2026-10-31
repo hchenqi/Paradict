@@ -24,6 +24,9 @@
 
 .concept .row .current {
   grid-column: 2;
+  display: flex;
+  gap: 8px;
+  align-items: center;
 }
 
 .concept .row .compare {

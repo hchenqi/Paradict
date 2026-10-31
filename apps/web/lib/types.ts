@@ -1,3 +1,5 @@
+import { Json } from "@/lib/database.types";
+
 export function languageLabel(code: string) {
   return new Intl.DisplayNames([code], { type: "language" }).of(code) ?? code;
 }
@@ -41,6 +43,6 @@ export type Submission = {
   payload: SubmissionPayload;
   review_status: "pending" | "approved" | "rejected";
   reviewed_by?: string;
-  review_note?: string;
+  review_note?: Json;
   reviewed_at?: string;
 };

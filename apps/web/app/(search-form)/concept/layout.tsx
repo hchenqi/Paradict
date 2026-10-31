@@ -91,6 +91,13 @@ export default function () {
     }
   }
 
+  async function createConcept(entries: EntryCreate[]) {
+    const { data, error } = await supabase.rpc("create_concept", { entry_list: entries });
+    if (error) { throw error; }
+    const conceptId = data as number;
+    router.replace(`/concept/${conceptId}`);
+  }
+
   return (
     <article className="concept">
       <Suspense><CompareIdLoader setCompare={setCompare} /></Suspense>
@@ -125,7 +132,7 @@ export default function () {
         }
       </nav>
       {message && <p role="status">{message}</p>}
-      <ConceptEdit languages={languages} concept={concept} removes={removes} creates={creates} setRemoves={setRemoves} setCreates={setCreates} compare={compare} editing={editing} canCommit={userProfile ? (userProfile.role === "editor" || userProfile.role === "admin") : false} />
+      <ConceptEdit languages={languages} concept={concept} removes={removes} creates={creates} setRemoves={setRemoves} setCreates={setCreates} compare={compare} editing={editing} canCommit={userProfile ? (userProfile.role === "editor" || userProfile.role === "admin") : false} onCreateConcept={createConcept} />
     </article>
   );
 }

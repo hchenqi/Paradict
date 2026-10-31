@@ -104,6 +104,7 @@ export default function ({
   compare,
   editing,
   canCommit,
+  onCreateConcept,
 }: {
   languages: [number, string][],
   concept: number | undefined;
@@ -114,8 +115,10 @@ export default function ({
   compare: number | undefined;
   editing: boolean;
   canCommit: boolean;
+  onCreateConcept: (entries: EntryCreate[]) => Promise<void>;
 }) {
   const [message, setMessage] = useState("");
+  const [creatingConcept, setCreatingConcept] = useState(false);
 
   const [entries, setEntries] = useState<Entry[]>([]);
   const entryGroups = useMemo(() => Map.groupBy(entries, entry => entry.lang), [entries]);
@@ -198,6 +201,20 @@ export default function ({
     }
   }
 
+  async function createConcept() {
+    if (!canCommit || concept !== undefined || creates.length === 0 || creatingConcept || !onCreateConcept) {
+      return;
+    }
+    setCreatingConcept(true);
+    try {
+      await onCreateConcept(creates);
+    } catch (error) {
+      setMessage(`Concept creation failed: ${error instanceof Error ? error.message : "Unknown error."}`);
+    } finally {
+      setCreatingConcept(false);
+    }
+  }
+
   async function subsumeCompare() {
     if (!hasCompare) {
       return;
@@ -222,7 +239,10 @@ export default function ({
     <>
       {message && <p role="status">{message}</p>}
       <div className={`row header ${compare ? "compare" : ""}`}>
-        <span className="current">{concept ? `Concept ${concept}` : "New concept"}</span>
+        <div className="current">
+          <span>{concept ? `Concept ${concept}` : "New concept"}</span>
+          {concept === undefined && canCommit && <button type="button" disabled={!creates.length || creatingConcept} onClick={createConcept}>{creatingConcept ? "Creating..." : "Create"}</button>}
+        </div>
         {
           hasCompare && (
             <div className="compare">
@@ -235,7 +255,7 @@ export default function ({
       <div>
         {
           languages.map(([id, code]) => (
-            <LanguageRow key={id} lang={{ id, code }} entries={entryGroups.get(id) ?? []} removes={removes} creates={createGroups.get(id) ?? []} onRemove={onRemove} onCreate={onCreate} commitRemove={commitRemove} commitCreate={commitCreate} compare={hasCompare ? compareEntryGroups.get(id) ?? [] : undefined} editing={editing} canCommit={canCommit} />
+            <LanguageRow key={id} lang={{ id, code }} entries={entryGroups.get(id) ?? []} removes={removes} creates={createGroups.get(id) ?? []} onRemove={onRemove} onCreate={onCreate} commitRemove={commitRemove} commitCreate={commitCreate} compare={hasCompare ? compareEntryGroups.get(id) ?? [] : undefined} editing={editing} canCommit={canCommit && concept !== undefined} />
           ))
         }
       </div>

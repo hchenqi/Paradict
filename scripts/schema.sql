@@ -233,6 +233,51 @@ create policy entries_editor_delete on public.entries for delete
   to authenticated using (exists (select 1 from public.users actor where actor.id = (select auth.uid()) and actor.role in ('editor', 'admin')));
 
 
+create type public.entry_create as (
+  lang bigint,
+  expr text
+);
+
+create function public.create_concept(entry_list public.entry_create[])
+returns bigint
+language plpgsql
+security invoker
+set search_path = ''
+as $$
+declare
+  concept_id bigint;
+begin
+  if not exists (select 1 from public.users where id = (select auth.uid()) and role in ('editor', 'admin')) then
+    raise exception 'not authorized';
+  end if;
+
+  if coalesce(cardinality(entry_list), 0) = 0 then
+    raise exception 'concept must contain at least one entry';
+  end if;
+
+  if exists (select 1 from unnest(entry_list) as item where (item).lang is null or (item).expr is null) then
+    raise exception 'each entry must have a language and expression';
+  end if;
+
+  insert into public.concepts
+    default values
+    returning id into concept_id;
+
+  insert into public.entries (concept, lang, expr)
+    select concept_id, entry.lang, entry.expr
+    from (
+      select distinct (item).lang, (item).expr
+      from unnest(entry_list) as item
+    ) as entry;
+
+  return concept_id;
+end;
+$$;
+
+revoke execute on function public.create_concept(public.entry_create[]) from public;
+grant execute on function public.create_concept(public.entry_create[]) to authenticated;
+
+
 -- =========================================================================
 -- User Functions
 -- =========================================================================

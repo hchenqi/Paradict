@@ -6,13 +6,9 @@ export default function PrivacyPage() {
     <article>
       <h1>Privacy Policy</h1>
 
-      <h2>Who we are</h2>
+      <h2>Data controller</h2>
       <p>
-        Paradict is operated by {legalInfo.name || "[Set LEGAL_INFO_NAME]"}.
-        For privacy questions or requests, contact{" "}
-        {legalInfo.contactEmail ? (
-          <a href={`mailto:${legalInfo.contactEmail}`}>{legalInfo.contactEmail}</a>
-        ) : "[Set LEGAL_INFO_CONTACT_EMAIL]"}.
+        The data controller is {legalInfo.name || "[Set LEGAL_INFO_NAME]"}.
       </p>
 
       <h2>Information we process</h2>
@@ -28,7 +24,7 @@ export default function PrivacyPage() {
           changes you submit, the proposal's review status and timestamps, and
           its account association so proposals can be reviewed and managed.
           Signed-in members and reviewers can view proposals. Approved
-          dictionary entries are public. Do not include personal or
+          dictionary entries are public. Do not submit personal or
           confidential information in a proposal.
         </li>
         <li>
@@ -76,15 +72,13 @@ export default function PrivacyPage() {
         On the <Link href="/account">account page</Link>, you can view and
         change your username and display name, and delete your account. Your
         email address is shown there but cannot currently be changed on that
-        page. Depending on the laws that apply to you, you may also have
+        page. You may delete pending or rejected proposals. Depending on the
+        laws that apply to you, you may also have
         privacy rights such as requesting access to, a copy of, or correction
         or deletion of your personal information, or objecting to or
         restricting certain uses. To make a request not available on the
-        account page, contact{" "}
-        {legalInfo.contactEmail ? (
-          <a href={`mailto:${legalInfo.contactEmail}`}>{legalInfo.contactEmail}</a>
-        ) : "[Set LEGAL_INFO_CONTACT_EMAIL]"}. We do not sell personal
-        information or use it for advertising.
+        account page, use the <Link href="/contact">Contact page</Link>.
+        We do not sell personal information or use it for advertising.
       </p>
     </article>
   );

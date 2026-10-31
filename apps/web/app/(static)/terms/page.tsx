@@ -1,36 +1,89 @@
-import { legalInfo } from "@/lib/legal-info";
+import Link from "next/link";
 
 export default function TermsPage() {
   return (
     <article>
       <h1>Terms and Conditions</h1>
-
-      <h2>Service and provider</h2>
       <p>
-        Paradict is a free, community-maintained multilingual dictionary. The
-        service provider is {legalInfo.name || "[Set LEGAL_INFO_NAME]"}.
-        Contact: {legalInfo.contactEmail ? (
-          <a href={`mailto:${legalInfo.contactEmail}`}>{legalInfo.contactEmail}</a>
-        ) : "[Set LEGAL_INFO_CONTACT_EMAIL]"}.
+        These terms explain how to use Paradict and what applies when you
+        submit a dictionary contribution.
       </p>
 
-      <h2>Accounts and acceptable use</h2>
+      <h2>Data source and copyright</h2>
       <p>
-        An account is required to submit suggestions. Keep your account
-        credentials secure and provide an email address you control. Use the
-        service lawfully. Do not submit unlawful, confidential, personal, or
-        infringing material, or attempt to disrupt or gain unauthorised access
-        to the service. You may only submit material that you are entitled to
-        license. Submissions are reviewed and may be rejected or removed.
+        The seed data is based on{" "}
+        <a href="https://huggingface.co/datasets/cointegrated/panlex-meanings">
+          cointegrated/panlex-meanings
+        </a>
+        , a dataset derived from PanLex whose dataset card states that it is
+        released under CC0 1.0. The source dataset's license applies to that dataset
+        only and does not guarantee rights in other material.
       </p>
       <p>
-        To report potentially illegal content or an infringement, contact us
-        at the email address above with the content URL and an explanation. We
-        will review the notice and may remove the content or restrict access
-        where appropriate.
+        The dictionary also includes entries submitted by the community. Paradict
+        dictionary data, including community contributions, is also dedicated
+        to the public domain under{" "}
+        <a href="https://creativecommons.org/publicdomain/zero/1.0/">
+          CC0 1.0
+        </a>
+        , to the extent legally possible.
+      </p>
+      <p>
+        This license does
+        not apply to Paradict software; a separate software license applies
+        only if published for this project.
       </p>
 
-      <h2>License for contributions</h2>
+      <h2>Using the dictionary</h2>
+      <ul>
+        <li>
+          <strong>Choose languages:</strong> Click{" "}
+          <strong>All languages</strong> to open the language list, then click
+          language buttons to select or deselect them. Click selected language
+          buttons to turn them on or off for searching and display. Your
+          choices are saved in this browser.
+        </li>
+        <li>
+          <strong>Explore concepts:</strong> Browse the{" "}
+          <Link href="/explore">Explore</Link> page for a random selection of concepts.
+          Click a concept title to view its entire entries.
+        </li>
+        <li>
+          <strong>Search:</strong> Enter a word or phrase in the Search box and
+          click the search button. Matching entries are grouped by concepts.
+          Click a concept title to open it. In search results, click{" "}
+          <strong>select for compare</strong> on a concept, then open another
+          concept to compare their entries.
+        </li>
+        <li>
+          <strong>View and compare concepts:</strong> On a concept page, choose “all
+          languages,” “selected languages,” or “active languages” from the
+          display menu. To compare by ID, enter the other concept's ID and
+          click <strong>Compare</strong>.
+        </li>
+        <li>
+          <strong>Edit a concept:</strong> Click <strong>Edit</strong> to
+          enter edit mode. Use the entry field and <strong>Add</strong> button
+          to propose an entry for a language, or click the minus button beside
+          an entry to propose removing it. Click <strong>View</strong> to leave
+          edit mode; proposed changes are sent for review when you click{" "}
+          <strong>Submit</strong>. Accepted proposals are merged in the public dictionary.
+        </li>
+        <li>
+          <strong>Suggest a new concept:</strong> Click{" "}
+          <strong>Suggest a new concept</strong> below search results to edit an
+          empty concept and submit.
+        </li>
+      </ul>
+
+      <h2>Contributing</h2>
+      <p>
+        To submit contributions, you must <Link href="/login?mode=signup">register</Link> with
+        an email address. Keep your account credentials secure and use the service lawfully. Do
+        not submit unlawful or infringing material, or attempt to disrupt or
+        gain unauthorised access to the service. Submissions are reviewed and
+        may be rejected or removed.
+      </p>
       <p>
         By submitting a contribution to Paradict, you dedicate that
         contribution to the public domain under the{" "}
@@ -50,26 +103,10 @@ export default function TermsPage() {
         You retain any rights not granted by this license. If your proposal is
         approved and merged, the license applies to the resulting dictionary
         data in the public core database and continues even if the proposal
-        record or your account is later deleted. You may delete pending or
-        rejected proposals. Deleting your account removes your profile and
-        unlinks your proposal records from you, but those records may be
-        retained for review and integrity purposes. Deleting a proposal does
-        not revoke a license already granted for material incorporated into
-        the dictionary. The contribution terms are fixed for this project;
-        any future project would have its own terms.
-      </p>
-
-      <h2>Source data and copyright</h2>
-      <p>
-        The seed data is based on{" "}
-        <a href="https://huggingface.co/datasets/cointegrated/panlex-meanings">
-          cointegrated/panlex-meanings
-        </a>
-        , whose dataset card states that it is released under CC0 1.0. That
-        statement concerns the source dataset and does not guarantee rights in
-        other material. Paradict software is not licensed by that dataset
-        license. A separate software license applies only if published for
-        this project.
+        or your account is later deleted. Deleting a proposal does not revoke
+        a license already granted for material incorporated into the
+        dictionary. The contribution terms are fixed for this project; any
+        future project would have its own terms.
       </p>
 
       <h2>Availability and liability</h2>
@@ -84,13 +121,12 @@ export default function TermsPage() {
         liability that cannot legally be excluded or limited.
       </p>
 
-      <h2>Contact</h2>
+      <h2>Report an issue</h2>
       <p>
-        Contact{" "}
-        {legalInfo.contactEmail ? (
-          <a href={`mailto:${legalInfo.contactEmail}`}>{legalInfo.contactEmail}</a>
-        ) : "[Set LEGAL_INFO_CONTACT_EMAIL]"}{" "}
-        with questions.
+        To report potentially illegal content or an infringement,{" "}
+        <Link href="/contact">contact us</Link> including the content URL
+        with an explanation. We will review the notice and may remove the
+        content or restrict access where appropriate.
       </p>
     </article>
   );

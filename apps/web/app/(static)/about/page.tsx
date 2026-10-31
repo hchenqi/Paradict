@@ -10,61 +10,38 @@ export default function () {
         express a related meaning across languages, making it possible to
         explore connections that a word-for-word dictionary may miss.
       </p>
-      <p>
-        The starting dictionary data comes from{" "}
-        <a href="https://huggingface.co/datasets/cointegrated/panlex-meanings">
-          cointegrated/panlex-meanings
-        </a>
-        , a dataset derived from PanLex and published under CC0 1.0 according
-        to its dataset card. Dictionary data may be incomplete or contain
-        errors.
-      </p>
-
-      <h2>How to use Paradict</h2>
-      <ol>
+      <h2>How to use</h2>
+      <ul>
         <li>
-          Enter a word or phrase in the search box. Search results show concepts
-          containing matching entries.
+          <strong>Choose languages:</strong> Use the language selector to
+          choose which languages to search and display. Your choices are saved
+          in this browser.
         </li>
         <li>
-          Choose the languages you want to explore with the language selector.
-          Your language choices are saved in this browser.
+          <strong>Explore concepts:</strong> Browse the{" "}
+          <Link href="/explore">Explore</Link> page for a random selection of
+          concepts.
         </li>
         <li>
-          Open a concept to view its entries. On a concept page, use the
-          language filter to change which language rows are displayed; compare
-          concepts by selecting a concept or entering its ID.
+          <strong>Search:</strong> Enter a word or phrase in the search box.
+          Matching entries are grouped into concepts; open a concept from the
+          results to see related words and phrases across languages.
         </li>
-      </ol>
+        <li>
+          <strong>View and compare concepts:</strong> On a concept page, use the
+          language filter to change which rows of languages are shown. Select a concept
+          from the search results or enter its ID in the comparison control to
+          compare it against another concept.
+        </li>
+        <li>
+          <strong>Contribute:</strong> Registered users can suggest a new
+          concept or edit an existing concept and submit changes for review.
+        </li>
+      </ul>
+      <h2>Learn more</h2>
       <p>
-        You can also browse the{" "}
-        <Link href="/explore">Explore page</Link> for a random selection of concepts.
-      </p>
-
-      <h2>Suggest a correction or addition</h2>
-      <p>
-        Sign up with an email address to suggest new concepts or changes to
-        existing entries. Open a concept and choose <strong>Edit</strong>, or
-        use the suggestion link on the search results page. Submit your
-        proposal for review; accepted proposals are added to the public
-        dictionary. Submitting a proposal means agreeing to the{" "}
-        <Link href="/terms">Terms and Conditions</Link>, including the CC0 1.0
-        license for contributions. Do not submit private or confidential
-        information.
-      </p>
-
-      <h2>Accounts and privacy</h2>
-      <p>
-        Browsing and searching do not require an account. An account is needed
-        to submit contributions. The site uses necessary authentication cookies
-        for sign-in and does not use advertising or analytics cookies. See the{" "}
-        <Link href="/privacy">Privacy Policy</Link> for details about account
-        and service data.
-      </p>
-
-      <p>
-        Ready to explore? <Link href="/explore">Browse concepts</Link> or{" "}
-        <Link href="/login?mode=signup">create an account</Link> to contribute.
+        For detailed usage, contribution, and license information,
+        see <Link href="/terms">Terms and Conditions</Link>.
       </p>
     </article>
   );

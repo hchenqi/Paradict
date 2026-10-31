@@ -1,8 +1,14 @@
 .info h1 {
-  margin: 12px 0 20px;
+  margin: 24px 0;
   letter-spacing: -1px;
 }
 
 .info a {
   color: #172320;
+}
+
+.info ul {
+  display: grid;
+  gap: 16px;
+  padding-left: 24px;
 }

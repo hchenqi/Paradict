@@ -43,6 +43,8 @@ export default function () {
   const [entries, setEntries] = useState<Entry[]>([]);
   const [message, setMessage] = useState("Loading...");
 
+  useEffect(() => { window.scrollTo({ top: 0 }); }, []);
+
   return (
     <>
       <Suspense><Search setQuery={setQuery} setEntries={setEntries} setMessage={setMessage} /></Suspense>

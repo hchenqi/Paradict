@@ -118,7 +118,7 @@ export default function ({
   onCreateConcept: (entries: EntryCreate[]) => Promise<void>;
 }) {
   const [message, setMessage] = useState("");
-  const [creatingConcept, setCreatingConcept] = useState(false);
+  const [committing, setCommitting] = useState(false);
   const [showEmptyRows, setShowEmptyRows] = useState(false);
 
   const [entries, setEntries] = useState<Entry[]>([]);
@@ -215,17 +215,36 @@ export default function ({
     }
   }
 
-  async function createConcept() {
-    if (!canCommit || concept !== undefined || creates.length === 0 || creatingConcept || !onCreateConcept) {
+  async function updateConcept() {
+    if (!canCommit || concept === undefined || (!removes.length && !creates.length) || committing) {
       return;
     }
-    setCreatingConcept(true);
+
+    setCommitting(true);
+    const entry_remove_list = removes.map(({ id }) => id);
+    const { data, error } = await supabase.rpc("update_concept", { concept, entry_remove_list, entry_create_list: creates });
+    if (error) {
+      setMessage(`Commit failed: ${error.message}`);
+    } else {
+      const removedIds = new Set(entry_remove_list);
+      setEntries(entries => [...entries.filter(({ id }) => !removedIds.has(id)), ...data]);
+      setRemoves(() => []);
+      setCreates(() => []);
+    }
+    setCommitting(false);
+  }
+
+  async function createConcept() {
+    if (!canCommit || concept !== undefined || creates.length === 0 || committing || !onCreateConcept) {
+      return;
+    }
+    setCommitting(true);
     try {
       await onCreateConcept(creates);
     } catch (error) {
       setMessage(`Concept creation failed: ${error instanceof Error ? error.message : "Unknown error."}`);
     } finally {
-      setCreatingConcept(false);
+      setCommitting(false);
     }
   }
 
@@ -256,7 +275,8 @@ export default function ({
         <button className={`filter ${showEmptyRows ? "active" : ""}`} type="button" aria-pressed={showEmptyRows} onClick={() => setShowEmptyRows(!showEmptyRows)}>empty rows</button>
         <div className="current">
           <span>{concept ? `Concept ${concept}` : "New concept"}</span>
-          {!editing && concept === undefined && canCommit && <button type="button" disabled={!creates.length || creatingConcept} onClick={createConcept}>{creatingConcept ? "Creating..." : "Create"}</button>}
+          {!editing && concept === undefined && canCommit && <button type="button" disabled={!creates.length || committing} onClick={createConcept}>{committing ? "Creating..." : "Create"}</button>}
+          {!editing && concept !== undefined && canCommit && <button type="button" disabled={(!removes.length && !creates.length) || committing} onClick={updateConcept}>{committing ? "Committing..." : "Commit all"}</button>}
         </div>
         {
           hasCompare && (
@@ -271,7 +291,7 @@ export default function ({
       <div>
         {
           languages.filter(([id]) => showEmptyRows || (entryGroups.get(id)?.length ?? 0) > 0 || (createGroups.get(id)?.length ?? 0) > 0 || (hasCompare && (compareEntryGroups.get(id)?.length ?? 0) > 0)).map(([id, code]) => (
-            <LanguageRow key={id} lang={{ id, code }} entries={entryGroups.get(id) ?? []} removes={removes} creates={createGroups.get(id) ?? []} onRemove={onRemove} onCreate={onCreate} commitRemove={commitRemove} commitCreate={commitCreate} compare={hasCompare ? compareEntryGroups.get(id) ?? [] : undefined} editing={editing} canCommit={canCommit && concept !== undefined} />
+            <LanguageRow key={id} lang={{ id, code }} entries={entryGroups.get(id) ?? []} removes={removes} creates={createGroups.get(id) ?? []} onRemove={onRemove} onCreate={onCreate} commitRemove={commitRemove} commitCreate={commitCreate} compare={hasCompare ? compareEntryGroups.get(id) ?? [] : undefined} editing={editing} canCommit={canCommit && concept !== undefined && !committing} />
           ))
         }
       </div>

@@ -3,18 +3,18 @@
   border-bottom: none;
 }
 
-.concept header span {
-  color: #eb5e3f;
-  padding: 0 8px;
-}
-
-.concept header button {
+.concept header button.compare-toggle {
   padding: 6px 8px;
   border: 1px solid #d9d6cd;
   border-radius: 4px;
   background: #fffdf9;
   color: #172320;
   cursor: pointer;
+}
+
+.concept header button.compare-toggle.selected {
+  border-color: #b7c5b3;
+  background: #e3ebdf;
 }
 
 .concept .entry.matched {

@@ -1,5 +1,6 @@
 .next
 .turbo
+.temp
 __pycache__
 *.tsbuildinfo
 *.local

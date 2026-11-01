@@ -12,25 +12,19 @@ export default function TermsPage() {
       <h2>Data source and copyright</h2>
       <p>
         The seed data is based on{" "}
-        <a href="https://huggingface.co/datasets/cointegrated/panlex-meanings">
-          cointegrated/panlex-meanings
-        </a>
-        , a dataset derived from PanLex whose dataset card states that it is
-        released under CC0 1.0. The source dataset's license applies to that dataset
+        <a href="https://huggingface.co/datasets/cointegrated/panlex-meanings">cointegrated/panlex-meanings</a>
+        , a dataset derived from PanLex released under CC0 1.0. The source dataset's license applies to that dataset
         only and does not guarantee rights in other material.
       </p>
       <p>
         The dictionary also includes entries submitted by the community. Paradict
         dictionary data, including community contributions, is also dedicated
         to the public domain under{" "}
-        <a href="https://creativecommons.org/publicdomain/zero/1.0/">
-          CC0 1.0
-        </a>
+        <a href="https://creativecommons.org/publicdomain/zero/1.0/">CC0 1.0</a>
         , to the extent legally possible.
       </p>
       <p>
-        This license does
-        not apply to Paradict software; a separate software license applies
+        This license does not apply to Paradict software; a separate software license applies
         only if published for this project.
       </p>
 
@@ -52,7 +46,7 @@ export default function TermsPage() {
           <strong>Search:</strong> Enter a word or phrase in the Search box and
           click the search button. Matching entries are grouped by concepts.
           Click a concept title to open it. In search results, click{" "}
-          <strong>select for compare</strong> on a concept, then open another
+          <strong>Compare</strong> on a concept to select it, then open another
           concept to compare their entries.
         </li>
         <li>
@@ -65,9 +59,14 @@ export default function TermsPage() {
           <strong>Edit a concept:</strong> Click <strong>Edit</strong> to
           enter edit mode. Use the entry field and <strong>Add</strong> button
           to propose an entry for a language, or click the minus button beside
-          an entry to propose removing it. Click <strong>View</strong> to leave
-          edit mode; proposed changes are sent for review when you click{" "}
-          <strong>Submit</strong>. Accepted proposals are merged in the public dictionary.
+          an entry to propose removing it. Click <strong>View</strong> to
+          leave edit mode, then click <strong>Submit</strong> to send the
+          proposed changes for review. Accepted changes are merged into the
+          public dictionary.
+          When comparing concepts, use <strong>Add all</strong> to propose
+          adding all entries from the compared concept. Click{" "}
+          <strong>Submit subsuming</strong> to send the changes for review and
+          include a request to delete the compared concept.
         </li>
         <li>
           <strong>Suggest a new concept:</strong> Click{" "}

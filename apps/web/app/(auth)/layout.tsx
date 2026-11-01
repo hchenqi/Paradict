@@ -11,7 +11,8 @@ export default function ({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (userProfile === null && pathname !== "/login") {
-      router.push(`/login?redirect=${pathname}`);
+      const timeout = setTimeout(() => router.replace(`/login?redirect=${pathname}`), 300);
+      return () => clearTimeout(timeout);
     }
   }, [userProfile, pathname, router]);
 

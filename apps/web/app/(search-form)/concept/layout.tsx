@@ -59,15 +59,16 @@ export default function () {
     setEditing(isCreate);
     if (!isCreate && !concept) {
       setMessage("Invalid concept id.");
-      router.push("/concept/create");
+      router.replace("/concept/create");
     }
   }, [pathname]);
 
   useEffect(() => {
     if (userProfile === null && editing) {
-      router.push(`/login?redirect=${encodeURIComponent(`${pathname}${window.location.search}`)}`);
+      const timeout = setTimeout(() => router.replace(`/login?redirect=${encodeURIComponent(`${pathname}${window.location.search}`)}`), 300);
+      return () => clearTimeout(timeout);
     }
-  }, [userProfile, editing, router]);
+  }, [userProfile, editing, pathname, router]);
 
   useEffect(() => {
     if (message) {

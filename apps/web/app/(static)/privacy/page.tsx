@@ -9,6 +9,10 @@ export default function PrivacyPage() {
       <h2>Data controller</h2>
       <p>
         The data controller is {legalInfo.name || "[Set LEGAL_INFO_NAME]"}.
+        Contact:{" "}
+        {legalInfo.contactEmail ? (
+          <a href={`mailto:${legalInfo.contactEmail}`}>{legalInfo.contactEmail}</a>
+        ) : "[Set LEGAL_INFO_CONTACT_EMAIL]"}.
       </p>
 
       <h2>Information we process</h2>
@@ -40,8 +44,8 @@ export default function PrivacyPage() {
         We use information to operate accounts, maintain and secure the
         website, and review dictionary proposals. Vercel provides hosting and
         delivery; Supabase provides authentication and database services. The
-        Supabase project is hosted
-        {legalInfo.supabaseRegion ? ` in ${legalInfo.supabaseRegion}` : ""}.
+        Supabase project is hosted in{" "}
+        {legalInfo.supabaseRegion || "[Set LEGAL_INFO_SUPABASE_REGION]"}.
         These providers may use subprocessors and process information in
         other countries according to their services and settings. Their
         documentation describes their data handling and any applicable
@@ -52,11 +56,13 @@ export default function PrivacyPage() {
         delete your account from the <Link href="/account">account page</Link>.
         This removes your authentication and profile data, but proposal
         records are retained for review and integrity purposes and are no
-        longer linked to your account. Approved dictionary entries may remain
-        public under the contribution license described in our{" "}
-        <Link href="/terms">Terms and Conditions</Link>. Provider logs and
-        backups are retained according to the providers' settings and
-        policies.
+        longer linked to your account. We may also suspend or close an account,
+        with or without prior notice, when necessary to protect the service or
+        its users, address security concerns, or comply with law. Approved
+        dictionary entries may remain publicly available under the contribution
+        license granted when they were submitted.
+        Provider logs and backups are retained according to the providers'
+        settings and policies.
       </p>
 
       <h2>Cookies and browser storage</h2>
@@ -71,9 +77,8 @@ export default function PrivacyPage() {
       <p>
         On the <Link href="/account">account page</Link>, you can view and
         change your username and display name, and delete your account. Your
-        email address is shown there but cannot currently be changed on that
-        page. You may delete pending or rejected proposals. Depending on the
-        laws that apply to you, you may also have
+        email address is shown there but cannot be changed.
+        Depending on the laws that apply to you, you may also have
         privacy rights such as requesting access to, a copy of, or correction
         or deletion of your personal information, or objecting to or
         restricting certain uses. To make a request not available on the

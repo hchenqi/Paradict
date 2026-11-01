@@ -100,7 +100,7 @@ begin
   candidate_concepts as (
     select
       m.concept as id,
-      max(m.score) as best_score
+      array_agg(m.score order by m.score desc) as scores
     from matched_entries m
     group by m.concept
   )
@@ -116,7 +116,7 @@ begin
     where me.concept = e.concept
       and me.lang = e.lang
   )
-  order by c.best_score desc, e.concept asc, m.score desc nulls last;
+  order by c.scores desc, e.concept asc, m.score desc nulls last;
 end;
 $$;
 

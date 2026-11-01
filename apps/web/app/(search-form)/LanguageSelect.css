@@ -1,0 +1,110 @@
+.language-select {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.language-select .row {
+  display: flex;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  align-items: center;
+  gap: 5px;
+  min-height: 38px;
+}
+
+.language-select .pill {
+  margin: 0;
+  height: 28px;
+  padding: 0 8px;
+  border: 1px solid transparent;
+  border-radius: 15px;
+  background: transparent;
+  color: #6d756d;
+  cursor: pointer;
+}
+
+.language-select .pill.draggable {
+  cursor: grab;
+}
+
+.language-select .pill.draggable:active {
+  cursor: grabbing;
+}
+
+.language-select .pill.draggable.dragging {
+  opacity: 0.35;
+  transform: scale(0.96);
+}
+
+.language-select .pill.draggable.active {
+  border-color: #b7c5b3;
+  background: #e3ebdf;
+  color: #172320;
+}
+
+.language-select .pill.draggable.inactive {
+  border-color: #b7c5b3;
+  background: transparent;
+  color: #6d756d;
+}
+
+.language-select button.popup {
+  margin-left: auto;
+  border: 2px #b7c5b3 solid;
+  border-radius: 4px;
+  padding: 4px;
+  background: 0;
+  cursor: pointer;
+  color: #6d756d;
+  font-size: 14px;
+}
+
+.language-select button.popup.hint {
+  border-color: orange;
+  animation: blink 2s infinite;
+}
+
+@keyframes blink {
+  50% {
+    border-color: olivedrab;
+  }
+}
+
+.language-select div.popup {
+  width: 100%;
+  min-width: 0;
+  margin: 8px 0;
+  border: 1px solid #d8d6cd;
+  border-radius: 10px;
+  padding: 10px;
+  background: #fffdf9;
+}
+
+.language-select .pill.static {
+  position: relative;
+  border-color: #d9d6cd;
+  background: #fffdf9;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.language-select .pill.static span {
+  min-width: 2.2em;
+  padding: 2px 4px;
+  border-radius: 10px;
+  background: #e8ebd2;
+  color: #59655a;
+  font-size: 0.72em;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.language-select .pill.static.selected {
+  border-color: #50715c;
+  color: #102b1b;
+  background: #cfe4d3;
+  box-shadow: inset 0 0 0 1px #8bb998;
+}

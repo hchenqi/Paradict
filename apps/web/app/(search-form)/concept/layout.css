@@ -1,0 +1,91 @@
+.concept nav {
+  margin-bottom: 8px;
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr) max-content;
+  gap: 8px;
+  align-items: start;
+}
+
+.concept nav > * {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.concept nav > select {
+  grid-column: 1;
+  justify-self: start;
+  width: max-content;
+  min-width: max-content;
+  max-width: none;
+}
+
+.concept nav > .view-toggle {
+  grid-column: 3;
+  justify-self: end;
+}
+
+.concept nav > .compare-form {
+  grid-column: 2;
+  display: flex;
+  justify-self: center;
+  gap: 0;
+  min-width: 0;
+  width: max-content;
+  max-width: 100%;
+}
+
+.concept nav > .compare-form input {
+  flex: 1 1 7.5rem;
+  width: 7.5rem;
+  min-width: 0;
+}
+
+.concept nav > .compare-form button {
+  flex: 0 1 auto;
+  min-width: 0;
+}
+
+.concept nav div {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.concept nav div.agreement {
+  grid-column: 1 / -1;
+  justify-self: end;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  margin-left: 0;
+  min-width: 0;
+  max-width: 100%;
+  font-size: 14px;
+}
+
+.concept nav div.agreement > * {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.concept nav div.agreement span {
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 400px) {
+  .concept nav {
+    grid-template-columns: minmax(0, 1fr) max-content;
+  }
+
+  .concept nav > .view-toggle {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .concept nav > .compare-form {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    justify-self: center;
+    width: max-content;
+    max-width: 100%;
+  }
+}

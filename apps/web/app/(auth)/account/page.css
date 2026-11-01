@@ -1,0 +1,125 @@
+.account {
+  width: min(500px, 100%);
+}
+
+.account .profile-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  padding: 9px 12px;
+  border: 1px solid #c9c7be;
+  border-radius: 4px;
+  color: #172320;
+  background: #f4f1eb;
+  font-size: 14px;
+  text-decoration: none;
+  transition: background-color 150ms ease, border-color 150ms ease;
+}
+
+.account .profile-link:hover {
+  border-color: #172320;
+  background: #e9e6dd;
+}
+
+.account .profile-link:focus-visible {
+  outline: 2px solid #172320;
+  outline-offset: 2px;
+}
+
+.account form {
+  display: grid;
+  gap: 14px;
+  margin-top: 28px;
+}
+
+.account form label {
+  display: grid;
+  gap: 6px;
+  color: #6d756d;
+}
+
+.account form input {
+  padding: 10px;
+  border: 1px solid #c9c7be;
+  border-radius: 4px;
+  color: #172320;
+  background: #f4f1eb;
+}
+
+.account form p {
+  margin: 0;
+  color: #b34f38;
+  font-size: 13px;
+}
+
+.account form button {
+  padding: 11px;
+  border: 0;
+  border-radius: 4px;
+  color: #fffdf9;
+  background: #172320;
+  cursor: pointer;
+}
+
+.account form button:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.account .actions {
+  margin-top: 16px;
+  border-top: 1px solid #d9d6cd;
+  padding-top: 16px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) max-content;
+  column-gap: 16px;
+  row-gap: 16px;
+}
+
+.account .actions div {
+  display: contents;
+}
+
+.account .actions p {
+  margin: 0;
+}
+
+.account .actions button {
+  align-self: center;
+  padding: 8px 12px;
+  border: 1px solid;
+  border-radius: 4px;
+  background: transparent;
+  cursor: pointer;
+  transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease;
+}
+
+.account .actions button:focus-visible {
+  outline: 2px solid #172320;
+  outline-offset: 2px;
+}
+
+.account .actions button:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.account .actions button.sign-out {
+  border: 1px solid #c9c7be;
+  color: #172320;
+}
+
+.account .actions button.sign-out:hover:not(:disabled) {
+  border-color: #172320;
+  background: #e9e6dd;
+}
+
+.account .actions button.delete {
+  border-color: #b34f38;
+  color: #b34f38;
+}
+
+.account .actions button.delete:hover:not(:disabled) {
+  background: #f7e9e5;
+}

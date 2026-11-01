@@ -1,0 +1,69 @@
+.search-form {
+  margin: 8px 0;
+  height: 40px;
+  padding: 0 4px;
+  background: #fffdf9;
+  border: 1px solid #c9c7be;
+  border-radius: 4px;
+  transition: border-color 120ms ease, box-shadow 120ms ease;
+  display: flex;
+}
+
+.search-form:focus-within {
+  border-color: #8bb998;
+  box-shadow: 0 0 0 2px rgb(139 185 152 / 18%);
+}
+
+.search-form input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  padding: 0 8px;
+  background: transparent;
+  color: #172320;
+}
+
+.search-form .icon {
+  background: none;
+  border: 0;
+  margin: auto 0;
+  cursor: pointer;
+  color: #eb5e3f;
+  font-size: 24px;
+}
+
+.result {
+  padding: 16px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.result .heading {
+  margin-bottom: 8px;
+}
+
+.result .empty {
+  padding: 75px 20px;
+  text-align: center;
+  border: 1px dashed #c9c7be;
+  border-radius: 8px;
+}
+
+.result .suggest {
+  align-self: center;
+  margin-top: 16px;
+  border: 1px solid #b7c5b3;
+  padding: 6px 8px;
+  background: #e3ebdf;
+  color: #172320;
+  text-decoration: none;
+  border-radius: 4px;
+  transition: background-color 120ms ease, border-color 120ms ease;
+}
+
+.result .suggest:hover {
+  border-color: #8bb998;
+  background: #cfe4d3;
+}

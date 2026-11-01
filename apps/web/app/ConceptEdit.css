@@ -1,0 +1,248 @@
+.concept button,
+.concept input,
+.concept select {
+  padding: 6px 8px;
+  border: 1px solid #c9c7be;
+  border-radius: 4px;
+  background: transparent;
+  color: #172320;
+  text-decoration: none;
+}
+
+.concept button,
+.concept select {
+  cursor: pointer;
+}
+
+.concept button {
+  transition: background-color 60ms ease, border-color 60ms ease, color 60ms ease;
+}
+
+.concept button:hover:not(:disabled) {
+  border-color: #aaa89f;
+  background: #eeece6;
+}
+
+.concept button:focus-visible {
+  outline: 2px solid #50715c;
+  outline-offset: 2px;
+}
+
+.concept button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  border-color: #c9c7be;
+  background: #fffdf9;
+  color: #6d756d;
+}
+
+.concept .row.header {
+  border-top: 0;
+}
+
+.concept .row.compare {
+  grid-template-columns: minmax(110px, 0.7fr) repeat(2, minmax(0, 1.5fr));
+}
+
+.concept .row .filter {
+  grid-column: 1;
+  justify-self: start;
+  background: transparent;
+  border-radius: 16px;
+  padding: 4px 6px;
+}
+
+.concept .row .filter.active {
+  background: #e3ebdf;
+}
+
+.concept .row .current {
+  grid-column: 2;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.concept .row .compare {
+  grid-column: 3;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.concept .entry {
+  max-width: 100%;
+}
+
+.concept .entry span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.concept .entry.removed {
+  background: #ffe9e8;
+  color: #7c857e;
+}
+
+.concept .entry.removed span {
+  text-decoration: line-through;
+}
+
+.concept .entry.created {
+  background: #edf9ee;
+  color: #25633d;
+}
+
+.concept .entry button {
+  height: 20px;
+  padding: 2px;
+  color: #6d756d;
+  background: transparent;
+}
+
+.concept .row .entries form {
+  display: flex;
+  flex: 1 1 100%;
+  min-width: 0;
+  max-width: 14rem;
+  gap: 0;
+}
+
+.concept .row .entries form input {
+  flex: 1;
+  min-width: 0;
+}
+
+.concept dialog {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  width: min(calc(100% - 32px), 560px);
+  max-width: none;
+  max-height: 90vh;
+  margin: auto;
+  overflow: auto;
+  border: 1px solid #d8d6cd;
+  border-radius: 10px;
+  padding: 20px;
+  background: #fffdf9;
+  color: #172320;
+  box-shadow: 0 8px 32px rgb(0 0 0 / 20%);
+}
+
+.concept dialog::backdrop {
+  background: rgb(0 0 0 / 40%);
+}
+
+.concept dialog h2 {
+  margin: 0 0 10px;
+  font-size: 1.2rem;
+}
+
+.concept dialog p {
+  margin: 0;
+  line-height: 1.5;
+}
+
+.concept dialog > p:first-of-type {
+  margin-bottom: 12px;
+}
+
+.concept dialog details {
+  margin: 0 0 16px;
+  border: 1px solid #d8d6cd;
+  border-radius: 6px;
+  padding: 8px 10px;
+  background: #f7f6f0;
+}
+
+.concept dialog summary {
+  color: #435b4b;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.concept dialog details p {
+  margin-top: 8px;
+  overflow-wrap: anywhere;
+}
+
+.concept dialog form {
+  display: grid;
+  gap: 8px;
+}
+
+.concept dialog textarea {
+  width: 100%;
+  min-height: 8rem;
+  resize: vertical;
+  border: 1px solid #c9c7be;
+  border-radius: 4px;
+  padding: 8px;
+  background: #fff;
+  color: #172320;
+  font: inherit;
+}
+
+.concept dialog [role="alert"] {
+  margin: 0;
+  color: #a3261d;
+}
+
+.concept dialog form > div {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+@media (max-width: 520px) {
+  .concept .row.compare:not(.header) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 8px;
+    align-items: start;
+  }
+
+  .concept .row.compare:not(.header) > .label {
+    grid-column: 1 / -1;
+  }
+
+  .concept .row.compare:not(.header) > .entries:not(.compare) {
+    grid-column: 1;
+  }
+
+  .concept .row.compare:not(.header) > .entries.compare {
+    grid-column: 2;
+  }
+
+  .concept .row.header.compare {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    row-gap: 8px;
+    align-items: start;
+  }
+
+  .concept .row.header.compare .filter {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .concept .row.header.compare .current {
+    grid-column: 1;
+    grid-row: 2;
+  }
+
+  .concept .row.header.compare .compare {
+    grid-column: 2;
+    grid-row: 2;
+  }
+
+  .concept .row.compare .current,
+  .concept .row.compare .compare {
+    min-width: 0;
+    flex-wrap: wrap;
+  }
+
+  .concept .row.compare .label {
+    padding: 0 4px 4px;
+  }
+}

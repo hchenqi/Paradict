@@ -1,38 +1,62 @@
-# Processing PanLex Dataset
+# PanLex Dataset Process Pipeline
 
-## Load Dataset
+## Prerequisits
+
+- Install:
+  - python
+  - duckdb
+
+(All data files are under `data/`)
+
+## Download Panlex Dataset
 
 ```sh
 pip install -U datasets
 python scripts/panlex/load.py
 ```
 
-output file:
+Output:
+- `panlex_meanings.parquet`: (id, langvar, text, text_degr, meaning, langvar_uid)
 
-- `data/panlex_meanings.parquet`
-
-## Extract Data
-
-install duckdb
+## Process the Dataset
 
 ```sh
-duckdb -c ".read scripts/panlex/extract.sql"
+python scripts/panlex/process.py
 ```
 
-output files:
+Output:
+- `concepts.tsv`
+- `languages.tsv`
+- `entries.tsv`
 
-- `data/concepts.tsv`
-- `data/languages.tsv`
-- `data/entries.tsv`
+## Normalize Expressions
 
-## Filter Data
+(can be skipped because already normalized) 
 
 ```sh
-duckdb -c ".read scripts/panlex/filter.sql"
+python scripts/panlex/normalize.py
 ```
 
-output files:
+## Import Tables
 
-- `data/concepts_final.tsv`
-- `data/languages_final.tsv`
-- `data/entries_final.tsv`
+(skip if importing for the first time)
+
+```sql
+drop index if exists public.idx_entries_expr_trgm;
+truncate public.entries, public.concepts, public.languages restart identity;
+```
+
+(use following commands or use dashboard UI)
+
+```psql
+SET statement_timeout = '1h';
+\copy public.concepts(id) FROM 'concepts.tsv' (FORMAT csv, HEADER true);
+\copy public.languages(id, code) FROM 'languages.tsv' (FORMAT csv, HEADER true, DELIMITER E'\t');
+\copy public.entries(concept, lang, expr) FROM 'entries.tsv' (FORMAT csv, HEADER true, DELIMITER E'\t');
+```
+
+```sql
+create index idx_entries_expr_trgm on public.entries using gin (expr extensions.gin_trgm_ops);
+
+vacuum analyze public.entries;
+```

@@ -1,0 +1,11 @@
+.search {
+  position: fixed;
+  z-index: 3;
+  width: max-content;
+  height: 32px;
+  padding: 0 8px;
+  border: 1px solid #b7c5b3;
+  color: #172320;
+  background: #e3ebdf;
+  cursor: pointer;
+}

@@ -122,7 +122,7 @@ function LanguageRow({
               event.preventDefault();
               const form = event.currentTarget;
               const expr = normalizeExpr(new FormData(form).get("create") as string);
-              expr && onCreate(false, { lang: lang.id, expr });
+              if (expr) { onCreate(false, { lang: lang.id, expr }); }
             }}>
               <input name="create" />
               <button type="submit">Add</button>

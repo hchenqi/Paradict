@@ -86,7 +86,7 @@ export default function () {
       const payload: SubmissionPayload = { concept, subsume, removes, creates };
       const { error } = await supabase.from("submissions").insert({ created_by: userProfile.id, payload });
       setMessage(error ? "Submission failed." : "Submitted for review.");
-      !error && setEditing(false);
+      if (!error) { setEditing(false); }
     } else {
       setMessage("No changes to submit.");
     }

@@ -35,7 +35,7 @@ function SubmissionArticle({ submission, reviewer }: { submission: Submission; r
     const conceptId = data as number;
     setReviewNote({ concept: conceptId });
     const { error: reviewError } = await supabase.from("submissions").update({ review_note: { concept: conceptId } }).eq("id", submission.id);
-    reviewError && setMessage(`Concept ${conceptId} created, but failed to be saved in review note.`);
+    if (reviewError) { setMessage(`Concept ${conceptId} created, but failed to be saved in review note.`); }
   }
 
   async function review(action: "approved" | "rejected") {

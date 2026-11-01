@@ -77,8 +77,8 @@ export default function () {
       </form>
       <button className="switch" type="button" onClick={() => {
         const params = new URLSearchParams();
-        mode === "login" && params.append("mode", "signup");
-        redirect && params.append("redirect", redirect);
+        if (mode === "login") { params.append("mode", "signup"); }
+        if (redirect) { params.append("redirect", redirect); }
         router.replace(`/login?${params}`);
       }} >
         {mode === "login" ? "Need an account? Create one" : "Already have an account? Sign in"}

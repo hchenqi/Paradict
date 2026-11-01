@@ -6,6 +6,10 @@
   background: #fffdf9;
 }
 
+.submission + .submission {
+  margin-top: 8px;
+}
+
 .submission header {
   display: flex;
   gap: 12px;

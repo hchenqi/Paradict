@@ -8,6 +8,7 @@
 .language-select .row {
   display: flex;
   flex-wrap: wrap;
+  align-content: flex-start;
   align-items: center;
   gap: 5px;
   min-height: 38px;

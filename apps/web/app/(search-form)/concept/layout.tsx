@@ -111,7 +111,7 @@ export default function () {
             ))
           }
         </select>
-        <form onSubmit={event => {
+        <form className="compare-form" onSubmit={event => {
           event.preventDefault();
           const form = event.currentTarget;
           const compare = new FormData(form).get("compare") as string;
@@ -120,7 +120,7 @@ export default function () {
           <input name="compare" placeholder="Concept id" />
           <button type="submit">Compare</button>
         </form>
-        <button type="button" onClick={() => setEditing(!editing)}>{!editing ? "Edit" : "View"}</button>
+        <button className="view-toggle" type="button" onClick={() => setEditing(!editing)}>{!editing ? "Edit" : "View"}</button>
         {
           editing && (
             <div className="agreement">

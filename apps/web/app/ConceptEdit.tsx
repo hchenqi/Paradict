@@ -181,6 +181,19 @@ export default function ({
     }
   }
 
+  function addCompareEntries() {
+    const idsToRestore = new Set(compareEntries.flatMap(({ lang, expr }) => {
+      const id = entryExprIdMap.get(JSON.stringify([lang, expr]));
+      return id ? [id] : [];
+    }));
+    const entriesToCreate = compareEntries
+      .filter(({ lang, expr }) => !entryExprIdMap.has(JSON.stringify([lang, expr])) && !creates.some(entry => entry.lang === lang && entry.expr === expr))
+      .map(({ lang, expr }) => ({ lang, expr }));
+
+    if (idsToRestore.size) { setRemoves(removes => removes.filter(({ id }) => !idsToRestore.has(id))); }
+    if (entriesToCreate.length) { setCreates(creates => [...creates, ...entriesToCreate.filter(entry => !creates.some(({ lang, expr }) => entry.lang === lang && entry.expr === expr))]); }
+  }
+
   async function commitRemove(entry: EntryRemove) {
     const { error } = await supabase.from("entries").delete().eq("id", entry.id);
     if (error) {
@@ -249,6 +262,7 @@ export default function ({
           hasCompare && (
             <div className="compare">
               <span>Concept {compare}</span>
+              {editing && <button type="button" onClick={addCompareEntries}>Add all</button>}
               {!editing && canCommit && <button type="button" onClick={subsumeCompare}>Subsume</button>}
             </div>
           )

@@ -1,12 +1,69 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { getConceptEntries, supabase } from "@/lib/client";
 import { Entry, EntryCreate, EntryRemove, languageLabel } from "@/lib/types";
 import "./ConceptEdit.css";
 
 function normalizeExpr(expr: string) {
   return expr.normalize('NFC').replace(/[\t\n\r]/g, ' ').replace(/\p{Cc}/gu, '').replace(/ {2,}/g, ' ').trim();
+}
+
+function EntryImport({ languages, onImport }: { languages: [number, string][]; onImport: (entries: EntryCreate[]) => void; }) {
+  const languageCodeIdMap = useMemo(() => new Map(languages.map(([id, code]) => [code, id])), [languages]);
+  const [open, setOpen] = useState(false);
+  const [json, setJson] = useState("");
+  const [error, setError] = useState("");
+  const dialogRef = useRef<HTMLDialogElement>(null);
+
+  function importEntries(event: React.SubmitEvent<HTMLFormElement>) {
+    event.preventDefault();
+    try {
+      const parsed: unknown = JSON.parse(json);
+      if (!Array.isArray(parsed)) { throw new Error("JSON must be a list of entries."); }
+      const imported = new Map<string, EntryCreate>();
+      for (const [index, item] of parsed.entries()) {
+        if (typeof item !== "object" || item === null || Array.isArray(item)) { throw new Error(`Entry ${index + 1} must have string lang and expr fields.`); }
+        const entry = item as Record<string, unknown>;
+        if (typeof entry.lang !== "string" || typeof entry.expr !== "string") { throw new Error(`Entry ${index + 1} must have string lang and expr fields.`); }
+        const lang = languageCodeIdMap.get(entry.lang.trim());
+        if (lang === undefined) { throw new Error(`Entry ${index + 1} has an unknown language code: ${entry.lang}.`); }
+        const expr = normalizeExpr(entry.expr);
+        if (!expr) { throw new Error(`Entry ${index + 1} has an empty expression.`); }
+        imported.set(JSON.stringify([lang, expr]), { lang, expr });
+      }
+      onImport([...imported.values()]);
+      setJson("");
+      setError("");
+      dialogRef.current?.close();
+    } catch (error) {
+      setError(error instanceof Error ? error.message : "Could not read the JSON.");
+    }
+  }
+
+  useEffect(() => {
+    if (open && !dialogRef.current?.open) { dialogRef.current?.showModal(); }
+  }, [open]);
+
+  return (
+    <>
+      <button type="button" onClick={() => { setError(""); setOpen(true); }}>Import</button>
+      {
+        open && (
+          <dialog ref={dialogRef} aria-labelledby="import-title" onClose={() => setOpen(false)} onClick={event => { if (event.target === event.currentTarget) { dialogRef.current?.close(); } }}>
+            <h2 id="import-title">Import entries from JSON</h2>
+            <p>Paste a JSON list of entries with language codes, for example: <code>[&#123;"lang":"eng","expr":"hello"&#125;]</code></p>
+            <details><summary>Available language codes</summary><p>{languages.map(([, code]) => code).join(", ")}</p></details>
+            <form onSubmit={importEntries}>
+              <textarea aria-label="Entries JSON" value={json} onChange={event => setJson(event.target.value)} rows={10} autoFocus />
+              {error && <p role="alert">{error}</p>}
+              <div><button type="button" onClick={() => dialogRef.current?.close()}>Cancel</button><button type="submit">Add entries</button></div>
+            </form>
+          </dialog>
+        )
+      }
+    </>
+  );
 }
 
 function LanguageRow({
@@ -44,7 +101,7 @@ function LanguageRow({
             return (
               <div className={`entry ${removed ? "removed" : ""}`} key={entry.id}>
                 <span>{entry.expr}</span>
-                {editing && <button type="button" onClick={() => onRemove(!removed, { id: entry.id })} aria-label={`${removed ? "Restore" : "Remove"}`}>{removed ? "+" : "-"}</button>}
+                {editing && <button type="button" onClick={() => onRemove(!removed, { id: entry.id })} aria-label={`${removed ? "Restore" : "Remove"} ${entry.expr} (${lang.code})`}>{removed ? "+" : "-"}</button>}
                 {!editing && canCommit && removed && <button type="button" onClick={() => commitRemove(entry)}>Commit</button>}
               </div>
             );
@@ -54,7 +111,7 @@ function LanguageRow({
           creates.map(entry => (
             <div className={`entry created`} key={entry.expr}>
               <span>{entry.expr}</span>
-              {editing && <button type="button" onClick={() => onCreate(true, entry)} aria-label="Remove">-</button>}
+              {editing && <button type="button" onClick={() => onCreate(true, entry)} aria-label={`Remove ${entry.expr} (${lang.code})`}>-</button>}
               {!editing && canCommit && <button type="button" onClick={() => commitCreate(entry)}>Commit</button>}
             </div>
           ))
@@ -181,15 +238,9 @@ export default function ({
     }
   }
 
-  function addCompareEntries() {
-    const idsToRestore = new Set(compareEntries.flatMap(({ lang, expr }) => {
-      const id = entryExprIdMap.get(JSON.stringify([lang, expr]));
-      return id ? [id] : [];
-    }));
-    const entriesToCreate = compareEntries
-      .filter(({ lang, expr }) => !entryExprIdMap.has(JSON.stringify([lang, expr])) && !creates.some(entry => entry.lang === lang && entry.expr === expr))
-      .map(({ lang, expr }) => ({ lang, expr }));
-
+  function addEntries(entries: EntryCreate[]) {
+    const idsToRestore = new Set(entries.map(({ lang, expr }) => entryExprIdMap.get(JSON.stringify([lang, expr]))).filter((id): id is number => id !== undefined));
+    const entriesToCreate = entries.filter(({ lang, expr }) => !entryExprIdMap.has(JSON.stringify([lang, expr])) && !creates.some(entry => entry.lang === lang && entry.expr === expr)).map(({ lang, expr }) => ({ lang, expr }));
     if (idsToRestore.size) { setRemoves(removes => removes.filter(({ id }) => !idsToRestore.has(id))); }
     if (entriesToCreate.length) { setCreates(creates => [...creates, ...entriesToCreate.filter(entry => !creates.some(({ lang, expr }) => entry.lang === lang && entry.expr === expr))]); }
   }
@@ -275,14 +326,15 @@ export default function ({
         <button className={`filter ${showEmptyRows ? "active" : ""}`} type="button" aria-pressed={showEmptyRows} onClick={() => setShowEmptyRows(!showEmptyRows)}>empty rows</button>
         <div className="current">
           <span>{concept ? `Concept ${concept}` : "New concept"}</span>
-          {!editing && concept === undefined && canCommit && <button type="button" disabled={!creates.length || committing} onClick={createConcept}>{committing ? "Creating..." : "Create"}</button>}
-          {!editing && concept !== undefined && canCommit && <button type="button" disabled={(!removes.length && !creates.length) || committing} onClick={updateConcept}>{committing ? "Committing..." : "Commit all"}</button>}
+          {editing && <EntryImport languages={languages} onImport={addEntries} />}
+          {!editing && concept === undefined && canCommit && creates.length > 0 && <button type="button" disabled={committing} onClick={createConcept}>{committing ? "Creating..." : "Create"}</button>}
+          {!editing && concept !== undefined && canCommit && (removes.length > 0 || creates.length > 0) && <button type="button" disabled={committing} onClick={updateConcept}>{committing ? "Committing..." : "Commit all"}</button>}
         </div>
         {
           hasCompare && (
             <div className="compare">
               <span>Concept {compare}</span>
-              {editing && <button type="button" onClick={addCompareEntries}>Add all</button>}
+              {editing && <button type="button" onClick={() => addEntries(compareEntries)}>Add all</button>}
               {!editing && canCommit && <button type="button" onClick={subsumeCompare}>Subsume</button>}
             </div>
           )

@@ -35,7 +35,7 @@ async function Footer() {
   return (
     <footer>
       <span>Paradict / your multilingual dictionary</span>
-      <nav>
+      <nav aria-label="Footer navigation">
         <Link href="/about">About</Link>
         <Link href="/terms">Terms and Conditions</Link>
         <Link href="/privacy">Privacy Policy</Link>

@@ -73,11 +73,11 @@ export default function () {
             </button>
           ))
         }
-        <button className={`popup ${selectedLanguages.length ? "" : "hint"}`} ref={toggleRef} type="button" onClick={() => setOpen(open => !open)} aria-expanded={open}>All languages</button>
+        <button className={`popup ${selectedLanguages.length ? "" : "hint"}`} ref={toggleRef} type="button" onClick={() => setOpen(open => !open)} aria-expanded={open} aria-controls={open ? "language-options" : undefined}>All languages</button>
       </div>
       {
         open && (
-          <div className="row popup" ref={popupRef}>
+          <div className="row popup" id="language-options" ref={popupRef}>
             {
               languages.map(([id, code]) => (
                 <button

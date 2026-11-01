@@ -39,7 +39,7 @@ export default function () {
   }
 
   return (
-    <aside className="cookie-notice" role="dialog" aria-label="Cookie notice">
+    <aside className="cookie-notice" aria-label="Cookie notice">
       <div>
         <strong>Essential cookies only</strong>
         <p>This website uses essential authentication cookies when you sign in. No advertising or tracking cookies are used.</p>

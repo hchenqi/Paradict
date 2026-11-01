@@ -43,10 +43,10 @@ export default function ({ children }: { children: React.ReactNode }) {
       <Suspense><SearchRouter setInput={setInput} query={query} setQuery={setQuery} /></Suspense>
       <form className="search-form" onSubmit={event => { event.preventDefault(); setQuery(input.trim()); }}>
         <input aria-label="Search" value={input} onChange={event => setInput(event.target.value)} placeholder="Search" />
-        <button type="submit" className="icon">⌕</button>
+        <button type="submit" className="icon" aria-label="Submit search">⌕</button>
       </form>
       <LanguageSelect />
-      <section className="result" aria-live="polite">
+      <section className="result" aria-label="Results" aria-live="polite">
         {children}
       </section>
     </main>

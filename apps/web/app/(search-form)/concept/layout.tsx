@@ -102,7 +102,7 @@ export default function () {
   return (
     <article className="concept">
       <Suspense><CompareIdLoader setCompare={setCompare} /></Suspense>
-      <nav>
+      <nav aria-label="Concept controls">
         <select aria-label="Languages to display" value={languageFilter} onChange={event => setLanguageFilter(event.target.value as LanguageFilter)}>
           {
             (["all", "selected", "active"] as LanguageFilter[]).map(option => (
@@ -118,7 +118,7 @@ export default function () {
           const compare = new FormData(form).get("compare") as string;
           router.replace(compare ? `${pathname}?compare=${encodeURIComponent(compare)}` : pathname);
         }}>
-          <input name="compare" placeholder="Concept id" />
+          <input name="compare" aria-label="Concept ID to compare" placeholder="Concept id" />
           <button type="submit">Compare</button>
         </form>
         <button className="view-toggle" type="button" onClick={() => setEditing(!editing)}>{!editing ? "Edit" : "View"}</button>

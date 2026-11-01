@@ -24,12 +24,12 @@ function RoleEdit({ id, role: initialRole }: { id: string; role: string; }) {
 
   return (
     <>
-      <select value={role} onChange={event => updateRole(event.target.value)} >
+      <label>Role<select value={role} onChange={event => updateRole(event.target.value)} >
         <option value="member">Member</option>
         <option value="editor">Editor</option>
         <option value="admin">Admin</option>
-      </select>
-      {message && <p>{message}</p>}
+      </select></label>
+      {message && <p role="status">{message}</p>}
     </>
   );
 }

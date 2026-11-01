@@ -14,6 +14,20 @@
   cursor: pointer;
 }
 
+.concept button {
+  transition: background-color 60ms ease, border-color 60ms ease, color 60ms ease;
+}
+
+.concept button:hover:not(:disabled) {
+  border-color: #aaa89f;
+  background: #eeece6;
+}
+
+.concept button:focus-visible {
+  outline: 2px solid #50715c;
+  outline-offset: 2px;
+}
+
 .concept button:disabled {
   opacity: 0.6;
   cursor: not-allowed;
@@ -36,7 +50,6 @@
   background: transparent;
   border-radius: 16px;
   padding: 4px 6px;
-  transition: background-color 120ms ease;
 }
 
 .concept .row .filter.active {
@@ -98,6 +111,89 @@
 .concept .row .entries form input {
   flex: 1;
   min-width: 0;
+}
+
+.concept dialog {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  width: min(calc(100% - 32px), 560px);
+  max-width: none;
+  max-height: 90vh;
+  margin: auto;
+  overflow: auto;
+  border: 1px solid #d8d6cd;
+  border-radius: 10px;
+  padding: 20px;
+  background: #fffdf9;
+  color: #172320;
+  box-shadow: 0 8px 32px rgb(0 0 0 / 20%);
+}
+
+.concept dialog::backdrop {
+  background: rgb(0 0 0 / 40%);
+}
+
+.concept dialog h2 {
+  margin: 0 0 10px;
+  font-size: 1.2rem;
+}
+
+.concept dialog p {
+  margin: 0;
+  line-height: 1.5;
+}
+
+.concept dialog > p:first-of-type {
+  margin-bottom: 12px;
+}
+
+.concept dialog details {
+  margin: 0 0 16px;
+  border: 1px solid #d8d6cd;
+  border-radius: 6px;
+  padding: 8px 10px;
+  background: #f7f6f0;
+}
+
+.concept dialog summary {
+  color: #435b4b;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.concept dialog details p {
+  margin-top: 8px;
+  overflow-wrap: anywhere;
+}
+
+.concept dialog form {
+  display: grid;
+  gap: 8px;
+}
+
+.concept dialog textarea {
+  width: 100%;
+  min-height: 8rem;
+  resize: vertical;
+  border: 1px solid #c9c7be;
+  border-radius: 4px;
+  padding: 8px;
+  background: #fff;
+  color: #172320;
+  font: inherit;
+}
+
+.concept dialog [role="alert"] {
+  margin: 0;
+  color: #a3261d;
+}
+
+.concept dialog form > div {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 8px;
 }
 
 @media (max-width: 520px) {

@@ -1,12 +1,3 @@
-.action button {
-  padding: 0;
-  border: 0;
-  background: transparent;
-  cursor: pointer;
-  color: #172320;
-  text-decoration: none;
-}
-
 .action .signup {
   padding: 4px 6px;
   border: 1px solid #b7c5b3;

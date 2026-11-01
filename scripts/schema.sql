@@ -211,7 +211,7 @@ create policy submissions_editor_update on public.submissions for update
   to authenticated using (exists (select 1 from public.users actor where actor.id = (select auth.uid()) and actor.role in ('editor', 'admin')));
 
 create policy submissions_own_admin_delete on public.submissions for delete
-  to authenticated using (((select auth.uid()) = created_by and review_status in ('pending', 'rejected')) or exists (select 1 from public.users actor where actor.id = (select auth.uid()) and actor.role = 'admin'));
+  to authenticated using (((select auth.uid()) = created_by) or exists (select 1 from public.users actor where actor.id = (select auth.uid()) and actor.role = 'admin'));
 
 
 create policy concepts_editor_insert on public.concepts for insert

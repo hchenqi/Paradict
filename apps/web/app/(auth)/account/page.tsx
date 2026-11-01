@@ -57,9 +57,15 @@ function UserDetails({ userProfile, setUserProfile }: { userProfile: UserProfile
         {message && <p role="status">{message}</p>}
         <button type="submit" disabled={saving}>{saving ? "Saving..." : "Save details"}</button>
       </form>
-      <div className="delete">
-        <p>Delete your account and sign out.</p>
-        <button type="button" onClick={() => deleteAccount()} disabled={deleting}>{deleting ? "Deleting..." : "Delete account"}</button>
+      <div className="actions" aria-label="Account actions">
+        <div>
+          <p>Sign out</p>
+          <button type="button" className="sign-out" onClick={() => supabase.auth.signOut()}>Sign out</button>
+        </div>
+        <div>
+          <p>Delete your account and sign out</p>
+          <button type="button" className="delete" onClick={() => deleteAccount()} disabled={deleting}>{deleting ? "Deleting..." : "Delete account"}</button>
+        </div>
       </div>
     </>
   );

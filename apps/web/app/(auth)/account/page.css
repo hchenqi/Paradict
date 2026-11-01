@@ -67,38 +67,59 @@
   cursor: wait;
 }
 
-.account .delete {
+.account .actions {
   margin-top: 16px;
   border-top: 1px solid #d9d6cd;
   padding-top: 16px;
-  display: flex;
-  justify-content: space-between;
-  gap: 16px;
-  align-items: center;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) max-content;
+  column-gap: 16px;
+  row-gap: 16px;
 }
 
-.account .delete p {
+.account .actions div {
+  display: contents;
+}
+
+.account .actions p {
   margin: 0;
 }
 
-.account .delete button {
-  flex: 0 0 auto;
-  padding: 8px;
-  border: 1px solid #b34f38;
+.account .actions button {
+  align-self: center;
+  padding: 8px 12px;
+  border: 1px solid;
   border-radius: 4px;
-  color: #b34f38;
   background: transparent;
   cursor: pointer;
+  transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease;
 }
 
-.account .delete button:disabled {
+.account .actions button:focus-visible {
+  outline: 2px solid #172320;
+  outline-offset: 2px;
+}
+
+.account .actions button:disabled {
   opacity: 0.6;
   cursor: wait;
 }
 
-@media (max-width: 480px) {
-  .account .delete {
-    flex-direction: column;
-    align-items: flex-start;
-  }
+.account .actions button.sign-out {
+  border: 1px solid #c9c7be;
+  color: #172320;
+}
+
+.account .actions button.sign-out:hover:not(:disabled) {
+  border-color: #172320;
+  background: #e9e6dd;
+}
+
+.account .actions button.delete {
+  border-color: #b34f38;
+  color: #b34f38;
+}
+
+.account .actions button.delete:hover:not(:disabled) {
+  background: #f7e9e5;
 }

@@ -1,0 +1,52 @@
+name: Daily backup
+
+on:
+  schedule:
+    - cron: "0 1 * * *"
+  workflow_dispatch:
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install PostgreSQL client
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+
+      - name: Print database summary
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          stats="$(psql "$SUPABASE_DB_URL" --no-psqlrc --set ON_ERROR_STOP=1 --tuples-only --no-align --field-separator $'\t' --command "SELECT (SELECT count(*) FROM public.concepts), (SELECT count(*) FROM public.languages), (SELECT count(*) FROM public.entries)")"
+          IFS=$'\t' read -r concept_count language_count entry_count <<< "$stats"
+          {
+            echo "| Table | Rows |"
+            echo "| --- | ---: |"
+            echo "| concepts | $concept_count |"
+            echo "| languages | $language_count |"
+            echo "| entries | $entry_count |"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Export database tables
+        id: export
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          if [ -z "$SUPABASE_DB_URL" ]; then
+            echo "The SUPABASE_DB_URL secret is required." >&2
+            exit 1
+          fi
+          mkdir backup
+          backup_date="$(date -u +%F)"
+          psql "$SUPABASE_DB_URL" --no-psqlrc --set ON_ERROR_STOP=1 --command "\copy (SELECT id FROM public.concepts) TO 'backup/concepts.tsv' WITH (FORMAT CSV, DELIMITER E'\t', HEADER TRUE)"
+          psql "$SUPABASE_DB_URL" --no-psqlrc --set ON_ERROR_STOP=1 --command "\copy (SELECT id, code FROM public.languages) TO 'backup/languages.tsv' WITH (FORMAT CSV, DELIMITER E'\t', HEADER TRUE)"
+          psql "$SUPABASE_DB_URL" --no-psqlrc --set ON_ERROR_STOP=1 --command "\copy (SELECT concept, lang, expr FROM public.entries) TO 'backup/entries.tsv' WITH (FORMAT CSV, DELIMITER E'\t', HEADER TRUE)"
+          tar --create --gzip --file "backup/paradict-backup-${backup_date}.tar.gz" --directory backup "concepts.tsv" "languages.tsv" "entries.tsv"
+          echo "backup_date=${backup_date}" >> "$GITHUB_OUTPUT"
+
+      - name: Upload backup
+        uses: actions/upload-artifact@v4
+        with:
+          name: paradict-backup-${{ steps.export.outputs.backup_date }}
+          path: backup/*.tar.gz
+          if-no-files-found: error
+          retention-days: 10

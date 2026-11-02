@@ -40,6 +40,12 @@ data/                  locally processed PanLex dataset files
 
 (See [`scripts/panlex/README.md`](scripts/panlex/README.md) for instructions)
 
+### Daily Backup
+
+The [Daily backup workflow](.github/workflows/backup.yml) exports `public.concepts`, `public.languages`, and `public.entries` as `concepts.tsv`, `languages.tsv`, and `entries.tsv` inside one dated `.tar.gz` archive each day at 01:00 UTC. Artifacts are retained for 10 days. The workflow also displays row counts in the summary, and can be started manually from the Actions tab.
+
+Add a repository Actions secret named `SUPABASE_DB_URL` containing the Supabase PostgreSQL connection string (with SSL enabled) for the project.
+
 ### Local Development
 
 ```sh

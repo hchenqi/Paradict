@@ -184,10 +184,9 @@ export default function ({
 
   const createGroups = useMemo(() => Map.groupBy(creates, entry => entry.lang), [creates]);
 
-  const [compareDeleted, setCompareDeleted] = useState(false);
-  const hasCompare = compare && compare !== concept && !compareDeleted;
   const [compareEntries, setCompareEntries] = useState<Entry[]>([]);
   const compareEntryGroups = useMemo(() => Map.groupBy(compareEntries, entry => entry.lang), [compareEntries]);
+  const hasCompare = compare && compare !== concept && compareEntries.length > 0;
 
   useEffect(() => {
     setEntries([]);
@@ -206,7 +205,7 @@ export default function ({
 
   useEffect(() => {
     setCompareEntries([]);
-    if (hasCompare) {
+    if (compare && compare !== concept) {
       let mounted = true;
       getConceptEntries(compare)
         .then(entries => mounted && (entries ? setCompareEntries(entries) : setMessage("Concept to compare does not exist.")))
@@ -266,6 +265,20 @@ export default function ({
     }
   }
 
+  async function createConcept() {
+    if (!canCommit || concept !== undefined || creates.length === 0 || committing || !onCreateConcept) {
+      return;
+    }
+    setCommitting(true);
+    try {
+      await onCreateConcept(creates);
+    } catch (error) {
+      setMessage(`Concept creation failed: ${error instanceof Error ? error.message : "Unknown error."}`);
+    } finally {
+      setCommitting(false);
+    }
+  }
+
   async function updateConcept() {
     if (!canCommit || concept === undefined || (!removes.length && !creates.length) || committing) {
       return;
@@ -285,18 +298,21 @@ export default function ({
     setCommitting(false);
   }
 
-  async function createConcept() {
-    if (!canCommit || concept !== undefined || creates.length === 0 || committing || !onCreateConcept) {
+  async function deleteConcept() {
+    if (!canCommit || editing || concept === undefined || removes.length || creates.length || committing) {
+      return;
+    }
+    if (!confirm("Are you sure you want to delete this concept and all its entries? This action cannot be undone.")) {
       return;
     }
     setCommitting(true);
-    try {
-      await onCreateConcept(creates);
-    } catch (error) {
-      setMessage(`Concept creation failed: ${error instanceof Error ? error.message : "Unknown error."}`);
-    } finally {
-      setCommitting(false);
+    const { error } = await supabase.from("concepts").delete().eq("id", concept);
+    if (error) {
+      setMessage(`Delete concept failed: ${error.message}`);
+    } else {
+      setEntries([]);
     }
+    setCommitting(false);
   }
 
   async function subsumeCompare() {
@@ -308,15 +324,17 @@ export default function ({
       return;
     }
     const subsumed = !compareEntries.find(entry => !entries.find(({ expr }) => entry.expr === expr) && !creates.find(({ expr }) => entry.expr === expr));
-    if (!subsumed && !confirm("Are you sure you want to delete this concept? This action cannot be undone.")) {
+    if (!subsumed && !confirm("Are you sure you want to delete this concept and all its entries? This action cannot be undone.")) {
       return;
     }
+    setCommitting(true);
     const { error } = await supabase.from("concepts").delete().eq("id", compare);
     if (error) {
-      setMessage("Delete concept failed.");
+      setMessage(`Delete concept failed: ${error.message}`);
     } else {
-      setCompareDeleted(true);
+      setCompareEntries([]);
     }
+    setCommitting(false);
   }
 
   return (
@@ -329,13 +347,14 @@ export default function ({
           {editing && <EntryImport languages={languages} onImport={addEntries} />}
           {!editing && concept === undefined && canCommit && creates.length > 0 && <button type="button" disabled={committing} onClick={createConcept}>{committing ? "Creating..." : "Create"}</button>}
           {!editing && concept !== undefined && canCommit && (removes.length > 0 || creates.length > 0) && <button type="button" disabled={committing} onClick={updateConcept}>{committing ? "Committing..." : "Commit all"}</button>}
+          {!editing && concept !== undefined && canCommit && (!removes.length && !creates.length) && <button type="button" disabled={committing} onClick={deleteConcept}>Delete</button>}
         </div>
         {
           hasCompare && (
             <div className="compare">
               <span>Concept {compare}</span>
               {editing && <button type="button" onClick={() => addEntries(compareEntries)}>Add all</button>}
-              {!editing && canCommit && <button type="button" onClick={subsumeCompare}>Subsume</button>}
+              {!editing && canCommit && <button type="button" disabled={committing} onClick={subsumeCompare}>Subsume</button>}
             </div>
           )
         }

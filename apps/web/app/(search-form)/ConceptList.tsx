@@ -3,12 +3,12 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { Entry, languageLabel } from "@/lib/types";
-import { useActiveLanguages, useLanguages } from "@/app/LanguageProvider";
+import { useLanguages } from "@/app/LanguageProvider";
 import "./ConceptList.css"
 
-function groupEntriesByLanguageOrdered(entries: Entry[], list: [number, string][], filter: boolean, languageIdCodeMap: Map<number, string>) {
+function groupEntriesByLanguageOrdered(entries: Entry[], languages: [number, string][], filter: boolean, languageIdCodeMap: Map<number, string>) {
   const group = Map.groupBy(entries, entry => entry.lang);
-  const rows = list.map(([id, code]) => { const entries = group.get(id) ?? []; group.delete(id); return { lang: code, entries }; });
+  const rows = languages.map(([id, code]) => { const entries = group.get(id) ?? []; group.delete(id); return { lang: code, entries }; });
   return filter ? rows : [...rows, ...[...group].map(([id, entries]) => ({ lang: languageIdCodeMap.get(id)!, entries }))];
 }
 
@@ -49,11 +49,10 @@ function ConceptCard({ conceptId, rows, query, compare, setCompare }: { conceptI
   );
 }
 
-export default function ({ entries, query }: { entries: Entry[], query?: string }) {
+export default function ({ entries, languageList, query }: { entries: Entry[], languageList: string[], query?: string }) {
   const concepts = useMemo(() => Map.groupBy(entries, entry => entry.concept), [entries]);
   const { languageCodeIdMap, languageIdCodeMap } = useLanguages();
-  const [activeLanguages] = useActiveLanguages();
-  const languages = useMemo(() => activeLanguages.map(code => [languageCodeIdMap.get(code)!, code] as [number, string]), [languageCodeIdMap, activeLanguages]);
+  const languages = useMemo(() => languageList.map(code => [languageCodeIdMap.get(code)!, code] as [number, string]), [languageCodeIdMap, languageList]);
   const [compare, setCompare] = useState<number | undefined>(undefined);
 
   return (

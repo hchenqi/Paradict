@@ -23,10 +23,11 @@ function SearchRouter({ setInput, query, setQuery }: { setInput: (input: string)
     const pathname = window.location.pathname;
     const searchParams = new URLSearchParams(window.location.search);
     if (query) {
-      const urlQuery = pathname === "/search" ? searchParams.get("q") ?? "" : "";
-      const urlLanguages = pathname === "/search" ? searchParams.get("lang") ?? "" : "";
+      const urlQuery = pathname === "/search" ? searchParams.get("q") : null;
+      const urlLanguages = pathname === "/search" ? searchParams.get("lang") : null;
+      const urlLimit = pathname === "/search" ? searchParams.get("limit") : null;
       if (pathname !== "/search" || query !== urlQuery || (activeLanguages.length && activeLanguages.join(",") !== urlLanguages)) {
-        router.replace(`/search?q=${encodeURIComponent(query)}${activeLanguages.length ? `&lang=${activeLanguages.join(",")}` : ""}`);
+        router.replace(`/search?q=${encodeURIComponent(query)}&lang=${activeLanguages.join(",")}${urlLimit ? `&limit=${encodeURIComponent(urlLimit)}` : ""}`);
       }
     }
   }, [query, activeLanguages, router]);

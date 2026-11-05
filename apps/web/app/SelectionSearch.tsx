@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useActiveLanguages } from "./LanguageProvider";
 import "./SelectionSearch.css";
 
@@ -10,7 +10,6 @@ type SelectionState = { text: string; top: number; left: number } | null;
 export default function () {
   const [activeLanguages] = useActiveLanguages();
   const [selection, setSelection] = useState<SelectionState>(null);
-  const router = useRouter();
 
   useEffect(() => {
     function onSelectionChange() {
@@ -44,14 +43,14 @@ export default function () {
   }
 
   return (
-    <button
+    <Link
       className="search"
+      href={`/search?q=${encodeURIComponent(selection.text)}${activeLanguages.length ? `&lang=${activeLanguages.join(",")}` : ""}`}
       style={{ top: selection.top, left: selection.left }}
-      type="button"
       onMouseDown={event => event.preventDefault()}
-      onClick={() => { router.push(`/search?q=${encodeURIComponent(selection.text)}${activeLanguages.length ? `&lang=${activeLanguages.join(",")}` : ""}`); setSelection(null); }}
+      onClick={() => setSelection(null)}
     >
       Search selected text
-    </button>
+    </Link>
   );
 }

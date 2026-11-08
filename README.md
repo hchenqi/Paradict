@@ -30,7 +30,7 @@ data/                  locally processed PanLex dataset files
 ### Supabase Setup
 
 1. Create a Supabase project.
-2. Run [`scripts/schema.sql`](scripts/schema.sql) in the Supabase SQL Editor. The `idx_entries_expr_lang_concept` and `idx_expressions_str_trgm` index statements are commented out for bulk import; create them after importing the dataset.
+2. Run [`scripts/schema.sql`](scripts/schema.sql) in the Supabase SQL Editor. The `idx_entries_expr_trgm` index statement is commented out for bulk import; create it after importing the dataset.
 3. Copy [`apps/web/.env.example`](apps/web/.env.example) to `apps/web/.env.local`.
 4. Set `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` to the project values. Replace the `LEGAL_INFO_*` examples with current operator and project details before launch.
 5. Run `npx supabase gen types typescript --project-id "the-project-id" --schema public > database.types.ts` then copy the generated file to `apps/web/lib/database.types.ts`.
@@ -42,7 +42,7 @@ data/                  locally processed PanLex dataset files
 
 ### Daily Backup
 
-The [Daily backup workflow](.github/workflows/backup.yml) exports `public.concepts`, `public.languages`, `public.expressions`, and `public.entries` as TSV files inside one dated `.tar.gz` archive each day at 01:00 UTC. Artifacts are retained for 10 days. The workflow also displays row counts in the summary, and can be started manually from the Actions tab.
+The [Daily backup workflow](.github/workflows/backup.yml) exports `public.concepts`, `public.languages`, and `public.entries` as TSV files inside one dated `.tar.gz` archive each day at 01:00 UTC. Artifacts are retained for 10 days. The workflow also displays row counts in the summary, and can be started manually from the Actions tab.
 
 Add a repository Actions secret named `SUPABASE_DB_URL` containing the Supabase PostgreSQL connection string (with SSL enabled) for the project.
 
@@ -60,8 +60,7 @@ npm run dev
 The core tables:
 - `concepts`: identity `id` for a language-neutral meaning.
 - `languages`: identity `id` and unique ISO language code.
-- `expressions`: identity `id` and unique normalized expression string.
-- `entries`: a row keyed by `(concept, lang, expr)` ids.
+- `entries`: identity `id` for a unique `(concept, lang, expr)` tuple.
 
 The `users` and `submissions` tables:
 - `users`: one row per Supabase Auth user, with `member`, `editor`, or `admin` role and username/display name.

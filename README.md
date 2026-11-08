@@ -65,21 +65,22 @@ The core tables:
 
 The `users` and `submissions` tables:
 - `users`: one row per Supabase Auth user, with `member`, `editor`, or `admin` role and username/display name.
-- `submissions`: authenticated community proposals for language and concept changes, with JSON payload, status, and timestamps.
+- `submissions`: authenticated community proposals for concept create/update/delete operations, with JSON payload, status, and timestamps.
 
 ### User Roles
 
 - **Member** can sign in and view and submit proposals.
-- **Editor** can review and apply submissions.
+- **Editor** can commit changes directly or review and atomically apply submissions.
 - **Admin** can delete submissions and change user roles.
 
 ### Submissions
 
-Possible proposals can be:
+Possible proposals can contain a list of:
 - concept creation
-- concept updates with entry creations/removals which could optionally subsume another concept
+- concept updates with entry creations/removals
+- concept deletion
 
-Proposals are stored as JSON payloads.
+Proposals are stored as JSON payloads. Reviewers can commit or reject a submission. Creators can update their own pending submissions. A reviewer can also commit a submission after edit, which creates a replacement submission and rejects the original in one transaction.
 
 ### API
 
@@ -103,7 +104,7 @@ Displays search result of a query text filtered by given languages.
 
 #### `/concept/[id]`
 
-Displays all entries of a concept grouped by languages, filtered by different language view modes.
+Displays a concept's entries grouped by languages, filtered by the language view mode. In edit mode, displays parallel concept panels for creating, updating, or deleting concepts.
 
 #### `/concept/create`
 

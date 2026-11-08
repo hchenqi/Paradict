@@ -177,7 +177,7 @@ revoke execute on function public.explore(integer) from public;
 grant execute on function public.explore(integer) to anon, authenticated;
 
 
-create function public.read_concept(concept bigint)
+create function public.read_concept(concept_id bigint)
 returns table (
   lang bigint,
   expr text
@@ -188,7 +188,7 @@ security invoker
 set search_path = ''
 as $$
 begin
-  if not exists (select 1 from public.concepts where id = concept) then
+  if not exists (select 1 from public.concepts where id = concept_id) then
     raise exception 'concept does not exist';
   end if;
 
@@ -196,7 +196,7 @@ begin
   select e.lang, ex.str
   from public.entries e
   join public.expressions ex on ex.id = e.expr
-  where e.concept = concept;
+  where e.concept = concept_id;
 end;
 $$;
 
@@ -219,10 +219,9 @@ create table public.submissions (
   id bigint generated always as identity primary key,
   created_by uuid references public.users(id) on delete set null,
   created_at timestamptz not null default now(),
-  payload jsonb not null check (pg_column_size(payload) <= 16 * 1024),
-  review_status text not null default 'pending' check (review_status in ('pending', 'approved', 'rejected')),
+  payload jsonb not null,
+  review_status text not null default 'pending' check (review_status in ('pending', 'committed', 'rejected')),
   reviewed_by uuid references public.users(id) on delete set null,
-  review_note jsonb,
   reviewed_at timestamptz
 );
 
@@ -233,9 +232,10 @@ create index idx_submissions_pending on public.submissions(created_at) where rev
 
 grant select (id, role, username, display_name) on public.users to authenticated;
 grant update (username, display_name) on public.users to authenticated;
+
 grant select, delete on public.submissions to authenticated;
 grant insert (created_by, payload) on public.submissions to authenticated;
-grant update (review_status, reviewed_by, review_note, reviewed_at) on public.submissions to authenticated;
+grant update (payload) on public.submissions to authenticated;
 
 
 alter table public.users enable row level security;
@@ -255,11 +255,11 @@ create policy submissions_member_select on public.submissions for select
 create policy submissions_own_insert on public.submissions for insert
   to authenticated with check ((select auth.uid()) = created_by);
 
-create policy submissions_editor_update on public.submissions for update
-  to authenticated using (exists (select 1 from public.users actor where actor.id = (select auth.uid()) and actor.role in ('editor', 'admin')));
+create policy submissions_own_update on public.submissions for update
+  to authenticated using ((select auth.uid()) = created_by and review_status = 'pending');
 
 create policy submissions_own_admin_delete on public.submissions for delete
-  to authenticated using (((select auth.uid()) = created_by) or exists (select 1 from public.users actor where actor.id = (select auth.uid()) and actor.role = 'admin'));
+  to authenticated using ((((select auth.uid()) = created_by) and review_status <> 'committed') or exists (select 1 from public.users actor where actor.id = (select auth.uid()) and actor.role = 'admin'));
 
 
 create policy concepts_editor_insert on public.concepts for insert
@@ -277,8 +277,273 @@ create policy languages_admin_delete on public.languages for delete
 create policy entries_editor_insert on public.entries for insert
   to authenticated with check (exists (select 1 from public.users actor where actor.id = (select auth.uid()) and actor.role in ('editor', 'admin')));
 
+create policy expressions_editor_insert on public.expressions for insert
+  to authenticated with check (exists (select 1 from public.users actor where actor.id = (select auth.uid()) and actor.role in ('editor', 'admin')));
+
 create policy entries_editor_delete on public.entries for delete
   to authenticated using (exists (select 1 from public.users actor where actor.id = (select auth.uid()) and actor.role in ('editor', 'admin')));
+
+
+create function public.valid_submission_payload(payload jsonb)
+returns boolean
+language plpgsql
+immutable
+set search_path = ''
+as $$
+declare
+  operation jsonb;
+  item jsonb;
+begin
+  if jsonb_typeof(payload) is distinct from 'array' or payload = '[]'::jsonb then
+    return false;
+  end if;
+
+  for operation in select value from jsonb_array_elements(payload)
+  loop
+    if jsonb_typeof(operation) is distinct from 'object'
+      or jsonb_typeof(operation->'type') is distinct from 'string' then
+      return false;
+    end if;
+
+    case operation->>'type'
+      when 'create' then
+        if jsonb_typeof(operation->'creates') is distinct from 'array'
+          or operation->'creates' = '[]'::jsonb then
+          return false;
+        end if;
+        for item in select value from jsonb_array_elements(operation->'creates')
+        loop
+          if jsonb_typeof(item) is distinct from 'object'
+            or jsonb_typeof(item->'lang') is distinct from 'number'
+            or jsonb_typeof(item->'expr') is distinct from 'string' then
+            return false;
+          end if;
+        end loop;
+
+      when 'update' then
+        if jsonb_typeof(operation->'concept') is distinct from 'number'
+          or jsonb_typeof(operation->'removes') is distinct from 'array'
+          or jsonb_typeof(operation->'creates') is distinct from 'array' then
+          return false;
+        end if;
+        if operation->'removes' = '[]'::jsonb and operation->'creates' = '[]'::jsonb then
+          return false;
+        end if;
+        for item in
+          select value from jsonb_array_elements(operation->'removes')
+          union all
+          select value from jsonb_array_elements(operation->'creates')
+        loop
+          if jsonb_typeof(item) is distinct from 'object'
+            or jsonb_typeof(item->'lang') is distinct from 'number'
+            or jsonb_typeof(item->'expr') is distinct from 'string' then
+            return false;
+          end if;
+        end loop;
+
+      when 'delete' then
+        if jsonb_typeof(operation->'concept') is distinct from 'number' then
+          return false;
+        end if;
+
+      else
+        return false;
+    end case;
+  end loop;
+
+  return true;
+end;
+$$;
+
+alter table public.submissions
+  add constraint submissions_payload_shape check (pg_column_size(payload) <= 64 * 1024 and public.valid_submission_payload(payload));
+
+
+create function public.cleanup_unused_expressions()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  delete from public.expressions ex
+  where ex.id in (select expr from entries_old)
+    and not exists (select 1 from public.entries entry where entry.expr = ex.id);
+  return null;
+end;
+$$;
+
+revoke execute on function public.cleanup_unused_expressions() from public;
+
+create trigger entries_cleanup_expressions
+after delete on public.entries
+referencing old table as entries_old
+for each statement execute function public.cleanup_unused_expressions();
+
+
+create function public.reject_submission(submission_id bigint)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  actor_id uuid := (select auth.uid());
+  affected_rows bigint;
+begin
+  if not exists (select 1 from public.users where id = actor_id and role in ('editor', 'admin')) then
+    raise exception 'not authorized';
+  end if;
+
+  update public.submissions
+  set review_status = 'rejected',
+      reviewed_by = actor_id,
+      reviewed_at = now()
+  where id = submission_id
+    and review_status = 'pending';
+  get diagnostics affected_rows = row_count;
+  if affected_rows = 0 then
+    raise exception 'submission does not exist or is not pending';
+  end if;
+end;
+$$;
+
+revoke execute on function public.reject_submission(bigint) from public;
+grant execute on function public.reject_submission(bigint) to authenticated;
+
+
+create function public.replace_submission(submission_id bigint, replacement_payload jsonb)
+returns bigint
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  actor_id uuid := (select auth.uid());
+  affected_rows bigint;
+  replacement_id bigint;
+begin
+  if not exists (select 1 from public.users where id = actor_id and role in ('editor', 'admin')) then
+    raise exception 'not authorized';
+  end if;
+
+  update public.submissions
+  set review_status = 'rejected',
+      reviewed_by = actor_id,
+      reviewed_at = now()
+  where id = submission_id
+    and review_status = 'pending';
+  get diagnostics affected_rows = row_count;
+  if affected_rows = 0 then
+    raise exception 'submission does not exist or is not pending';
+  end if;
+
+  insert into public.submissions(created_by, payload)
+  values (actor_id, replacement_payload)
+  returning id into replacement_id;
+
+  return replacement_id;
+end;
+$$;
+
+revoke execute on function public.replace_submission(bigint, jsonb) from public;
+grant execute on function public.replace_submission(bigint, jsonb) to authenticated;
+
+
+create function public.commit_submission(submission_id bigint)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  actor_id uuid := (select auth.uid());
+  submission public.submissions%rowtype;
+  operation jsonb;
+  item jsonb;
+  current_concept bigint;
+  expression_id bigint;
+begin
+  if not exists (select 1 from public.users where id = actor_id and role in ('editor', 'admin')) then
+    raise exception 'not authorized';
+  end if;
+
+  select * into submission
+  from public.submissions
+  where id = submission_id
+  for update;
+
+  if not found then
+    raise exception 'submission does not exist';
+  end if;
+
+  if submission.review_status <> 'pending' then
+    raise exception 'submission is not pending';
+  end if;
+
+  for operation in
+    select value from jsonb_array_elements(submission.payload)
+  loop
+    case operation->>'type'
+      when 'create' then
+        insert into public.concepts default values returning id into current_concept;
+
+        for item in select value from jsonb_array_elements(operation->'creates')
+        loop
+          expression_id := null;
+          insert into public.expressions(str) values (item->>'expr') on conflict (str) do nothing returning id into expression_id;
+          if expression_id is null then
+            select id into expression_id from public.expressions where str = item->>'expr';
+          end if;
+
+          insert into public.entries(concept, lang, expr)
+          values (current_concept, (item->>'lang')::bigint, expression_id)
+          on conflict do nothing;
+        end loop;
+
+      when 'update' then
+        current_concept := (operation->>'concept')::bigint;
+        if not exists (select 1 from public.concepts where id = current_concept) then
+          raise exception 'concept % does not exist', current_concept;
+        end if;
+
+        for item in select value from jsonb_array_elements(operation->'removes')
+        loop
+          delete from public.entries
+          where concept = current_concept
+            and lang = (item->>'lang')::bigint
+            and expr = (select id from public.expressions where str = item->>'expr');
+        end loop;
+
+        for item in select value from jsonb_array_elements(operation->'creates')
+        loop
+          expression_id := null;
+          insert into public.expressions(str) values (item->>'expr') on conflict (str) do nothing returning id into expression_id;
+          if expression_id is null then
+            select id into expression_id from public.expressions where str = item->>'expr';
+          end if;
+
+          insert into public.entries(concept, lang, expr)
+          values (current_concept, (item->>'lang')::bigint, expression_id)
+          on conflict do nothing;
+        end loop;
+
+      when 'delete' then
+        current_concept := (operation->>'concept')::bigint;
+        delete from public.concepts where id = current_concept;
+    end case;
+  end loop;
+
+  update public.submissions
+  set review_status = 'committed',
+      reviewed_by = actor_id,
+      reviewed_at = now()
+  where id = submission_id;
+end;
+$$;
+
+revoke execute on function public.commit_submission(bigint) from public;
+grant execute on function public.commit_submission(bigint) to authenticated;
 
 
 -- =========================================================================

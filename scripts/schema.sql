@@ -59,7 +59,6 @@ create policy entries_public_read on public.entries for select
 
 create function public.search(query text, language_list bigint[], result_limit integer)
 returns table (
-  id bigint,
   concept bigint,
   lang bigint,
   expr text,
@@ -95,30 +94,37 @@ begin
   perform set_config('pg_trgm.word_similarity_threshold', '0.5', true);
 
   return query
-  with matched_entries as (
+  with matched_expressions as (
     select
-      e.id,
-      e.concept,
-      e.lang,
-      similarity(query, e.expr) as score
-    from public.entries e
-    where query <% e.expr
+      ex.id,
+      ex.str,
+      similarity(query, ex.str) as score
+    from public.expressions ex
+    where query <% ex.str
     order by score desc
     limit result_limit
   ),
+  matched_entries as (
+    select e.concept, e.lang, m.score
+    from matched_expressions m
+    join public.entries e on e.expr = m.id
+  ),
   candidate_concepts as (
     select
-      m.concept as id,
-      array_agg(m.score order by m.score desc) as scores
-    from matched_entries m
-    group by m.concept
+      concept as id,
+      array_agg(score order by score desc) as scores
+    from matched_entries
+    group by concept
   )
   select
-    e.*,
+    e.concept,
+    e.lang,
+    ex.str,
     m.score
   from public.entries e
+  join public.expressions ex on ex.id = e.expr
   join candidate_concepts c on c.id = e.concept
-  left join matched_entries m on m.id = e.id
+  left join matched_expressions m on m.id = e.expr
   where e.lang = any(language_list) or exists (
     select 1
     from matched_entries me
@@ -134,7 +140,11 @@ grant execute on function public.search(text, bigint[], integer) to anon, authen
 
 
 create function public.explore(result_limit integer)
-returns setof public.entries
+returns table (
+  concept bigint,
+  lang bigint,
+  expr text
+)
 language plpgsql
 stable
 security invoker
@@ -156,13 +166,42 @@ begin
     order by random()
     limit result_limit
   )
-  select e.* from public.entries e
+  select e.concept, e.lang, ex.str
+  from public.entries e
+  join public.expressions ex on ex.id = e.expr
   join candidate_concepts c on c.id = e.concept;
 end;
 $$;
 
 revoke execute on function public.explore(integer) from public;
 grant execute on function public.explore(integer) to anon, authenticated;
+
+
+create function public.read_concept(concept bigint)
+returns table (
+  lang bigint,
+  expr text
+)
+language plpgsql
+stable
+security invoker
+set search_path = ''
+as $$
+begin
+  if not exists (select 1 from public.concepts where id = concept) then
+    raise exception 'concept does not exist';
+  end if;
+
+  return query
+  select e.lang, ex.str
+  from public.entries e
+  join public.expressions ex on ex.id = e.expr
+  where e.concept = concept;
+end;
+$$;
+
+revoke execute on function public.read_concept(bigint) from public;
+grant execute on function public.read_concept(bigint) to anon, authenticated;
 
 
 -- =========================================================================
@@ -240,98 +279,6 @@ create policy entries_editor_insert on public.entries for insert
 
 create policy entries_editor_delete on public.entries for delete
   to authenticated using (exists (select 1 from public.users actor where actor.id = (select auth.uid()) and actor.role in ('editor', 'admin')));
-
-
-create type public.entry_create as (
-  lang bigint,
-  expr text
-);
-
-
-create function public.create_concept(entry_list public.entry_create[])
-returns bigint
-language plpgsql
-security invoker
-set search_path = ''
-as $$
-declare
-  concept_id bigint;
-begin
-  if not exists (select 1 from public.users where id = (select auth.uid()) and role in ('editor', 'admin')) then
-    raise exception 'not authorized';
-  end if;
-
-  if coalesce(cardinality(entry_list), 0) = 0 then
-    raise exception 'concept must contain at least one entry';
-  end if;
-
-  if exists (select 1 from unnest(entry_list) as item where (item).lang is null or (item).expr is null) then
-    raise exception 'each entry must have a language and expression';
-  end if;
-
-  insert into public.concepts
-    default values
-    returning id into concept_id;
-
-  insert into public.entries (concept, lang, expr)
-    select concept_id, entry.lang, entry.expr
-    from (
-      select distinct (item).lang, (item).expr
-      from unnest(entry_list) as item
-    ) as entry;
-
-  return concept_id;
-end;
-$$;
-
-revoke execute on function public.create_concept(public.entry_create[]) from public;
-grant execute on function public.create_concept(public.entry_create[]) to authenticated;
-
-
-create function public.update_concept(concept bigint, entry_remove_list bigint[], entry_create_list public.entry_create[])
-returns setof public.entries
-language plpgsql
-security invoker
-set search_path = ''
-as $$
-begin
-  if not exists (select 1 from public.users where id = (select auth.uid()) and role in ('editor', 'admin')) then
-    raise exception 'not authorized';
-  end if;
-
-  if not exists (select 1 from public.concepts where id = $1) then
-    raise exception 'concept does not exist';
-  end if;
-
-  if coalesce(cardinality(entry_remove_list), 0) = 0 and coalesce(cardinality(entry_create_list), 0) = 0 then
-    raise exception 'no changes to commit';
-  end if;
-
-  if exists (select 1 from unnest(coalesce(entry_remove_list, array[]::bigint[])) as ids(id) where id is null) then
-    raise exception 'entry ids must not be null';
-  end if;
-
-  if exists (select 1 from unnest(entry_create_list) as item where (item).lang is null or (item).expr is null) then
-    raise exception 'each entry must have a language and expression';
-  end if;
-
-  delete from public.entries as entry
-  where entry.concept = $1
-    and entry.id = any(coalesce(entry_remove_list, array[]::bigint[]));
-
-  return query
-  insert into public.entries (concept, lang, expr)
-  select $1, entry.lang, entry.expr
-  from (
-    select distinct (item).lang, (item).expr
-    from unnest(entry_create_list) as item
-  ) as entry
-  returning *;
-end;
-$$;
-
-revoke execute on function public.update_concept(bigint, bigint[], public.entry_create[]) from public;
-grant execute on function public.update_concept(bigint, bigint[], public.entry_create[]) to authenticated;
 
 
 -- =========================================================================

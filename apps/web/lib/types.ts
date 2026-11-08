@@ -1,15 +1,17 @@
-import { Json } from "@/lib/database.types";
-
 export function languageLabel(code: string) {
   return new Intl.DisplayNames([code], { type: "language" }).of(code) ?? code;
 }
 
 export type Entry = {
-  id: number;
   concept: number;
   lang: number;
   expr: string;
   score?: number;
+};
+
+export type ConceptEntry = {
+  lang: number;
+  expr: string;
 };
 
 export type UserProfile = {

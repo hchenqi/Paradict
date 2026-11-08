@@ -27,36 +27,43 @@ python scripts/panlex/process.py
 Output:
 - `concepts.tsv`
 - `languages.tsv`
+- `expressions.tsv`
 - `entries.tsv`
 
-## Normalize Expressions
-
-(can be skipped because already normalized) 
-
-```sh
-python scripts/panlex/normalize.py
-```
+Expressions are normalied to NFC.
 
 ## Import Tables
 
 (skip if importing for the first time)
 
 ```sql
-drop index if exists public.idx_entries_expr_trgm;
-truncate public.entries, public.concepts, public.languages restart identity;
+drop index if exists public.idx_expressions_str_trgm, public.idx_entries_expr_lang_concept;
+truncate public.entries, public.expressions, public.concepts, public.languages restart identity;
 ```
 
-(use following commands or use dashboard UI)
+(use the following commands or use the Supabase dashboard CSV import UI to import the tables)
 
 ```psql
 SET statement_timeout = '1h';
 \copy public.concepts(id) FROM 'concepts.tsv' (FORMAT csv, HEADER true);
 \copy public.languages(id, code) FROM 'languages.tsv' (FORMAT csv, HEADER true, DELIMITER E'\t');
+\copy public.expressions(id, str) FROM 'expressions.tsv' (FORMAT csv, HEADER true, DELIMITER E'\t');
 \copy public.entries(concept, lang, expr) FROM 'entries.tsv' (FORMAT csv, HEADER true, DELIMITER E'\t');
 ```
 
-```sql
-create index idx_entries_expr_trgm on public.entries using gin (expr extensions.gin_trgm_ops);
+(run the following queries to synchronize the id sequences)
+(can be skipped if using Supabase dashboard CSV import UI)
 
+```sql
+select setval(pg_get_serial_sequence('public.concepts', 'id'), coalesce(max(id), 1), max(id) is not null) from public.concepts;
+select setval(pg_get_serial_sequence('public.languages', 'id'), coalesce(max(id), 1), max(id) is not null) from public.languages;
+select setval(pg_get_serial_sequence('public.expressions', 'id'), coalesce(max(id), 1), max(id) is not null) from public.expressions;
+```
+
+```sql
+create index idx_expressions_str_trgm on public.expressions using gin (str extensions.gin_trgm_ops);
+create index idx_entries_expr_lang_concept on public.entries(expr, lang, concept);
+
+vacuum analyze public.expressions;
 vacuum analyze public.entries;
 ```

@@ -39,6 +39,15 @@ def import_dataset():
 
 def export_tables(concepts, languages, entries):
 	return Query({ "concepts": concepts, "languages": languages, "entries": entries }, """--sql
+		CREATE VIEW entries AS
+			SELECT * FROM read_parquet({entries});
+
+		CREATE TABLE expressions AS
+			SELECT
+				row_number() OVER () AS id,
+				expr AS str
+			FROM (SELECT DISTINCT expr FROM entries);
+
 		COPY (
 			SELECT * FROM read_parquet({concepts})
 		) TO 'data/concepts.tsv' (HEADER, DELIMITER '\t');
@@ -48,6 +57,12 @@ def export_tables(concepts, languages, entries):
 		) TO 'data/languages.tsv' (HEADER, DELIMITER '\t');
 
 		COPY (
-			SELECT * FROM read_parquet({entries})
+			SELECT * FROM expressions
+		) TO 'data/expressions.tsv' (HEADER, DELIMITER '\t');
+
+		COPY (
+			SELECT entries.concept, entries.lang, expressions.id AS expr
+			FROM entries
+			JOIN expressions ON expressions.str = entries.expr
 		) TO 'data/entries.tsv' (HEADER, DELIMITER '\t');
 	""")

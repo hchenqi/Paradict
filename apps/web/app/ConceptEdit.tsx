@@ -2,14 +2,14 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { getConceptEntries, supabase } from "@/lib/client";
-import { Entry, EntryCreate, EntryRemove, languageLabel } from "@/lib/types";
+import { Entry, ConceptEntry, languageLabel } from "@/lib/types";
 import "./ConceptEdit.css";
 
 function normalizeExpr(expr: string) {
-  return expr.normalize('NFC').replace(/[\t\n\r]/g, ' ').replace(/\p{Cc}/gu, '').replace(/ {2,}/g, ' ').trim();
+  return expr.normalize("NFC").replace(/[\t\n\r]/g, " ").replace(/\p{Cc}/gu, "").replace(/ {2,}/g, " ").trim();
 }
 
-function EntryImport({ languages, onImport }: { languages: [number, string][]; onImport: (entries: EntryCreate[]) => void; }) {
+function EntryImport({ languages, onImport }: { languages: [number, string][]; onImport: (entries: ConceptEntry[]) => void; }) {
   const languageCodeIdMap = useMemo(() => new Map(languages.map(([id, code]) => [code, id])), [languages]);
   const [open, setOpen] = useState(false);
   const [json, setJson] = useState("");
@@ -21,7 +21,7 @@ function EntryImport({ languages, onImport }: { languages: [number, string][]; o
     try {
       const parsed: unknown = JSON.parse(json);
       if (!Array.isArray(parsed)) { throw new Error("JSON must be a list of entries."); }
-      const imported = new Map<string, EntryCreate>();
+      const imported = new Map<string, ConceptEntry>();
       for (const [index, item] of parsed.entries()) {
         if (typeof item !== "object" || item === null || Array.isArray(item)) { throw new Error(`Entry ${index + 1} must have string lang and expr fields.`); }
         const entry = item as Record<string, unknown>;
@@ -75,24 +75,22 @@ function LanguageRow({
   onCreate,
   commitRemove,
   commitCreate,
-  compare,
   editing,
   canCommit,
 }: {
   lang: { id: number; code: string };
   entries: Entry[];
-  removes: EntryRemove[];
-  creates: EntryCreate[];
-  onRemove: (remove: boolean, entry: EntryRemove) => void;
-  onCreate: (remove: boolean, entry: EntryCreate) => void;
-  commitRemove: (entry: EntryRemove) => void;
-  commitCreate: (entry: EntryCreate) => void;
-  compare: Entry[] | undefined;
+  removes: ConceptEntry[];
+  creates: ConceptEntry[];
+  onRemove: (remove: boolean, entry: ConceptEntry) => void;
+  onCreate: (remove: boolean, entry: ConceptEntry) => void;
+  commitRemove: (entry: ConceptEntry) => void;
+  commitCreate: (entry: ConceptEntry) => void;
   editing: boolean;
   canCommit: boolean;
 }) {
   return (
-    <div className={`row ${compare ? "compare" : ""}`}>
+    <div className={`row`}>
       <div className="label">{languageLabel(lang.code)}</div>
       <div className="entries">
         {
@@ -130,23 +128,6 @@ function LanguageRow({
           )
         }
       </div>
-      {
-        compare && (
-          <div className="entries compare">
-            {
-              compare.map(entry => {
-                const add = !entries.find(({ expr }) => entry.expr === expr) && !creates.find(({ expr }) => entry.expr === expr);
-                return (
-                  <div className={`entry ${add ? "created" : ""}`} key={entry.id}>
-                    <span>{entry.expr}</span>
-                    {editing && add && <button type="button" onClick={() => onCreate(false, { lang: lang.id, expr: entry.expr })}>Add</button>}
-                  </div>
-                )
-              })
-            }
-          </div>
-        )
-      }
     </div >
   );
 }
@@ -158,21 +139,19 @@ export default function ({
   creates,
   setRemoves,
   setCreates,
-  compare,
   editing,
   canCommit,
   onCreateConcept,
 }: {
   languages: [number, string][],
   concept: number | undefined;
-  removes: EntryRemove[];
-  creates: EntryCreate[];
-  setRemoves: (fn: (removes: EntryRemove[]) => EntryRemove[]) => void,
-  setCreates: (fn: (creates: EntryCreate[]) => EntryCreate[]) => void,
-  compare: number | undefined;
+  removes: ConceptEntry[];
+  creates: ConceptEntry[];
+  setRemoves: (fn: (removes: ConceptEntry[]) => ConceptEntry[]) => void,
+  setCreates: (fn: (creates: ConceptEntry[]) => ConceptEntry[]) => void,
   editing: boolean;
   canCommit: boolean;
-  onCreateConcept: (entries: EntryCreate[]) => Promise<void>;
+  onCreateConcept: (entries: ConceptEntry[]) => Promise<void>;
 }) {
   const [message, setMessage] = useState("");
   const [committing, setCommitting] = useState(false);
@@ -183,10 +162,6 @@ export default function ({
   const entryExprIdMap = useMemo(() => new Map(entries.map(({ id, lang, expr }) => [JSON.stringify([lang, expr]), id])), [entries]);
 
   const createGroups = useMemo(() => Map.groupBy(creates, entry => entry.lang), [creates]);
-
-  const [compareEntries, setCompareEntries] = useState<Entry[]>([]);
-  const compareEntryGroups = useMemo(() => Map.groupBy(compareEntries, entry => entry.lang), [compareEntries]);
-  const hasCompare = compare && compare !== concept && compareEntries.length > 0;
 
   useEffect(() => {
     setEntries([]);
@@ -203,18 +178,7 @@ export default function ({
     setCreates(creates => creates.filter(({ lang, expr }) => !entryExprIdMap.get(JSON.stringify([lang, expr]))));
   }, [entries]);
 
-  useEffect(() => {
-    setCompareEntries([]);
-    if (compare && compare !== concept) {
-      let mounted = true;
-      getConceptEntries(compare)
-        .then(entries => mounted && (entries ? setCompareEntries(entries) : setMessage("Concept to compare does not exist.")))
-        .catch(() => mounted && setMessage("Could not load concept to compare."));
-      return () => { mounted = false; };
-    }
-  }, [concept, compare]);
-
-  function onRemove(remove: boolean, entry: EntryRemove) {
+  function onRemove(remove: boolean, entry: ConceptEntry) {
     if (remove) {
       setRemoves(entries => [...entries, entry]);
     } else {
@@ -222,7 +186,7 @@ export default function ({
     }
   }
 
-  function onCreate(remove: boolean, entry: EntryCreate) {
+  function onCreate(remove: boolean, entry: ConceptEntry) {
     if (!remove) {
       const id = entryExprIdMap.get(JSON.stringify([entry.lang, entry.expr]));
       if (id) {
@@ -237,14 +201,14 @@ export default function ({
     }
   }
 
-  function addEntries(entries: EntryCreate[]) {
+  function addEntries(entries: ConceptEntry[]) {
     const idsToRestore = new Set(entries.map(({ lang, expr }) => entryExprIdMap.get(JSON.stringify([lang, expr]))).filter((id): id is number => id !== undefined));
     const entriesToCreate = entries.filter(({ lang, expr }) => !entryExprIdMap.has(JSON.stringify([lang, expr])) && !creates.some(entry => entry.lang === lang && entry.expr === expr)).map(({ lang, expr }) => ({ lang, expr }));
     if (idsToRestore.size) { setRemoves(removes => removes.filter(({ id }) => !idsToRestore.has(id))); }
     if (entriesToCreate.length) { setCreates(creates => [...creates, ...entriesToCreate.filter(entry => !creates.some(({ lang, expr }) => entry.lang === lang && entry.expr === expr))]); }
   }
 
-  async function commitRemove(entry: EntryRemove) {
+  async function commitRemove(entry: ConceptEntry) {
     const { error } = await supabase.from("entries").delete().eq("id", entry.id);
     if (error) {
       setMessage("Commit failed.");
@@ -253,11 +217,11 @@ export default function ({
     }
   }
 
-  async function commitCreate(entry: EntryCreate) {
+  async function commitCreate(entry: ConceptEntry) {
     if (concept === undefined) {
       return setMessage("Create a concept before committing changes.");
     }
-    const { data, error } = await supabase.from("entries").insert({ concept, ...entry }).select('id').single();
+    const { data, error } = await supabase.from("entries").insert({ concept, ...entry }).select("id").single();
     if (error) {
       setMessage("Commit failed.");
     } else {
@@ -315,32 +279,10 @@ export default function ({
     setCommitting(false);
   }
 
-  async function subsumeCompare() {
-    if (!hasCompare) {
-      return;
-    }
-    if (creates.length) {
-      setMessage("Commit created entries before subsuming.")
-      return;
-    }
-    const subsumed = !compareEntries.find(entry => !entries.find(({ expr }) => entry.expr === expr) && !creates.find(({ expr }) => entry.expr === expr));
-    if (!subsumed && !confirm("Are you sure you want to delete this concept and all its entries? This action cannot be undone.")) {
-      return;
-    }
-    setCommitting(true);
-    const { error } = await supabase.from("concepts").delete().eq("id", compare);
-    if (error) {
-      setMessage(`Delete concept failed: ${error.message}`);
-    } else {
-      setCompareEntries([]);
-    }
-    setCommitting(false);
-  }
-
   return (
     <>
       {message && <p role="status">{message}</p>}
-      <div className={`row header ${compare ? "compare" : ""}`}>
+      <div className={`row header`}>
         <button className={`filter ${showEmptyRows ? "active" : ""}`} type="button" aria-pressed={showEmptyRows} onClick={() => setShowEmptyRows(!showEmptyRows)}>empty rows</button>
         <div className="current">
           <span>{concept ? `Concept ${concept}` : "New concept"}</span>
@@ -349,20 +291,11 @@ export default function ({
           {!editing && concept !== undefined && canCommit && (removes.length > 0 || creates.length > 0) && <button type="button" disabled={committing} onClick={updateConcept}>{committing ? "Committing..." : "Commit all"}</button>}
           {!editing && concept !== undefined && canCommit && (!removes.length && !creates.length) && <button type="button" disabled={committing} onClick={deleteConcept}>Delete</button>}
         </div>
-        {
-          hasCompare && (
-            <div className="compare">
-              <span>Concept {compare}</span>
-              {editing && <button type="button" onClick={() => addEntries(compareEntries)}>Add all</button>}
-              {!editing && canCommit && <button type="button" disabled={committing} onClick={subsumeCompare}>Subsume</button>}
-            </div>
-          )
-        }
       </div>
       <div>
         {
           languages.filter(([id]) => showEmptyRows || (entryGroups.get(id)?.length ?? 0) > 0 || (createGroups.get(id)?.length ?? 0) > 0 || (hasCompare && (compareEntryGroups.get(id)?.length ?? 0) > 0)).map(([id, code]) => (
-            <LanguageRow key={id} lang={{ id, code }} entries={entryGroups.get(id) ?? []} removes={removes} creates={createGroups.get(id) ?? []} onRemove={onRemove} onCreate={onCreate} commitRemove={commitRemove} commitCreate={commitCreate} compare={hasCompare ? compareEntryGroups.get(id) ?? [] : undefined} editing={editing} canCommit={canCommit && concept !== undefined && !committing} />
+            <LanguageRow key={id} lang={{ id, code }} entries={entryGroups.get(id) ?? []} removes={removes} creates={createGroups.get(id) ?? []} onRemove={onRemove} onCreate={onCreate} commitRemove={commitRemove} commitCreate={commitCreate} editing={editing} canCommit={canCommit && concept !== undefined && !committing} />
           ))
         }
       </div>

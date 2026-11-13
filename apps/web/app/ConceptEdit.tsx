@@ -73,6 +73,7 @@ function LanguageRow({
   onRemove,
   onCreate,
   editing,
+  deleting,
 }: {
   lang: { id: number; code: string };
   entries: string[];
@@ -81,10 +82,10 @@ function LanguageRow({
   onRemove: (remove: boolean, entry: ConceptEntry) => void;
   onCreate: (remove: boolean, entry: ConceptEntry) => void;
   editing: boolean;
+  deleting: boolean;
 }) {
   return (
-    <div className={`row`}>
-      <div className="label">{languageLabel(lang.code)}</div>
+    <div className={`row ${deleting ? "disabled" : ""}`} aria-label={languageLabel(lang.code)}>
       <div className="entries">
         {
           entries.map(expr => {
@@ -92,16 +93,16 @@ function LanguageRow({
             return (
               <div className={`entry ${removed ? "removed" : ""}`} key={expr}>
                 <span>{expr}</span>
-                {editing && <button type="button" onClick={() => onRemove(!removed, { lang: lang.id, expr })} aria-label={`${removed ? "Restore" : "Remove"} ${expr} (${lang.code})`}>{removed ? "+" : "-"}</button>}
+                {editing && <button type="button" disabled={deleting} onClick={() => onRemove(!removed, { lang: lang.id, expr })} aria-label={`${removed ? "Restore" : "Remove"} ${expr}`}>{removed ? "+" : "-"}</button>}
               </div>
             );
           })
         }
         {
           creates.map(expr => (
-            <div className={`entry created`} key={expr}>
+            <div className="entry created" key={expr}>
               <span>{expr}</span>
-              {editing && <button type="button" onClick={() => onCreate(true, { lang: lang.id, expr })} aria-label={`Remove ${expr} (${lang.code})`}>-</button>}
+              {editing && <button type="button" disabled={deleting} onClick={() => onCreate(true, { lang: lang.id, expr })} aria-label={`Remove ${expr}`}>-</button>}
             </div>
           ))
         }
@@ -113,13 +114,13 @@ function LanguageRow({
               const expr = normalizeExpr(new FormData(form).get("create") as string);
               if (expr) { onCreate(false, { lang: lang.id, expr }); }
             }}>
-              <input name="create" />
-              <button type="submit">Add</button>
+              <input name="create" disabled={deleting} />
+              <button type="submit" disabled={deleting}>Add</button>
             </form>
           )
         }
       </div>
-    </div >
+    </div>
   );
 }
 
@@ -140,6 +141,7 @@ export default function ({
 }) {
   const [removes, setRemoves] = useState<ConceptEntry[]>(initialRemoves);
   const [creates, setCreates] = useState<ConceptEntry[]>(initialCreates);
+  const [deleting, setDeleting] = useState(false);
 
   const entryGroups = useMemo(() => Map.groupBy(entries, entry => entry.lang), [entries]);
   const removeGroups = useMemo(() => Map.groupBy(creates, entry => entry.lang), [removes]);
@@ -182,12 +184,13 @@ export default function ({
         <div className="current">
           <span>{concept ? `Concept ${concept}` : "New concept"}</span>
           {editing && <EntryImport languages={languages} onImport={addEntries} />}
+          {editing && <button type="button" aria-pressed={deleting} onClick={() => setDeleting(!deleting)}>{deleting ? "Restore" : "Delete"}</button>}
         </div>
       </div>
       <div>
         {
           languages.map(([id, code]) => (
-            <LanguageRow key={id} lang={{ id, code }} entries={(entryGroups.get(id) ?? []).map(entry => entry.expr)} removes={(removeGroups.get(id) ?? []).map(entry => entry.expr)} creates={(createGroups.get(id) ?? []).map(entry => entry.expr)} onRemove={onRemove} onCreate={onCreate} editing={editing} />
+            <LanguageRow key={id} lang={{ id, code }} entries={(entryGroups.get(id) ?? []).map(entry => entry.expr)} removes={(removeGroups.get(id) ?? []).map(entry => entry.expr)} creates={(createGroups.get(id) ?? []).map(entry => entry.expr)} onRemove={onRemove} onCreate={onCreate} editing={editing} deleting={deleting} />
           ))
         }
       </div>

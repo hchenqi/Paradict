@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { ConceptEntry, languageLabel } from "@/lib/types";
 import "./ConceptEdit.css";
 
@@ -14,6 +14,7 @@ function EntryImport({ languages, onImport }: { languages: [number, string][]; o
   const [json, setJson] = useState("");
   const [error, setError] = useState("");
   const dialogRef = useRef<HTMLDialogElement>(null);
+  const id = useId();
 
   function importEntries(event: React.SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -49,8 +50,8 @@ function EntryImport({ languages, onImport }: { languages: [number, string][]; o
       <button type="button" onClick={() => { setError(""); setOpen(true); }}>Import</button>
       {
         open && (
-          <dialog ref={dialogRef} aria-labelledby="import-title" onClose={() => setOpen(false)} onClick={event => { if (event.target === event.currentTarget) { dialogRef.current?.close(); } }}>
-            <h2 id="import-title">Import entries from JSON</h2>
+          <dialog ref={dialogRef} aria-labelledby={id} onClose={() => setOpen(false)} onClick={event => { if (event.target === event.currentTarget) { dialogRef.current?.close(); } }}>
+            <h2 id={id}>Import entries from JSON</h2>
             <p>Paste a JSON list of entries with language codes, for example: <code>[&#123;"lang":"eng","expr":"hello"&#125;]</code></p>
             <details><summary>Available language codes</summary><p>{languages.map(([, code]) => code).join(", ")}</p></details>
             <form onSubmit={importEntries}>

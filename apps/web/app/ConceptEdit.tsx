@@ -1,8 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { getConceptEntries } from "@/lib/client";
-import { Entry, ConceptEntry, languageLabel } from "@/lib/types";
+import { ConceptEntry, languageLabel } from "@/lib/types";
 import "./ConceptEdit.css";
 
 function normalizeExpr(expr: string) {
@@ -76,9 +75,9 @@ function LanguageRow({
   editing,
 }: {
   lang: { id: number; code: string };
-  entries: Entry[];
-  removes: ConceptEntry[];
-  creates: ConceptEntry[];
+  entries: string[];
+  removes: string[];
+  creates: string[];
   onRemove: (remove: boolean, entry: ConceptEntry) => void;
   onCreate: (remove: boolean, entry: ConceptEntry) => void;
   editing: boolean;
@@ -88,21 +87,21 @@ function LanguageRow({
       <div className="label">{languageLabel(lang.code)}</div>
       <div className="entries">
         {
-          entries.map(entry => {
-            const removed = removes.find(item => item.id === entry.id);
+          entries.map(expr => {
+            const removed = removes.includes(expr);
             return (
-              <div className={`entry ${removed ? "removed" : ""}`} key={entry.id}>
-                <span>{entry.expr}</span>
-                {editing && <button type="button" onClick={() => onRemove(!removed, { id: entry.id })} aria-label={`${removed ? "Restore" : "Remove"} ${entry.expr} (${lang.code})`}>{removed ? "+" : "-"}</button>}
+              <div className={`entry ${removed ? "removed" : ""}`} key={expr}>
+                <span>{expr}</span>
+                {editing && <button type="button" onClick={() => onRemove(!removed, { lang: lang.id, expr })} aria-label={`${removed ? "Restore" : "Remove"} ${expr} (${lang.code})`}>{removed ? "+" : "-"}</button>}
               </div>
             );
           })
         }
         {
-          creates.map(entry => (
-            <div className={`entry created`} key={entry.expr}>
-              <span>{entry.expr}</span>
-              {editing && <button type="button" onClick={() => onCreate(true, entry)} aria-label={`Remove ${entry.expr} (${lang.code})`}>-</button>}
+          creates.map(expr => (
+            <div className={`entry created`} key={expr}>
+              <span>{expr}</span>
+              {editing && <button type="button" onClick={() => onCreate(true, { lang: lang.id, expr })} aria-label={`Remove ${expr} (${lang.code})`}>-</button>}
             </div>
           ))
         }
@@ -127,79 +126,59 @@ function LanguageRow({
 export default function ({
   languages,
   concept,
-  removes,
-  creates,
-  setRemoves,
-  setCreates,
+  entries,
+  initialRemoves,
+  initialCreates,
   editing,
 }: {
   languages: [number, string][],
   concept: number | undefined;
-  removes: ConceptEntry[];
-  creates: ConceptEntry[];
-  setRemoves: (fn: (removes: ConceptEntry[]) => ConceptEntry[]) => void,
-  setCreates: (fn: (creates: ConceptEntry[]) => ConceptEntry[]) => void,
+  entries: ConceptEntry[];
+  initialRemoves: ConceptEntry[];
+  initialCreates: ConceptEntry[];
   editing: boolean;
 }) {
-  const [message, setMessage] = useState("");
-  const [showEmptyRows, setShowEmptyRows] = useState(false);
+  const [removes, setRemoves] = useState<ConceptEntry[]>(initialRemoves);
+  const [creates, setCreates] = useState<ConceptEntry[]>(initialCreates);
 
-  const [entries, setEntries] = useState<Entry[]>([]);
   const entryGroups = useMemo(() => Map.groupBy(entries, entry => entry.lang), [entries]);
-  const entryExprIdMap = useMemo(() => new Map(entries.map(({ id, lang, expr }) => [JSON.stringify([lang, expr]), id])), [entries]);
-
+  const removeGroups = useMemo(() => Map.groupBy(creates, entry => entry.lang), [removes]);
   const createGroups = useMemo(() => Map.groupBy(creates, entry => entry.lang), [creates]);
 
   useEffect(() => {
-    setEntries([]);
-    if (concept) {
-      let mounted = true;
-      getConceptEntries(concept)
-        .then(entries => mounted && (entries ? setEntries(entries) : setMessage("Concept does not exist.")))
-        .catch(() => mounted && setMessage("Could not load concept."));
-      return () => { mounted = false; };
-    }
-  }, [concept]);
-
-  useEffect(() => {
-    setCreates(creates => creates.filter(({ lang, expr }) => !entryExprIdMap.get(JSON.stringify([lang, expr]))));
+    setCreates(creates => creates.filter(({ lang, expr }) => !entries.find(entry => lang === entry.lang && expr === entry.expr)));
   }, [entries]);
 
   function onRemove(remove: boolean, entry: ConceptEntry) {
     if (remove) {
-      setRemoves(entries => [...entries, entry]);
+      setRemoves(removes => [...removes, entry]);
     } else {
-      setRemoves(entries => entries.filter(({ id }) => id !== entry.id));
+      setRemoves(removes => removes.filter(({ lang, expr }) => !(lang === entry.lang && expr === entry.expr)));
     }
   }
 
   function onCreate(remove: boolean, entry: ConceptEntry) {
     if (!remove) {
-      const id = entryExprIdMap.get(JSON.stringify([entry.lang, entry.expr]));
-      if (id) {
-        setRemoves(entries => entries.filter(entry => entry.id !== id));
+      if (entries.find(({ lang, expr }) => lang === entry.lang && expr === entry.expr)) {
+        onRemove(false, entry);
       } else {
         if (!creates.find(({ lang, expr }) => lang === entry.lang && expr === entry.expr)) {
-          setCreates(entries => [...entries, entry]);
+          setCreates(creates => [...creates, entry]);
         }
       }
     } else {
-      setCreates(entries => entries.filter(other => other !== entry));
+      setCreates(creates => creates.filter(({ lang, expr }) => !(lang === entry.lang && expr === entry.expr)));
     }
   }
 
   function addEntries(entries: ConceptEntry[]) {
-    const idsToRestore = new Set(entries.map(({ lang, expr }) => entryExprIdMap.get(JSON.stringify([lang, expr]))).filter((id): id is number => id !== undefined));
-    const entriesToCreate = entries.filter(({ lang, expr }) => !entryExprIdMap.has(JSON.stringify([lang, expr])) && !creates.some(entry => entry.lang === lang && entry.expr === expr)).map(({ lang, expr }) => ({ lang, expr }));
-    if (idsToRestore.size) { setRemoves(removes => removes.filter(({ id }) => !idsToRestore.has(id))); }
-    if (entriesToCreate.length) { setCreates(creates => [...creates, ...entriesToCreate.filter(entry => !creates.some(({ lang, expr }) => entry.lang === lang && entry.expr === expr))]); }
+    setRemoves(removes => removes.filter(({ lang, expr }) => !entries.find(entry => lang === entry.lang && expr === entry.expr)));
+    setCreates(creates => [...creates, ...entries.filter(({ lang, expr }) => !creates.find(entry => lang === entry.lang && expr === entry.expr))]);
   }
 
   return (
     <>
-      {message && <p role="status">{message}</p>}
       <div className={`row header`}>
-        <button className={`filter ${showEmptyRows ? "active" : ""}`} type="button" aria-pressed={showEmptyRows} onClick={() => setShowEmptyRows(!showEmptyRows)}>empty rows</button>
         <div className="current">
           <span>{concept ? `Concept ${concept}` : "New concept"}</span>
           {editing && <EntryImport languages={languages} onImport={addEntries} />}
@@ -207,8 +186,8 @@ export default function ({
       </div>
       <div>
         {
-          languages.filter(([id]) => showEmptyRows || (entryGroups.get(id)?.length ?? 0) > 0 || (createGroups.get(id)?.length ?? 0) > 0).map(([id, code]) => (
-            <LanguageRow key={id} lang={{ id, code }} entries={entryGroups.get(id) ?? []} removes={removes} creates={createGroups.get(id) ?? []} onRemove={onRemove} onCreate={onCreate} editing={editing} />
+          languages.map(([id, code]) => (
+            <LanguageRow key={id} lang={{ id, code }} entries={(entryGroups.get(id) ?? []).map(entry => entry.expr)} removes={(removeGroups.get(id) ?? []).map(entry => entry.expr)} creates={(createGroups.get(id) ?? []).map(entry => entry.expr)} onRemove={onRemove} onCreate={onCreate} editing={editing} />
           ))
         }
       </div>

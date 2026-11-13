@@ -1,8 +1,25 @@
 "use client";
 
 import { useEffect, useId, useMemo, useRef, useState } from "react";
-import { ConceptEntry, languageLabel } from "@/lib/types";
+import { ConceptEntry, ConceptOperation, languageLabel } from "@/lib/types";
+import { supabase } from "@/lib/client";
 import "./ConceptEdit.css";
+
+function useConceptLoader(concept: number | undefined, setMessage: (message: string) => void) {
+  const [entries, setEntries] = useState<ConceptEntry[]>([]);
+
+  useEffect(() => {
+    setEntries([]);
+    if (concept) {
+      let mounted = true;
+      supabase.rpc("read_concept", { concept_id: concept })
+        .then(({ data: entries, error }) => { if (mounted) { if (!error) { setEntries(entries); } else { setMessage("Concept does not exist."); } } })
+      return () => { mounted = false; };
+    }
+  }, [concept]);
+
+  return entries;
+}
 
 function normalizeExpr(expr: string) {
   return expr.normalize("NFC").replace(/[\t\n\r]/g, " ").replace(/\p{Cc}/gu, "").replace(/ {2,}/g, " ").trim();
@@ -125,24 +142,23 @@ function LanguageRow({
   );
 }
 
-export default function ({
+function Panel({
   languages,
-  concept,
-  entries,
-  initialRemoves,
-  initialCreates,
+  initial,
   editing,
 }: {
-  languages: [number, string][],
-  concept: number | undefined;
-  entries: ConceptEntry[];
-  initialRemoves: ConceptEntry[];
-  initialCreates: ConceptEntry[];
+  languages: [number, string][];
+  initial: ConceptOperation;
   editing: boolean;
 }) {
-  const [removes, setRemoves] = useState<ConceptEntry[]>(initialRemoves);
-  const [creates, setCreates] = useState<ConceptEntry[]>(initialCreates);
-  const [deleting, setDeleting] = useState(false);
+  const [message, setMessage] = useState("");
+
+  const concept = initial.type !== "create" ? initial.concept : undefined;
+  const entries = useConceptLoader(concept, setMessage);
+
+  const [removes, setRemoves] = useState<ConceptEntry[]>(initial.type === "update" ? initial.removes : []);
+  const [creates, setCreates] = useState<ConceptEntry[]>(initial.type !== "delete" ? initial.creates : []);
+  const [deleting, setDeleting] = useState(initial.type === "delete");
 
   const entryGroups = useMemo(() => Map.groupBy(entries, entry => entry.lang), [entries]);
   const removeGroups = useMemo(() => Map.groupBy(creates, entry => entry.lang), [removes]);
@@ -181,12 +197,17 @@ export default function ({
 
   return (
     <>
+      {message && <p role="status">{message}</p>}
       <div className={`row header`}>
-        <div className="current">
-          <span>{concept ? `Concept ${concept}` : "New concept"}</span>
-          {editing && <EntryImport languages={languages} onImport={addEntries} />}
-          {editing && <button type="button" aria-pressed={deleting} onClick={() => setDeleting(!deleting)}>{deleting ? "Restore" : "Delete"}</button>}
-        </div>
+        <span>{concept ? `Concept ${concept}` : "New concept"}</span>
+        {
+          editing && (
+            <div className="actions">
+              <EntryImport languages={languages} onImport={addEntries} />
+              <button type="button" aria-pressed={deleting} onClick={() => setDeleting(!deleting)}>{deleting ? "Restore" : "Delete"}</button>
+            </div>
+          )
+        }
       </div>
       <div>
         {

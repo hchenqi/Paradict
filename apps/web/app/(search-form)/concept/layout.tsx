@@ -88,12 +88,15 @@ export default function () {
     setSubmitting(false);
     if (error) {
       setMessage(`Submission failed: ${error.message}`);
-      return;
-    }
-    if (canCommit) {
-      const { error } = await supabase.rpc("commit_submission", { submission_id: data.id });
-      if (error) {
-        setMessage(`Submission succeeded but failed to commit: ${error.message}`);
+    } else {
+      setEditing(false);
+      if (canCommit) {
+        const { error } = await supabase.rpc("commit_submission", { submission_id: data.id });
+        if (error) {
+          setMessage(`Commit submission #${data.id} failed: ${error.message}`);
+        } else {
+          setMessage(`Submission #${data.id} committed.`);
+        }
       }
     }
   }

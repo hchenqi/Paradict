@@ -104,40 +104,38 @@ function LanguageRow({
 }) {
   return (
     <div className={`row ${deleting ? "disabled" : ""}`} aria-label={languageLabel(lang.code)}>
-      <div className="entries">
-        {
-          entries.map(expr => {
-            const removed = removes.includes(expr);
-            return (
-              <div className={`entry ${removed ? "removed" : ""}`} key={expr}>
-                <span>{expr}</span>
-                {editing && <button type="button" disabled={deleting} onClick={() => onRemove(!removed, { lang: lang.id, expr })} aria-label={`${removed ? "Restore" : "Remove"} ${expr}`}>{removed ? "+" : "-"}</button>}
-              </div>
-            );
-          })
-        }
-        {
-          creates.map(expr => (
-            <div className="entry created" key={expr}>
+      {
+        entries.map(expr => {
+          const removed = removes.includes(expr);
+          return (
+            <div className={`entry ${removed ? "removed" : ""}`} key={expr}>
               <span>{expr}</span>
-              {editing && <button type="button" disabled={deleting} onClick={() => onCreate(true, { lang: lang.id, expr })} aria-label={`Remove ${expr}`}>-</button>}
+              {editing && <button type="button" disabled={deleting} onClick={() => onRemove(!removed, { lang: lang.id, expr })} aria-label={`${removed ? "Restore" : "Remove"} ${expr}`}>{removed ? "+" : "-"}</button>}
             </div>
-          ))
-        }
-        {
-          editing && (
-            <form onSubmit={event => {
-              event.preventDefault();
-              const form = event.currentTarget;
-              const expr = normalizeExpr(new FormData(form).get("create") as string);
-              if (expr) { onCreate(false, { lang: lang.id, expr }); }
-            }}>
-              <input name="create" aria-label={`Add expression in ${lang.code}`} disabled={deleting} />
-              <button type="submit" disabled={deleting}>Add</button>
-            </form>
-          )
-        }
-      </div>
+          );
+        })
+      }
+      {
+        creates.map(expr => (
+          <div className="entry created" key={expr}>
+            <span>{expr}</span>
+            {editing && <button type="button" disabled={deleting} onClick={() => onCreate(true, { lang: lang.id, expr })} aria-label={`Remove ${expr}`}>-</button>}
+          </div>
+        ))
+      }
+      {
+        editing && !deleting && (
+          <form onSubmit={event => {
+            event.preventDefault();
+            const form = event.currentTarget;
+            const expr = normalizeExpr(new FormData(form).get("create") as string);
+            if (expr) { onCreate(false, { lang: lang.id, expr }); }
+          }}>
+            <input name="create" aria-label={`Add expression in ${lang.code}`} disabled={deleting} />
+            <button type="submit" disabled={deleting}>Add</button>
+          </form>
+        )
+      }
     </div>
   );
 }
@@ -157,6 +155,7 @@ function Panel({
 }: {
   ref: Ref<PanelHandle>;
   self: {
+    columnCount: number;
     column: number;
     setMain: () => void;
     move: (direction: -1 | 1) => void;
@@ -232,25 +231,31 @@ function Panel({
 
   return (
     <div className="panel" style={{ gridColumn: self.column + 2, gridRow: "1 / -1" }} aria-label={concept ? `Concept ${concept}` : "New concept"}>
-      {message && <p role="status">{message}</p>}
       <div className="row header">
-        <div className="title">
+        <div className="top">
           <span className="name">{concept ? `Concept ${concept}` : "New concept"}</span>
-          {
-            editing && (
-              <div className="actions edit">
-                <EntryImport languages={languages} onImport={addEntries} />
-                <button type="button" aria-pressed={deleting} onClick={() => setDeleting(!deleting)}>{deleting ? "Restore" : "Delete"}</button>
-              </div>
-            )
-          }
+          <div className="actions">
+            {self.column !== 0 && <button type="button" onClick={self.setMain}>Set as main</button>}
+            {self.column !== 0 && <button type="button" onClick={() => self.move(-1)} aria-label="Move left">←</button>}
+            {self.column !== self.columnCount - 1 && <button type="button" onClick={() => self.move(1)} aria-label="Move right">→</button>}
+            <button type="button" onClick={self.remove} aria-label="Remove panel">×</button>
+          </div>
         </div>
-        <div className="actions">
-          {self.column !== 0 && <button type="button" onClick={self.setMain}>Set as main</button>}
-          <button type="button" onClick={() => self.move(-1)} aria-label="Move left">←</button>
-          <button type="button" onClick={() => self.move(1)} aria-label="Move right">→</button>
-          <button type="button" onClick={self.remove} aria-label="Remove panel">×</button>
-        </div>
+        {
+          (message || editing) && (
+            <div className="bottom">
+              {message && <p role="status">{message}</p>}
+              {
+                editing && (
+                  <div className="actions">
+                    <EntryImport languages={languages} onImport={addEntries} />
+                    <button type="button" aria-pressed={deleting} onClick={() => setDeleting(!deleting)}>{deleting ? "Restore" : "Delete"}</button>
+                  </div>
+                )
+              }
+            </div>
+          )
+        }
       </div>
       {
         visibleLanguages.map(([id, code]) => (
@@ -350,7 +355,7 @@ export default function ({ ref, languages, initial, editing }: { ref: Ref<Concep
         }
         {message && <span role="status">{message}</span>}
       </div>
-      <div className="scroll">
+      <div className={`scroll${panels.length === 1 ? " single" : ""}`}>
         <div className={`grid${panels.length === 1 ? " single" : ""}`} style={panelGridStyle}>
           <div className="corner">
             <button type="button" className={`filter ${showEmptyRows ? "active" : ""}`} aria-pressed={showEmptyRows} onClick={() => setShowEmptyRows(value => !value)}>empty rows</button>
@@ -366,6 +371,7 @@ export default function ({ ref, languages, initial, editing }: { ref: Ref<Concep
                 key={panel.key}
                 ref={handle => { handle ? panelRefs.current.set(panel.key, handle) : panelRefs.current.delete(panel.key); return; }}
                 self={{
+                  columnCount: panels.length,
                   column: index,
                   setMain: () => setPanels([panels[index], ...panels.filter((_, panelIndex) => panelIndex !== index)]),
                   move: direction => setPanels(current => { const index = current.findIndex(item => item.key === panel.key); const nextIndex = index + direction; if (index < 0 || nextIndex < 0 || nextIndex >= current.length) { return current; } const next = [...current];[next[index], next[nextIndex]] = [next[nextIndex], next[index]]; return next; }),

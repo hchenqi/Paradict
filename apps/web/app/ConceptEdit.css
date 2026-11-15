@@ -81,6 +81,10 @@
   overflow-x: auto;
 }
 
+.concept .scroll.single {
+  overflow-x: hidden;
+}
+
 .concept .edit:fullscreen .scroll {
   flex: 1 1 auto;
   min-height: 0;
@@ -98,7 +102,8 @@
 }
 
 .concept .grid.single {
-  grid-template-columns: 112px repeat(var(--panel-count), minmax(280px, 1fr));
+  grid-template-columns: 112px minmax(0, 1fr);
+  width: 100%;
 }
 
 .concept .grid .panel {
@@ -107,6 +112,7 @@
 
 .concept .grid.single .panel {
   max-width: none;
+  min-width: 0;
 }
 
 .concept .corner,
@@ -154,21 +160,21 @@
 }
 
 .concept .panel .row.header {
+  flex-direction: column;
   flex-wrap: nowrap;
-  align-items: center;
-  gap: 8px;
+  align-items: stretch;
+  gap: 4px;
   min-width: 0;
   padding: 8px;
   border-top: 0;
   border-bottom: 1px solid #e1dfd8;
 }
 
-.concept .panel .row.header .title {
+.concept .panel .row.header .top,
+.concept .panel .row.header .bottom {
   display: flex;
-  flex: 1 1 auto;
-  flex-wrap: wrap;
   align-items: center;
-  gap: 4px;
+  gap: 8px;
   min-width: 0;
 }
 
@@ -180,23 +186,19 @@
   white-space: nowrap;
 }
 
-.concept .panel .row.header .actions.edit {
-  display: flex;
-  flex: 0 1 auto;
-  flex-wrap: wrap;
-  max-width: 100%;
-  gap: 4px;
-}
-
 .concept .panel .row.header .actions {
   display: flex;
   flex-wrap: nowrap;
   justify-content: flex-end;
-  flex: 0 0 auto;
+  max-width: 100%;
   gap: 4px;
+  margin-left: auto;
 }
 
-.concept .panel > [role="status"] {
+.concept .panel .row.header [role="status"] {
+  min-width: 0;
+  margin: 0;
+  overflow-wrap: anywhere;
   color: #a3261d;
   font-size: 13px;
 }
@@ -204,6 +206,10 @@
 .concept .panel .row {
   position: relative;
   display: flex;
+  flex-wrap: wrap;
+  align-content: center;
+  align-items: center;
+  gap: 6px;
   min-width: 0;
   padding: 6px;
   border-top: 1px solid #e1dfd8;
@@ -211,16 +217,6 @@
 
 .concept .panel .row.disabled {
   opacity: 0.55;
-}
-
-.concept .panel .row .entries {
-  display: flex;
-  flex-wrap: wrap;
-  align-content: center;
-  align-items: center;
-  gap: 6px;
-  width: 100%;
-  min-width: 0;
 }
 
 .concept .entry {
@@ -254,39 +250,32 @@
   background: transparent;
 }
 
-.concept .row .entries form {
-  position: absolute;
-  z-index: 2;
-  top: 50%;
-  right: 6px;
-  display: flex;
+.concept .panel .row > form {
+  display: none;
+  flex: 0 1 14rem;
   width: 14rem;
   max-width: 14rem;
   min-width: 0;
+  margin-left: auto;
   gap: 0;
   border: none;
+  background: #fffdf9;
   box-shadow: 0 2px 8px rgb(23 35 32 / 12%);
-  opacity: 0;
-  pointer-events: none;
-  transform: translateY(-50%);
-  transition: opacity 120ms ease;
 }
 
-.concept .panel .row:hover .entries form,
-.concept .panel .row:focus-within .entries form {
-  opacity: 1;
-  pointer-events: auto;
+.concept .panel .row:hover > form,
+.concept .panel .row:focus-within > form {
+  display: flex;
 }
 
-.concept .row .entries form input {
+.concept .panel .row > form input {
   flex: 1;
   min-width: 0;
 }
 
 @media (hover: none) {
-  .concept .panel .row .entries form {
-    opacity: 1;
-    pointer-events: auto;
+  .concept .panel .row > form {
+    display: flex;
   }
 }
 

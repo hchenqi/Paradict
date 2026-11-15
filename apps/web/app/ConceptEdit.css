@@ -45,6 +45,11 @@
   margin: 12px 0;
 }
 
+.concept .controls div {
+  display: flex;
+  gap: 8px;
+}
+
 .concept .controls form {
   display: flex;
   align-items: end;
@@ -55,17 +60,53 @@
   font-size: 13px;
 }
 
+.concept .edit:fullscreen {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  width: 100vw;
+  height: 100vh;
+  padding: 16px;
+  overflow: hidden;
+  background: #fffdf9;
+  color: #172320;
+}
+
+.concept .edit:fullscreen .controls {
+  flex: 0 0 auto;
+  margin: 0 0 12px;
+}
+
 .concept .scroll {
   overflow-x: auto;
 }
 
+.concept .edit:fullscreen .scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+}
+
 .concept .grid {
   display: grid;
-  grid-template-columns: 112px repeat(var(--panel-count), minmax(280px, 1fr));
+  grid-template-columns: 112px repeat(var(--panel-count), minmax(280px, 400px));
   grid-template-rows: auto repeat(var(--language-count), minmax(44px, auto));
+  column-gap: 8px;
   width: max-content;
   min-width: 100%;
   align-items: stretch;
+}
+
+.concept .grid.single {
+  grid-template-columns: 112px repeat(var(--panel-count), minmax(280px, 1fr));
+}
+
+.concept .grid .panel {
+  max-width: 400px;
+}
+
+.concept .grid.single .panel {
+  max-width: none;
 }
 
 .concept .corner,
@@ -113,7 +154,7 @@
 }
 
 .concept .panel .row.header {
-  justify-content: space-between;
+  flex-wrap: nowrap;
   align-items: center;
   gap: 8px;
   min-width: 0;
@@ -122,10 +163,36 @@
   border-bottom: 1px solid #e1dfd8;
 }
 
+.concept .panel .row.header .title {
+  display: flex;
+  flex: 1 1 auto;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+}
+
+.concept .panel .row.header .name {
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.concept .panel .row.header .actions.edit {
+  display: flex;
+  flex: 0 1 auto;
+  flex-wrap: wrap;
+  max-width: 100%;
+  gap: 4px;
+}
+
 .concept .panel .row.header .actions {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   justify-content: flex-end;
+  flex: 0 0 auto;
   gap: 4px;
 }
 
@@ -157,6 +224,7 @@
 }
 
 .concept .entry {
+  min-width: 0;
   max-width: 100%;
 }
 

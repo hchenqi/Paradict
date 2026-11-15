@@ -121,7 +121,7 @@ export default function () {
         }
       </nav>
       {message && <p role="status">{message}</p>}
-      <ConceptEdit ref={conceptEditRef} languages={languages} initial={initial} editing={editing} />
+      {compares && <ConceptEdit ref={conceptEditRef} languages={languages} initial={initial} editing={editing} />}
     </article>
   );
 }

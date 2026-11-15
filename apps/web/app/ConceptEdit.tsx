@@ -234,19 +234,23 @@ function Panel({
     <div className="panel" style={{ gridColumn: self.column + 2, gridRow: "1 / -1" }} aria-label={concept ? `Concept ${concept}` : "New concept"}>
       {message && <p role="status">{message}</p>}
       <div className="row header">
-        <span>{concept ? `Concept ${concept}` : "New concept"}</span>
-        {
-          editing && (
-            <div className="actions">
-              <EntryImport languages={languages} onImport={addEntries} />
-              <button type="button" aria-pressed={deleting} onClick={() => setDeleting(!deleting)}>{deleting ? "Restore" : "Delete"}</button>
-              {self.column !== 0 && <button type="button" onClick={self.setMain}>Set as main</button>}
-              <button type="button" onClick={() => self.move(-1)} aria-label="Move left">←</button>
-              <button type="button" onClick={() => self.move(1)} aria-label="Move right">→</button>
-              <button type="button" onClick={self.remove} aria-label="Remove panel">×</button>
-            </div>
-          )
-        }
+        <div className="title">
+          <span className="name">{concept ? `Concept ${concept}` : "New concept"}</span>
+          {
+            editing && (
+              <div className="actions edit">
+                <EntryImport languages={languages} onImport={addEntries} />
+                <button type="button" aria-pressed={deleting} onClick={() => setDeleting(!deleting)}>{deleting ? "Restore" : "Delete"}</button>
+              </div>
+            )
+          }
+        </div>
+        <div className="actions">
+          {self.column !== 0 && <button type="button" onClick={self.setMain}>Set as main</button>}
+          <button type="button" onClick={() => self.move(-1)} aria-label="Move left">←</button>
+          <button type="button" onClick={() => self.move(1)} aria-label="Move right">→</button>
+          <button type="button" onClick={self.remove} aria-label="Remove panel">×</button>
+        </div>
       </div>
       {
         visibleLanguages.map(([id, code]) => (
@@ -274,6 +278,17 @@ export default function ({ ref, languages, initial, editing }: { ref: Ref<Concep
   const [message, setMessage] = useState("");
   const [showEmptyRows, setShowEmptyRows] = useState(false);
   const visibleLanguages = showEmptyRows ? languages : languages.filter(([id]) => [...panelLanguages.values()].some(panel => panel.has(id)));
+
+  const editorRef = useRef<HTMLDivElement>(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  useEffect(() => {
+    function updateFullscreenState() {
+      setIsFullscreen(document.fullscreenElement === editorRef.current);
+    }
+    document.addEventListener("fullscreenchange", updateFullscreenState);
+    return () => document.removeEventListener("fullscreenchange", updateFullscreenState);
+  }, []);
 
   const panelGridStyle = useMemo(() => ({
     "--panel-count": panels.length,
@@ -304,22 +319,39 @@ export default function ({ ref, languages, initial, editing }: { ref: Ref<Concep
     form.reset();
   }
 
-  return (
-    <>
-      {
-        editing && (
-          <div className="controls">
-            <form onSubmit={addConcept}>
-              <input name="id" inputMode="numeric" />
-              <button type="submit">Add concept</button>
-            </form>
-            <button type="button" onClick={() => addPanel({ type: "create", creates: [] })}>Add new concept</button>
-            {message && <span role="status">{message}</span>}
-          </div>
-        )
+  async function toggleFullscreen() {
+    const editor = editorRef.current;
+    if (!editor) { return; }
+    try {
+      if (document.fullscreenElement === editor) {
+        await document.exitFullscreen();
+      } else {
+        await editor.requestFullscreen();
       }
+    } catch (error) {
+      setMessage(error instanceof Error ? `Could not toggle fullscreen: ${error.message}` : "Could not toggle fullscreen.");
+    }
+  }
+
+  return (
+    <div className="edit" ref={editorRef}>
+      <div className="controls">
+        <button type="button" aria-pressed={isFullscreen} onClick={toggleFullscreen}>{isFullscreen ? "Exit fullscreen" : "Fullscreen"}</button>
+        {
+          editing && (
+            <div>
+              <form onSubmit={addConcept}>
+                <input name="id" inputMode="numeric" />
+                <button type="submit">Add concept</button>
+              </form>
+              <button type="button" onClick={() => addPanel({ type: "create", creates: [] })}>Add new concept</button>
+            </div>
+          )
+        }
+        {message && <span role="status">{message}</span>}
+      </div>
       <div className="scroll">
-        <div className="grid" style={panelGridStyle}>
+        <div className={`grid${panels.length === 1 ? " single" : ""}`} style={panelGridStyle}>
           <div className="corner">
             <button type="button" className={`filter ${showEmptyRows ? "active" : ""}`} aria-pressed={showEmptyRows} onClick={() => setShowEmptyRows(value => !value)}>empty rows</button>
           </div>
@@ -361,6 +393,6 @@ export default function ({ ref, languages, initial, editing }: { ref: Ref<Concep
           }
         </div>
       </div>
-    </>
+    </div>
   );
 }

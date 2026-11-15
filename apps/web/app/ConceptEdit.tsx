@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useMemo, useRef, useState } from "react";
+import { Ref, useEffect, useId, useImperativeHandle, useMemo, useRef, useState } from "react";
 import { ConceptEntry, ConceptOperation, languageLabel } from "@/lib/types";
 import { supabase } from "@/lib/client";
 import "./ConceptEdit.css";
@@ -142,11 +142,24 @@ function LanguageRow({
   );
 }
 
+type PanelHandle = {
+  getOperation: () => ConceptOperation | null;
+};
+
 function Panel({
+  ref,
+  self,
   languages,
   initial,
   editing,
 }: {
+  ref: Ref<PanelHandle>;
+  self: {
+    column: number;
+    setMain: () => void;
+    move: (direction: -1 | 1) => void;
+    remove: () => void;
+  };
   languages: [number, string][];
   initial: ConceptOperation;
   editing: boolean;
@@ -164,9 +177,23 @@ function Panel({
   const removeGroups = useMemo(() => Map.groupBy(creates, entry => entry.lang), [removes]);
   const createGroups = useMemo(() => Map.groupBy(creates, entry => entry.lang), [creates]);
 
-  useEffect(() => {
-    setCreates(creates => creates.filter(({ lang, expr }) => !entries.find(entry => lang === entry.lang && expr === entry.expr)));
-  }, [entries]);
+  useImperativeHandle(ref, () => ({
+    getOperation: () => {
+      if (concept === undefined) {
+        if (!deleting) {
+          return creates.length > 0 ? { "type": "create", creates } : null;
+        } else {
+          return null;
+        }
+      } else {
+        if (!deleting) {
+          return removes.length > 0 || creates.length > 0 ? { "type": "update", concept, removes, creates } : null;
+        } else {
+          return { "type": "delete", concept };
+        }
+      }
+    }
+  }), [concept, removes, creates, deleting]);
 
   function onRemove(remove: boolean, entry: ConceptEntry) {
     if (remove) {
@@ -196,25 +223,119 @@ function Panel({
   }
 
   return (
-    <>
+    <div className="panel" style={{ gridColumn: self.column + 2, gridRow: "1 / -1" }} aria-label={concept ? `Concept ${concept}` : "New concept"}>
       {message && <p role="status">{message}</p>}
-      <div className={`row header`}>
+      <div className="row header">
         <span>{concept ? `Concept ${concept}` : "New concept"}</span>
         {
           editing && (
             <div className="actions">
               <EntryImport languages={languages} onImport={addEntries} />
               <button type="button" aria-pressed={deleting} onClick={() => setDeleting(!deleting)}>{deleting ? "Restore" : "Delete"}</button>
+              {self.column !== 0 && <button type="button" onClick={self.setMain}>Set as main</button>}
+              <button type="button" onClick={() => self.move(-1)} aria-label="Move left">←</button>
+              <button type="button" onClick={() => self.move(1)} aria-label="Move right">→</button>
+              <button type="button" onClick={self.remove} aria-label="Remove panel">×</button>
             </div>
           )
         }
       </div>
-      <div>
-        {
-          languages.map(([id, code]) => (
-            <LanguageRow key={id} lang={{ id, code }} entries={(entryGroups.get(id) ?? []).map(entry => entry.expr)} removes={(removeGroups.get(id) ?? []).map(entry => entry.expr)} creates={(createGroups.get(id) ?? []).map(entry => entry.expr)} onRemove={onRemove} onCreate={onCreate} editing={editing} deleting={deleting} />
-          ))
-        }
+      {
+        languages.map(([id, code]) => (
+          <LanguageRow key={id} lang={{ id, code }} entries={(entryGroups.get(id) ?? []).map(entry => entry.expr)} removes={(removeGroups.get(id) ?? []).map(entry => entry.expr)} creates={(createGroups.get(id) ?? []).map(entry => entry.expr)} onRemove={onRemove} onCreate={onCreate} editing={editing} deleting={deleting} />
+        ))
+      }
+    </div>
+  );
+}
+
+export type ConceptEditHandle = {
+  getOperations: () => ConceptOperation[];
+};
+
+type Panel = {
+  key: string;
+  operation: ConceptOperation;
+};
+
+export default function ({ ref, languages, initial, editing }: { ref: Ref<ConceptEditHandle>; languages: [number, string][]; initial: ConceptOperation[]; editing: boolean; }) {
+  const [panels, setPanels] = useState<Panel[]>(() => initial.map(operation => ({ key: crypto.randomUUID(), operation })));
+  const panelRefs = useRef(new Map<string, PanelHandle>());
+
+  const [message, setMessage] = useState("");
+  const [showEmptyRows, setShowEmptyRows] = useState(false);
+
+  const panelGridStyle = useMemo(() => ({
+    "--panel-count": panels.length,
+    "--language-count": languages.length
+  } as React.CSSProperties), [panels.length, languages.length]);
+
+  useImperativeHandle(ref, () => ({
+    getOperations: () => panels.map(panel => panelRefs.current.get(panel.key)?.getOperation()).filter(operation => !!operation)
+  }), [panels]);
+
+  function addPanel(operation: ConceptOperation) {
+    setPanels([...panels, { key: crypto.randomUUID(), operation }]);
+  }
+
+  function addConcept(event: React.SubmitEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const id = Number(new FormData(form).get("id"));
+    if (!Number.isInteger(id) || id < 1) {
+      setMessage("Invalid concept ID");
+      return;
+    }
+    if (panels.some(panel => panel.operation.type !== "create" && panel.operation.concept === id)) {
+      setMessage(`Concept ${id} already added`);
+      return;
+    }
+    addPanel({ type: "update", concept: id, creates: [], removes: [] });
+    form.reset();
+  }
+
+  return (
+    <>
+      {
+        editing && (
+          <div className="controls">
+            <form onSubmit={addConcept}>
+              <input name="id" inputMode="numeric" />
+              <button type="submit">Add concept</button>
+            </form>
+            <button type="button" onClick={() => addPanel({ type: "create", creates: [] })}>Add new concept</button>
+            {message && <span role="status">{message}</span>}
+          </div>
+        )
+      }
+      <div className="scroll">
+        <div className="grid" style={panelGridStyle}>
+          <div className="corner">
+            <button type="button" className={`filter ${showEmptyRows ? "active" : ""}`} aria-pressed={showEmptyRows} onClick={() => setShowEmptyRows(value => !value)}>empty rows</button>
+          </div>
+          {
+            languages.map(([id, code], index) => (
+              <div className="lang" key={id} style={{ gridColumn: 1, gridRow: index + 2 }}>{languageLabel(code)}</div>
+            ))
+          }
+          {
+            panels.map((panel, index) => (
+              <Panel
+                key={panel.key}
+                ref={handle => { handle ? panelRefs.current.set(panel.key, handle) : panelRefs.current.delete(panel.key); return; }}
+                self={{
+                  column: index,
+                  setMain: () => setPanels([panels[index], ...panels.filter((_, panelIndex) => panelIndex !== index)]),
+                  move: direction => setPanels(current => { const index = current.findIndex(item => item.key === panel.key); const nextIndex = index + direction; if (index < 0 || nextIndex < 0 || nextIndex >= current.length) { return current; } const next = [...current];[next[index], next[nextIndex]] = [next[nextIndex], next[index]]; return next; }),
+                  remove: () => setPanels(current => current.filter(item => item.key !== panel.key)),
+                }}
+                languages={languages}
+                initial={panel.operation}
+                editing={editing}
+              />
+            ))
+          }
+        </div>
       </div>
     </>
   );

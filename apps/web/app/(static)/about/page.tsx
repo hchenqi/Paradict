@@ -19,16 +19,15 @@ export default function () {
       <p>
         Each concept represents one meaning, while its entries are the
         expressions used to convey that meaning in particular languages, for
-        example, English “water”, French “eau”, and Spanish “agua”. One
-        expression can have more than one sense and appear in different
+        example, English “water”, French “eau”, and Spanish “agua”.
+        One expression can have more than one sense and appear in different
         concepts: “bank” in English can mean a financial institution or the
         land beside a river.
       </p>
       <p>
-        We focus on genuine synonyms and translations that appear in natural languages.
-        For technical terms and abbreviations such as “HTML”, “GPS”, or “Wi-Fi”
-        that are used unchanged in multiple languages, there is also no need to have an entry
-        for each language with the identical expression.
+        We focus on genuine synonyms and translations that appear in natural languages,
+        which excludes technical terms and abbreviations such as “HTML”, “GPS”, or “Wi-Fi”
+        that are used unchanged in multiple languages.
       </p>
       <h2>How to use</h2>
       <ul>

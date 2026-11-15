@@ -79,10 +79,11 @@
 .concept .corner {
   grid-column: 1;
   grid-row: 1;
+  display: flex;
+  align-items: center;
 }
 
 .concept .corner .filter {
-  justify-self: start;
   background: transparent;
   border: 0;
   border-radius: 16px;
@@ -112,12 +113,12 @@
 }
 
 .concept .panel .row.header {
-  display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 8px;
   min-width: 0;
   padding: 8px;
+  border-top: 0;
   border-bottom: 1px solid #e1dfd8;
 }
 
@@ -128,12 +129,13 @@
   gap: 4px;
 }
 
-.concept .panel .row.header [role="status"] {
+.concept .panel > [role="status"] {
   color: #a3261d;
   font-size: 13px;
 }
 
 .concept .panel .row {
+  position: relative;
   display: flex;
   min-width: 0;
   padding: 6px;
@@ -185,16 +187,39 @@
 }
 
 .concept .row .entries form {
+  position: absolute;
+  z-index: 2;
+  top: 50%;
+  right: 6px;
   display: flex;
-  flex: 1 1 100%;
-  min-width: 0;
+  width: 14rem;
   max-width: 14rem;
+  min-width: 0;
   gap: 0;
+  border: none;
+  box-shadow: 0 2px 8px rgb(23 35 32 / 12%);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-50%);
+  transition: opacity 120ms ease;
+}
+
+.concept .panel .row:hover .entries form,
+.concept .panel .row:focus-within .entries form {
+  opacity: 1;
+  pointer-events: auto;
 }
 
 .concept .row .entries form input {
   flex: 1;
   min-width: 0;
+}
+
+@media (hover: none) {
+  .concept .panel .row .entries form {
+    opacity: 1;
+    pointer-events: auto;
+  }
 }
 
 .concept dialog {

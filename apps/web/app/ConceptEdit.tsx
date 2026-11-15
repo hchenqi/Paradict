@@ -132,7 +132,7 @@ function LanguageRow({
               const expr = normalizeExpr(new FormData(form).get("create") as string);
               if (expr) { onCreate(false, { lang: lang.id, expr }); }
             }}>
-              <input name="create" disabled={deleting} />
+              <input name="create" aria-label={`Add expression in ${lang.code}`} disabled={deleting} />
               <button type="submit" disabled={deleting}>Add</button>
             </form>
           )
@@ -150,6 +150,8 @@ function Panel({
   ref,
   self,
   languages,
+  visibleLanguages,
+  onLanguagesChange,
   initial,
   editing,
 }: {
@@ -161,6 +163,8 @@ function Panel({
     remove: () => void;
   };
   languages: [number, string][];
+  visibleLanguages: [number, string][];
+  onLanguagesChange: (languages: number[]) => void;
   initial: ConceptOperation;
   editing: boolean;
 }) {
@@ -174,8 +178,12 @@ function Panel({
   const [deleting, setDeleting] = useState(initial.type === "delete");
 
   const entryGroups = useMemo(() => Map.groupBy(entries, entry => entry.lang), [entries]);
-  const removeGroups = useMemo(() => Map.groupBy(creates, entry => entry.lang), [removes]);
+  const removeGroups = useMemo(() => Map.groupBy(removes, entry => entry.lang), [removes]);
   const createGroups = useMemo(() => Map.groupBy(creates, entry => entry.lang), [creates]);
+
+  useEffect(() => {
+    onLanguagesChange([...new Set([...entries.map(entry => entry.lang), ...creates.map(entry => entry.lang)])]);
+  }, [entries, creates, onLanguagesChange]);
 
   useImperativeHandle(ref, () => ({
     getOperation: () => {
@@ -241,7 +249,7 @@ function Panel({
         }
       </div>
       {
-        languages.map(([id, code]) => (
+        visibleLanguages.map(([id, code]) => (
           <LanguageRow key={id} lang={{ id, code }} entries={(entryGroups.get(id) ?? []).map(entry => entry.expr)} removes={(removeGroups.get(id) ?? []).map(entry => entry.expr)} creates={(createGroups.get(id) ?? []).map(entry => entry.expr)} onRemove={onRemove} onCreate={onCreate} editing={editing} deleting={deleting} />
         ))
       }
@@ -261,14 +269,16 @@ type Panel = {
 export default function ({ ref, languages, initial, editing }: { ref: Ref<ConceptEditHandle>; languages: [number, string][]; initial: ConceptOperation[]; editing: boolean; }) {
   const [panels, setPanels] = useState<Panel[]>(() => initial.map(operation => ({ key: crypto.randomUUID(), operation })));
   const panelRefs = useRef(new Map<string, PanelHandle>());
+  const [panelLanguages, setPanelLanguages] = useState<Map<string, Set<number>>>(new Map());
 
   const [message, setMessage] = useState("");
   const [showEmptyRows, setShowEmptyRows] = useState(false);
+  const visibleLanguages = showEmptyRows ? languages : languages.filter(([id]) => [...panelLanguages.values()].some(panel => panel.has(id)));
 
   const panelGridStyle = useMemo(() => ({
     "--panel-count": panels.length,
-    "--language-count": languages.length
-  } as React.CSSProperties), [panels.length, languages.length]);
+    "--language-count": visibleLanguages.length
+  } as React.CSSProperties), [panels.length, visibleLanguages.length]);
 
   useImperativeHandle(ref, () => ({
     getOperations: () => panels.map(panel => panelRefs.current.get(panel.key)?.getOperation()).filter(operation => !!operation)
@@ -314,7 +324,7 @@ export default function ({ ref, languages, initial, editing }: { ref: Ref<Concep
             <button type="button" className={`filter ${showEmptyRows ? "active" : ""}`} aria-pressed={showEmptyRows} onClick={() => setShowEmptyRows(value => !value)}>empty rows</button>
           </div>
           {
-            languages.map(([id, code], index) => (
+            visibleLanguages.map(([id, code], index) => (
               <div className="lang" key={id} style={{ gridColumn: 1, gridRow: index + 2 }}>{languageLabel(code)}</div>
             ))
           }
@@ -327,9 +337,23 @@ export default function ({ ref, languages, initial, editing }: { ref: Ref<Concep
                   column: index,
                   setMain: () => setPanels([panels[index], ...panels.filter((_, panelIndex) => panelIndex !== index)]),
                   move: direction => setPanels(current => { const index = current.findIndex(item => item.key === panel.key); const nextIndex = index + direction; if (index < 0 || nextIndex < 0 || nextIndex >= current.length) { return current; } const next = [...current];[next[index], next[nextIndex]] = [next[nextIndex], next[index]]; return next; }),
-                  remove: () => setPanels(current => current.filter(item => item.key !== panel.key)),
+                  remove: () => {
+                    setPanels(current => current.filter(item => item.key !== panel.key));
+                    setPanelLanguages(current => {
+                      if (!current.has(panel.key)) { return current; }
+                      const next = new Map(current); next.delete(panel.key); return next;
+                    });
+                  },
+                }}
+                onLanguagesChange={ids => {
+                  setPanelLanguages(current => {
+                    const previous = current.get(panel.key);
+                    if (previous?.size === ids.length && ids.every(id => previous.has(id))) { return current; }
+                    const next = new Map(current); next.set(panel.key, new Set(ids)); return next;
+                  });
                 }}
                 languages={languages}
+                visibleLanguages={visibleLanguages}
                 initial={panel.operation}
                 editing={editing}
               />

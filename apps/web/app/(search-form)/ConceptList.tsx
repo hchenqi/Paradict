@@ -24,19 +24,21 @@ function LanguageRow({ lang, entries, query }: { lang: string; entries: Entry[];
       <div className="label">{languageLabel(lang)}</div>
       <div className="entries">
         {
-          entries.map(entry => <div className={`entry ${entry.score ? "matched" : ""}`} key={entry.id}><span>{query ? highlight(entry.expr, query) : entry.expr}</span></div>)
+          entries.map(entry => <div className={`entry ${entry.score ? "matched" : ""}`} key={entry.expr}><span>{query ? highlight(entry.expr, query) : entry.expr}</span></div>)
         }
       </div>
     </div>
   );
 }
 
-function ConceptCard({ conceptId, rows, query, compare, setCompare }: { conceptId: number; rows: { lang: string; entries: Entry[]; }[]; query: string | undefined; compare: number | undefined; setCompare: (compare: number | undefined) => void; }) {
+function ConceptCard({ conceptId, rows, query, compare, setCompare }: { conceptId: number; rows: { lang: string; entries: Entry[]; }[]; query: string | undefined; compare: number[]; setCompare: (compare: number[]) => void; }) {
+  const compareIds = compare.filter(id => id !== conceptId);
+  const selected = compare.includes(conceptId);
   return (
     <article className="concept">
       <header>
-        <Link className="title" href={`/concept/${conceptId}${compare !== undefined && compare !== conceptId ? `?compare=${compare}` : ""}`}>Concept {conceptId}</Link>
-        {query && <button className={`compare-toggle ${compare === conceptId ? "selected" : ""}`} type="button" aria-label={`Compare concept ${conceptId}`} aria-pressed={compare === conceptId} onClick={() => setCompare(compare === conceptId ? undefined : conceptId)}>Compare</button>}
+        <Link className="title" href={`/concept/${conceptId}${compareIds.length ? `?compare=${compareIds.join(",")}` : ""}`}>Concept {conceptId}</Link>
+        {query && <button className={`compare-toggle ${selected ? "selected" : ""}`} type="button" aria-label={`Compare concept ${conceptId}`} aria-pressed={selected} onClick={() => setCompare(selected ? compareIds : [...compare, conceptId])}>Compare</button>}
       </header>
       <div>
         {
@@ -53,7 +55,7 @@ export default function ({ entries, languageList, query }: { entries: Entry[], l
   const concepts = useMemo(() => Map.groupBy(entries, entry => entry.concept), [entries]);
   const { languageCodeIdMap, languageIdCodeMap } = useLanguages();
   const languages = useMemo(() => languageList.map(code => [languageCodeIdMap.get(code)!, code] as [number, string]), [languageCodeIdMap, languageList]);
-  const [compare, setCompare] = useState<number | undefined>(undefined);
+  const [compare, setCompare] = useState<number[]>([]);
 
   return (
     <>
@@ -62,7 +64,7 @@ export default function ({ entries, languageList, query }: { entries: Entry[], l
           <ConceptCard key={conceptId} conceptId={conceptId} rows={groupEntriesByLanguageOrdered(entries, languages, !query, languageIdCodeMap)} query={query} compare={compare} setCompare={setCompare} />
         ))
       }
-      {query && <Link className="suggest" href={`/concept/create${compare !== undefined ? `?compare=${compare}` : ""}`}>Suggest a new concept</Link>}
+      {query && <Link className="suggest" href={`/concept/create${compare.length ? `?compare=${compare.join(",")}` : ""}`}>Suggest a new concept</Link>}
     </>
   );
 }

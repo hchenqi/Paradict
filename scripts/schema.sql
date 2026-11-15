@@ -50,7 +50,6 @@ create policy entries_public_read on public.entries for select
 
 create function public.search(query text, language_list bigint[], result_limit integer)
 returns table (
-  id bigint,
   concept bigint,
   lang bigint,
   expr text,
@@ -105,7 +104,9 @@ begin
     group by m.concept
   )
   select
-    e.*,
+    e.concept,
+    e.lang,
+    e.expr,
     m.score
   from public.entries e
   join candidate_concepts c on c.id = e.concept
@@ -125,7 +126,11 @@ grant execute on function public.search(text, bigint[], integer) to anon, authen
 
 
 create function public.explore(result_limit integer)
-returns setof public.entries
+returns table (
+  concept bigint,
+  lang bigint,
+  expr text
+)
 language plpgsql
 stable
 security invoker
@@ -147,13 +152,38 @@ begin
     order by random()
     limit result_limit
   )
-  select e.* from public.entries e
+  select e.concept, e.lang, e.expr from public.entries e
   join candidate_concepts c on c.id = e.concept;
 end;
 $$;
 
 revoke execute on function public.explore(integer) from public;
 grant execute on function public.explore(integer) to anon, authenticated;
+
+
+create function public.read_concept(concept_id bigint)
+returns table (
+  lang bigint,
+  expr text
+)
+language plpgsql
+stable
+security invoker
+set search_path = ''
+as $$
+begin
+  if not exists (select 1 from public.concepts where id = concept_id) then
+    raise exception 'concept does not exist';
+  end if;
+
+  return query
+  select e.lang, e.expr from public.entries e
+  where e.concept = concept_id;
+end;
+$$;
+
+revoke execute on function public.read_concept(bigint) from public;
+grant execute on function public.read_concept(bigint) to anon, authenticated;
 
 
 -- =========================================================================
@@ -171,10 +201,9 @@ create table public.submissions (
   id bigint generated always as identity primary key,
   created_by uuid references public.users(id) on delete set null,
   created_at timestamptz not null default now(),
-  payload jsonb not null check (pg_column_size(payload) <= 16 * 1024),
-  review_status text not null default 'pending' check (review_status in ('pending', 'approved', 'rejected')),
+  payload jsonb not null,
+  review_status text not null default 'pending' check (review_status in ('pending', 'committed', 'rejected')),
   reviewed_by uuid references public.users(id) on delete set null,
-  review_note jsonb,
   reviewed_at timestamptz
 );
 
@@ -185,9 +214,10 @@ create index idx_submissions_pending on public.submissions(created_at) where rev
 
 grant select (id, role, username, display_name) on public.users to authenticated;
 grant update (username, display_name) on public.users to authenticated;
+
 grant select, delete on public.submissions to authenticated;
 grant insert (created_by, payload) on public.submissions to authenticated;
-grant update (review_status, reviewed_by, review_note, reviewed_at) on public.submissions to authenticated;
+grant update (payload) on public.submissions to authenticated;
 
 
 alter table public.users enable row level security;
@@ -207,11 +237,11 @@ create policy submissions_member_select on public.submissions for select
 create policy submissions_own_insert on public.submissions for insert
   to authenticated with check ((select auth.uid()) = created_by);
 
-create policy submissions_editor_update on public.submissions for update
-  to authenticated using (exists (select 1 from public.users actor where actor.id = (select auth.uid()) and actor.role in ('editor', 'admin')));
+create policy submissions_own_update on public.submissions for update
+  to authenticated using ((select auth.uid()) = created_by and review_status = 'pending');
 
 create policy submissions_own_admin_delete on public.submissions for delete
-  to authenticated using (((select auth.uid()) = created_by) or exists (select 1 from public.users actor where actor.id = (select auth.uid()) and actor.role = 'admin'));
+  to authenticated using ((((select auth.uid()) = created_by) and review_status <> 'committed') or exists (select 1 from public.users actor where actor.id = (select auth.uid()) and actor.role = 'admin'));
 
 
 create policy concepts_editor_insert on public.concepts for insert
@@ -233,96 +263,231 @@ create policy entries_editor_delete on public.entries for delete
   to authenticated using (exists (select 1 from public.users actor where actor.id = (select auth.uid()) and actor.role in ('editor', 'admin')));
 
 
-create type public.entry_create as (
-  lang bigint,
-  expr text
-);
-
-
-create function public.create_concept(entry_list public.entry_create[])
-returns bigint
+create function public.valid_submission_payload(payload jsonb)
+returns boolean
 language plpgsql
-security invoker
+immutable
 set search_path = ''
 as $$
 declare
-  concept_id bigint;
+  operation jsonb;
+  item jsonb;
 begin
-  if not exists (select 1 from public.users where id = (select auth.uid()) and role in ('editor', 'admin')) then
-    raise exception 'not authorized';
+  if jsonb_typeof(payload) is distinct from 'array' or payload = '[]'::jsonb then
+    return false;
   end if;
 
-  if coalesce(cardinality(entry_list), 0) = 0 then
-    raise exception 'concept must contain at least one entry';
-  end if;
+  for operation in select value from jsonb_array_elements(payload)
+  loop
+    if jsonb_typeof(operation) is distinct from 'object'
+      or jsonb_typeof(operation->'type') is distinct from 'string' then
+      return false;
+    end if;
 
-  if exists (select 1 from unnest(entry_list) as item where (item).lang is null or (item).expr is null) then
-    raise exception 'each entry must have a language and expression';
-  end if;
+    case operation->>'type'
+      when 'create' then
+        if jsonb_typeof(operation->'creates') is distinct from 'array'
+          or operation->'creates' = '[]'::jsonb then
+          return false;
+        end if;
+        for item in select value from jsonb_array_elements(operation->'creates')
+        loop
+          if jsonb_typeof(item) is distinct from 'object'
+            or jsonb_typeof(item->'lang') is distinct from 'number'
+            or jsonb_typeof(item->'expr') is distinct from 'string' then
+            return false;
+          end if;
+        end loop;
 
-  insert into public.concepts
-    default values
-    returning id into concept_id;
+      when 'update' then
+        if jsonb_typeof(operation->'concept') is distinct from 'number'
+          or jsonb_typeof(operation->'removes') is distinct from 'array'
+          or jsonb_typeof(operation->'creates') is distinct from 'array' then
+          return false;
+        end if;
+        if operation->'removes' = '[]'::jsonb and operation->'creates' = '[]'::jsonb then
+          return false;
+        end if;
+        for item in
+          select value from jsonb_array_elements(operation->'removes')
+          union all
+          select value from jsonb_array_elements(operation->'creates')
+        loop
+          if jsonb_typeof(item) is distinct from 'object'
+            or jsonb_typeof(item->'lang') is distinct from 'number'
+            or jsonb_typeof(item->'expr') is distinct from 'string' then
+            return false;
+          end if;
+        end loop;
 
-  insert into public.entries (concept, lang, expr)
-    select concept_id, entry.lang, entry.expr
-    from (
-      select distinct (item).lang, (item).expr
-      from unnest(entry_list) as item
-    ) as entry;
+      when 'delete' then
+        if jsonb_typeof(operation->'concept') is distinct from 'number' then
+          return false;
+        end if;
 
-  return concept_id;
+      else
+        return false;
+    end case;
+  end loop;
+
+  return true;
 end;
 $$;
 
-revoke execute on function public.create_concept(public.entry_create[]) from public;
-grant execute on function public.create_concept(public.entry_create[]) to authenticated;
+alter table public.submissions
+  add constraint submissions_payload_shape check (pg_column_size(payload) <= 64 * 1024 and public.valid_submission_payload(payload));
 
 
-create function public.update_concept(concept bigint, entry_remove_list bigint[], entry_create_list public.entry_create[])
-returns setof public.entries
+create function public.reject_submission(submission_id bigint)
+returns void
 language plpgsql
-security invoker
+security definer
 set search_path = ''
 as $$
+declare
+  actor_id uuid := (select auth.uid());
+  affected_rows bigint;
 begin
-  if not exists (select 1 from public.users where id = (select auth.uid()) and role in ('editor', 'admin')) then
+  if not exists (select 1 from public.users where id = actor_id and role in ('editor', 'admin')) then
     raise exception 'not authorized';
   end if;
 
-  if not exists (select 1 from public.concepts where id = $1) then
-    raise exception 'concept does not exist';
+  update public.submissions
+  set review_status = 'rejected',
+      reviewed_by = actor_id,
+      reviewed_at = now()
+  where id = submission_id
+    and review_status = 'pending';
+  get diagnostics affected_rows = row_count;
+  if affected_rows = 0 then
+    raise exception 'submission does not exist or is not pending';
   end if;
-
-  if coalesce(cardinality(entry_remove_list), 0) = 0 and coalesce(cardinality(entry_create_list), 0) = 0 then
-    raise exception 'no changes to commit';
-  end if;
-
-  if exists (select 1 from unnest(coalesce(entry_remove_list, array[]::bigint[])) as ids(id) where id is null) then
-    raise exception 'entry ids must not be null';
-  end if;
-
-  if exists (select 1 from unnest(entry_create_list) as item where (item).lang is null or (item).expr is null) then
-    raise exception 'each entry must have a language and expression';
-  end if;
-
-  delete from public.entries as entry
-  where entry.concept = $1
-    and entry.id = any(coalesce(entry_remove_list, array[]::bigint[]));
-
-  return query
-  insert into public.entries (concept, lang, expr)
-  select $1, entry.lang, entry.expr
-  from (
-    select distinct (item).lang, (item).expr
-    from unnest(entry_create_list) as item
-  ) as entry
-  returning *;
 end;
 $$;
 
-revoke execute on function public.update_concept(bigint, bigint[], public.entry_create[]) from public;
-grant execute on function public.update_concept(bigint, bigint[], public.entry_create[]) to authenticated;
+revoke execute on function public.reject_submission(bigint) from public;
+grant execute on function public.reject_submission(bigint) to authenticated;
+
+
+create function public.replace_submission(submission_id bigint, replacement_payload jsonb)
+returns bigint
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  actor_id uuid := (select auth.uid());
+  affected_rows bigint;
+  replacement_id bigint;
+begin
+  if not exists (select 1 from public.users where id = actor_id and role in ('editor', 'admin')) then
+    raise exception 'not authorized';
+  end if;
+
+  update public.submissions
+  set review_status = 'rejected',
+      reviewed_by = actor_id,
+      reviewed_at = now()
+  where id = submission_id
+    and review_status = 'pending';
+  get diagnostics affected_rows = row_count;
+  if affected_rows = 0 then
+    raise exception 'submission does not exist or is not pending';
+  end if;
+
+  insert into public.submissions(created_by, payload)
+  values (actor_id, replacement_payload)
+  returning id into replacement_id;
+
+  return replacement_id;
+end;
+$$;
+
+revoke execute on function public.replace_submission(bigint, jsonb) from public;
+grant execute on function public.replace_submission(bigint, jsonb) to authenticated;
+
+
+create function public.commit_submission(submission_id bigint)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  actor_id uuid := (select auth.uid());
+  submission public.submissions%rowtype;
+  operation jsonb;
+  item jsonb;
+  current_concept bigint;
+begin
+  if not exists (select 1 from public.users where id = actor_id and role in ('editor', 'admin')) then
+    raise exception 'not authorized';
+  end if;
+
+  select * into submission
+  from public.submissions
+  where id = submission_id
+  for update;
+
+  if not found then
+    raise exception 'submission does not exist';
+  end if;
+
+  if submission.review_status <> 'pending' then
+    raise exception 'submission is not pending';
+  end if;
+
+  for operation in
+    select value from jsonb_array_elements(submission.payload)
+  loop
+    case operation->>'type'
+      when 'create' then
+        insert into public.concepts default values returning id into current_concept;
+
+        for item in select value from jsonb_array_elements(operation->'creates')
+        loop
+          insert into public.entries(concept, lang, expr)
+          values (current_concept, (item->>'lang')::bigint, item->>'expr')
+          on conflict do nothing;
+        end loop;
+
+      when 'update' then
+        current_concept := (operation->>'concept')::bigint;
+        if not exists (select 1 from public.concepts where id = current_concept) then
+          raise exception 'concept % does not exist', current_concept;
+        end if;
+
+        for item in select value from jsonb_array_elements(operation->'removes')
+        loop
+          delete from public.entries
+          where concept = current_concept
+            and lang = (item->>'lang')::bigint
+            and expr = item->>'expr';
+        end loop;
+
+        for item in select value from jsonb_array_elements(operation->'creates')
+        loop
+          insert into public.entries(concept, lang, expr)
+          values (current_concept, (item->>'lang')::bigint, item->>'expr')
+          on conflict do nothing;
+        end loop;
+
+      when 'delete' then
+        current_concept := (operation->>'concept')::bigint;
+        delete from public.concepts where id = current_concept;
+    end case;
+  end loop;
+
+  update public.submissions
+  set review_status = 'committed',
+      reviewed_by = actor_id,
+      reviewed_at = now()
+  where id = submission_id;
+end;
+$$;
+
+revoke execute on function public.commit_submission(bigint) from public;
+grant execute on function public.commit_submission(bigint) to authenticated;
 
 
 -- =========================================================================

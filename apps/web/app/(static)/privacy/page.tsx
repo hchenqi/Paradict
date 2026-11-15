@@ -21,7 +21,8 @@ export default function PrivacyPage() {
           <strong>Account information:</strong> Your email address, username,
           optional display name, and authentication information are used to
           create and manage your account and sign you in. Supabase provides
-          account authentication.
+          account authentication. Your username, display name, and submitted proposals
+          may be visible to other users.
         </li>
         <li>
           <strong>Dictionary proposals:</strong> We process the entries or

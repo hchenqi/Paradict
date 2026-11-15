@@ -29,13 +29,7 @@ Output:
 - `languages.tsv`
 - `entries.tsv`
 
-## Normalize Expressions
-
-(can be skipped because already normalized) 
-
-```sh
-python scripts/panlex/normalize.py
-```
+Expressions are normalied to NFC.
 
 ## Import Tables
 
@@ -46,13 +40,21 @@ drop index if exists public.idx_entries_expr_trgm;
 truncate public.entries, public.concepts, public.languages restart identity;
 ```
 
-(use following commands or use dashboard UI)
+(use the following commands or use the Supabase dashboard CSV import UI to import the tables)
 
 ```psql
 SET statement_timeout = '1h';
 \copy public.concepts(id) FROM 'concepts.tsv' (FORMAT csv, HEADER true);
 \copy public.languages(id, code) FROM 'languages.tsv' (FORMAT csv, HEADER true, DELIMITER E'\t');
 \copy public.entries(concept, lang, expr) FROM 'entries.tsv' (FORMAT csv, HEADER true, DELIMITER E'\t');
+```
+
+(run the following queries to synchronize the id sequences)
+(can be skipped if using Supabase dashboard CSV import UI)
+
+```sql
+select setval(pg_get_serial_sequence('public.concepts', 'id'), coalesce(max(id), 1), max(id) is not null) from public.concepts;
+select setval(pg_get_serial_sequence('public.languages', 'id'), coalesce(max(id), 1), max(id) is not null) from public.languages;
 ```
 
 ```sql

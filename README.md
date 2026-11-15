@@ -30,7 +30,7 @@ data/                  locally processed PanLex dataset files
 ### Supabase Setup
 
 1. Create a Supabase project.
-2. Run [`scripts/schema.sql`](scripts/schema.sql) in the Supabase SQL Editor. (line `create index idx_entries_expr_trgm` could be run after importing the dataset to speed up the import)
+2. Run [`scripts/schema.sql`](scripts/schema.sql) in the Supabase SQL Editor. The `idx_entries_expr_trgm` index statement is commented out for bulk import; create it after importing the dataset.
 3. Copy [`apps/web/.env.example`](apps/web/.env.example) to `apps/web/.env.local`.
 4. Set `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` to the project values. Replace the `LEGAL_INFO_*` examples with current operator and project details before launch.
 5. Run `npx supabase gen types typescript --project-id "the-project-id" --schema public > database.types.ts` then copy the generated file to `apps/web/lib/database.types.ts`.
@@ -42,7 +42,7 @@ data/                  locally processed PanLex dataset files
 
 ### Daily Backup
 
-The [Daily backup workflow](.github/workflows/backup.yml) exports `public.concepts`, `public.languages`, and `public.entries` as `concepts.tsv`, `languages.tsv`, and `entries.tsv` inside one dated `.tar.gz` archive each day at 01:00 UTC. Artifacts are retained for 10 days. The workflow also displays row counts in the summary, and can be started manually from the Actions tab.
+The [Daily backup workflow](.github/workflows/backup.yml) exports `public.concepts`, `public.languages`, and `public.entries` as TSV files inside one dated `.tar.gz` archive each day at 01:00 UTC. Artifacts are retained for 10 days. The workflow also displays row counts in the summary, and can be started manually from the Actions tab.
 
 Add a repository Actions secret named `SUPABASE_DB_URL` containing the Supabase PostgreSQL connection string (with SSL enabled) for the project.
 
@@ -60,25 +60,26 @@ npm run dev
 The core tables:
 - `concepts`: identity `id` for a language-neutral meaning.
 - `languages`: identity `id` and unique ISO language code.
-- `entries`: a unique row per (concept, language, expression).
+- `entries`: identity `id` for a unique `(concept, lang, expr)` tuple.
 
 The `users` and `submissions` tables:
 - `users`: one row per Supabase Auth user, with `member`, `editor`, or `admin` role and username/display name.
-- `submissions`: authenticated community proposals for language and concept changes, with JSON payload, status, and timestamps.
+- `submissions`: authenticated community proposals for concept create/update/delete operations, with JSON payload, status, and timestamps.
 
 ### User Roles
 
 - **Member** can sign in and view and submit proposals.
-- **Editor** can review and apply submissions.
+- **Editor** can commit changes directly or review and atomically apply submissions.
 - **Admin** can delete submissions and change user roles.
 
 ### Submissions
 
-Possible proposals can be:
+Possible proposals can contain a list of:
 - concept creation
-- concept updates with entry creations/removals which could optionally subsume another concept
+- concept updates with entry creations/removals
+- concept deletion
 
-Proposals are stored as JSON payloads.
+Proposals are stored as JSON payloads. Reviewers can commit or reject a submission. Creators can update their own pending submissions. A reviewer can also commit a submission after edit, which creates a replacement submission and rejects the original in one transaction.
 
 ### API
 
@@ -102,7 +103,7 @@ Displays search result of a query text filtered by given languages.
 
 #### `/concept/[id]`
 
-Displays all entries of a concept grouped by languages, filtered by different language view modes.
+Displays a concept's entries grouped by languages, filtered by the language view mode. In edit mode, displays parallel concept panels for creating, updating, or deleting concepts.
 
 #### `/concept/create`
 

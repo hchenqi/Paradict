@@ -1,27 +1,44 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
-import { getConceptEntries, supabase } from "@/lib/client";
-import { Entry, EntryCreate, EntryRemove, languageLabel } from "@/lib/types";
+import { Ref, useEffect, useId, useImperativeHandle, useMemo, useRef, useState } from "react";
+import { ConceptEntry, ConceptOperation, languageLabel } from "@/lib/types";
+import { supabase } from "@/lib/client";
 import "./ConceptEdit.css";
 
-function normalizeExpr(expr: string) {
-  return expr.normalize('NFC').replace(/[\t\n\r]/g, ' ').replace(/\p{Cc}/gu, '').replace(/ {2,}/g, ' ').trim();
+function useConceptLoader(concept: number | undefined, setMessage: (message: string) => void) {
+  const [entries, setEntries] = useState<ConceptEntry[]>([]);
+
+  useEffect(() => {
+    setEntries([]);
+    if (concept) {
+      let mounted = true;
+      supabase.rpc("read_concept", { concept_id: concept })
+        .then(({ data: entries, error }) => { if (mounted) { if (!error) { setEntries(entries); } else { setMessage("Concept does not exist."); } } })
+      return () => { mounted = false; };
+    }
+  }, [concept]);
+
+  return entries;
 }
 
-function EntryImport({ languages, onImport }: { languages: [number, string][]; onImport: (entries: EntryCreate[]) => void; }) {
+function normalizeExpr(expr: string) {
+  return expr.normalize("NFC").replace(/[\t\n\r]/g, " ").replace(/\p{Cc}/gu, "").replace(/ {2,}/g, " ").trim();
+}
+
+function EntryImport({ languages, onImport }: { languages: [number, string][]; onImport: (entries: ConceptEntry[]) => void; }) {
   const languageCodeIdMap = useMemo(() => new Map(languages.map(([id, code]) => [code, id])), [languages]);
   const [open, setOpen] = useState(false);
   const [json, setJson] = useState("");
   const [error, setError] = useState("");
   const dialogRef = useRef<HTMLDialogElement>(null);
+  const id = useId();
 
   function importEntries(event: React.SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
     try {
       const parsed: unknown = JSON.parse(json);
       if (!Array.isArray(parsed)) { throw new Error("JSON must be a list of entries."); }
-      const imported = new Map<string, EntryCreate>();
+      const imported = new Map<string, ConceptEntry>();
       for (const [index, item] of parsed.entries()) {
         if (typeof item !== "object" || item === null || Array.isArray(item)) { throw new Error(`Entry ${index + 1} must have string lang and expr fields.`); }
         const entry = item as Record<string, unknown>;
@@ -50,8 +67,8 @@ function EntryImport({ languages, onImport }: { languages: [number, string][]; o
       <button type="button" onClick={() => { setError(""); setOpen(true); }}>Import</button>
       {
         open && (
-          <dialog ref={dialogRef} aria-labelledby="import-title" onClose={() => setOpen(false)} onClick={event => { if (event.target === event.currentTarget) { dialogRef.current?.close(); } }}>
-            <h2 id="import-title">Import entries from JSON</h2>
+          <dialog ref={dialogRef} aria-labelledby={id} onClose={() => setOpen(false)} onClick={event => { if (event.target === event.currentTarget) { dialogRef.current?.close(); } }}>
+            <h2 id={id}>Import entries from JSON</h2>
             <p>Paste a JSON list of entries with language codes, for example: <code>[&#123;"lang":"eng","expr":"hello"&#125;]</code></p>
             <details><summary>Available language codes</summary><p>{languages.map(([, code]) => code).join(", ")}</p></details>
             <form onSubmit={importEntries}>
@@ -73,299 +90,315 @@ function LanguageRow({
   creates,
   onRemove,
   onCreate,
-  commitRemove,
-  commitCreate,
-  compare,
   editing,
-  canCommit,
+  deleting,
 }: {
   lang: { id: number; code: string };
-  entries: Entry[];
-  removes: EntryRemove[];
-  creates: EntryCreate[];
-  onRemove: (remove: boolean, entry: EntryRemove) => void;
-  onCreate: (remove: boolean, entry: EntryCreate) => void;
-  commitRemove: (entry: EntryRemove) => void;
-  commitCreate: (entry: EntryCreate) => void;
-  compare: Entry[] | undefined;
+  entries: string[];
+  removes: string[];
+  creates: string[];
+  onRemove: (remove: boolean, entry: ConceptEntry) => void;
+  onCreate: (remove: boolean, entry: ConceptEntry) => void;
   editing: boolean;
-  canCommit: boolean;
+  deleting: boolean;
 }) {
   return (
-    <div className={`row ${compare ? "compare" : ""}`}>
-      <div className="label">{languageLabel(lang.code)}</div>
-      <div className="entries">
-        {
-          entries.map(entry => {
-            const removed = removes.find(item => item.id === entry.id);
-            return (
-              <div className={`entry ${removed ? "removed" : ""}`} key={entry.id}>
-                <span>{entry.expr}</span>
-                {editing && <button type="button" onClick={() => onRemove(!removed, { id: entry.id })} aria-label={`${removed ? "Restore" : "Remove"} ${entry.expr} (${lang.code})`}>{removed ? "+" : "-"}</button>}
-                {!editing && canCommit && removed && <button type="button" onClick={() => commitRemove(entry)}>Commit</button>}
-              </div>
-            );
-          })
-        }
-        {
-          creates.map(entry => (
-            <div className={`entry created`} key={entry.expr}>
-              <span>{entry.expr}</span>
-              {editing && <button type="button" onClick={() => onCreate(true, entry)} aria-label={`Remove ${entry.expr} (${lang.code})`}>-</button>}
-              {!editing && canCommit && <button type="button" onClick={() => commitCreate(entry)}>Commit</button>}
+    <div className={`row ${deleting ? "disabled" : ""}`} aria-label={languageLabel(lang.code)}>
+      {
+        entries.map(expr => {
+          const removed = removes.includes(expr);
+          return (
+            <div className={`entry ${removed ? "removed" : ""}`} key={expr}>
+              <span>{expr}</span>
+              {editing && <button type="button" disabled={deleting} onClick={() => onRemove(!removed, { lang: lang.id, expr })} aria-label={`${removed ? "Restore" : "Remove"} ${expr}`}>{removed ? "+" : "-"}</button>}
             </div>
-          ))
+          );
+        })
+      }
+      {
+        creates.map(expr => (
+          <div className="entry created" key={expr}>
+            <span>{expr}</span>
+            {editing && <button type="button" disabled={deleting} onClick={() => onCreate(true, { lang: lang.id, expr })} aria-label={`Remove ${expr}`}>-</button>}
+          </div>
+        ))
+      }
+      {
+        editing && !deleting && (
+          <form onSubmit={event => {
+            event.preventDefault();
+            const form = event.currentTarget;
+            const expr = normalizeExpr(new FormData(form).get("create") as string);
+            if (expr) { onCreate(false, { lang: lang.id, expr }); }
+          }}>
+            <input name="create" aria-label={`Add expression in ${lang.code}`} disabled={deleting} />
+            <button type="submit" disabled={deleting}>Add</button>
+          </form>
+        )
+      }
+    </div>
+  );
+}
+
+type PanelHandle = {
+  getOperation: () => ConceptOperation | null;
+};
+
+function Panel({
+  ref,
+  self,
+  languages,
+  visibleLanguages,
+  onLanguagesChange,
+  initial,
+  editing,
+}: {
+  ref: Ref<PanelHandle>;
+  self: {
+    columnCount: number;
+    column: number;
+    setMain: () => void;
+    move: (direction: -1 | 1) => void;
+    remove: () => void;
+  };
+  languages: [number, string][];
+  visibleLanguages: [number, string][];
+  onLanguagesChange: (languages: number[]) => void;
+  initial: ConceptOperation;
+  editing: boolean;
+}) {
+  const [message, setMessage] = useState("");
+
+  const concept = initial.type !== "create" ? initial.concept : undefined;
+  const entries = useConceptLoader(concept, setMessage);
+
+  const [removes, setRemoves] = useState<ConceptEntry[]>(initial.type === "update" ? initial.removes : []);
+  const [creates, setCreates] = useState<ConceptEntry[]>(initial.type !== "delete" ? initial.creates : []);
+  const [deleting, setDeleting] = useState(initial.type === "delete");
+
+  const entryGroups = useMemo(() => Map.groupBy(entries, entry => entry.lang), [entries]);
+  const removeGroups = useMemo(() => Map.groupBy(removes, entry => entry.lang), [removes]);
+  const createGroups = useMemo(() => Map.groupBy(creates, entry => entry.lang), [creates]);
+
+  useEffect(() => {
+    onLanguagesChange([...new Set([...entries.map(entry => entry.lang), ...creates.map(entry => entry.lang)])]);
+  }, [entries, creates, onLanguagesChange]);
+
+  useImperativeHandle(ref, () => ({
+    getOperation: () => {
+      if (concept === undefined) {
+        if (!deleting) {
+          return creates.length > 0 ? { "type": "create", creates } : null;
+        } else {
+          return null;
         }
+      } else {
+        if (!deleting) {
+          return removes.length > 0 || creates.length > 0 ? { "type": "update", concept, removes, creates } : null;
+        } else {
+          return { "type": "delete", concept };
+        }
+      }
+    }
+  }), [concept, removes, creates, deleting]);
+
+  function onRemove(remove: boolean, entry: ConceptEntry) {
+    if (remove) {
+      setRemoves(removes => [...removes, entry]);
+    } else {
+      setRemoves(removes => removes.filter(({ lang, expr }) => !(lang === entry.lang && expr === entry.expr)));
+    }
+  }
+
+  function onCreate(remove: boolean, entry: ConceptEntry) {
+    if (!remove) {
+      if (entries.find(({ lang, expr }) => lang === entry.lang && expr === entry.expr)) {
+        onRemove(false, entry);
+      } else {
+        if (!creates.find(({ lang, expr }) => lang === entry.lang && expr === entry.expr)) {
+          setCreates(creates => [...creates, entry]);
+        }
+      }
+    } else {
+      setCreates(creates => creates.filter(({ lang, expr }) => !(lang === entry.lang && expr === entry.expr)));
+    }
+  }
+
+  function addEntries(entries: ConceptEntry[]) {
+    setRemoves(removes => removes.filter(({ lang, expr }) => !entries.find(entry => lang === entry.lang && expr === entry.expr)));
+    setCreates(creates => [...creates, ...entries.filter(({ lang, expr }) => !creates.find(entry => lang === entry.lang && expr === entry.expr))]);
+  }
+
+  return (
+    <div className="panel" style={{ gridColumn: self.column + 2, gridRow: "1 / -1" }} aria-label={concept ? `Concept ${concept}` : "New concept"}>
+      <div className="row header">
+        <div className="top">
+          <span className="name">{concept ? `Concept ${concept}` : "New concept"}</span>
+          <div className="actions">
+            {self.column !== 0 && <button type="button" onClick={self.setMain}>Set as main</button>}
+            {self.column !== 0 && <button type="button" onClick={() => self.move(-1)} aria-label="Move left">←</button>}
+            {self.column !== self.columnCount - 1 && <button type="button" onClick={() => self.move(1)} aria-label="Move right">→</button>}
+            <button type="button" onClick={self.remove} aria-label="Remove panel">×</button>
+          </div>
+        </div>
         {
-          editing && (
-            <form onSubmit={event => {
-              event.preventDefault();
-              const form = event.currentTarget;
-              const expr = normalizeExpr(new FormData(form).get("create") as string);
-              if (expr) { onCreate(false, { lang: lang.id, expr }); }
-            }}>
-              <input name="create" />
-              <button type="submit">Add</button>
-            </form>
+          (message || editing) && (
+            <div className="bottom">
+              {message && <p role="status">{message}</p>}
+              {
+                editing && (
+                  <div className="actions">
+                    <EntryImport languages={languages} onImport={addEntries} />
+                    <button type="button" aria-pressed={deleting} onClick={() => setDeleting(!deleting)}>{deleting ? "Restore" : "Delete"}</button>
+                  </div>
+                )
+              }
+            </div>
           )
         }
       </div>
       {
-        compare && (
-          <div className="entries compare">
-            {
-              compare.map(entry => {
-                const add = !entries.find(({ expr }) => entry.expr === expr) && !creates.find(({ expr }) => entry.expr === expr);
-                return (
-                  <div className={`entry ${add ? "created" : ""}`} key={entry.id}>
-                    <span>{entry.expr}</span>
-                    {editing && add && <button type="button" onClick={() => onCreate(false, { lang: lang.id, expr: entry.expr })}>Add</button>}
-                  </div>
-                )
-              })
-            }
-          </div>
-        )
+        visibleLanguages.map(([id, code]) => (
+          <LanguageRow key={id} lang={{ id, code }} entries={(entryGroups.get(id) ?? []).map(entry => entry.expr)} removes={(removeGroups.get(id) ?? []).map(entry => entry.expr)} creates={(createGroups.get(id) ?? []).map(entry => entry.expr)} onRemove={onRemove} onCreate={onCreate} editing={editing} deleting={deleting} />
+        ))
       }
-    </div >
+    </div>
   );
 }
 
-export default function ({
-  languages,
-  concept,
-  removes,
-  creates,
-  setRemoves,
-  setCreates,
-  compare,
-  editing,
-  canCommit,
-  onCreateConcept,
-}: {
-  languages: [number, string][],
-  concept: number | undefined;
-  removes: EntryRemove[];
-  creates: EntryCreate[];
-  setRemoves: (fn: (removes: EntryRemove[]) => EntryRemove[]) => void,
-  setCreates: (fn: (creates: EntryCreate[]) => EntryCreate[]) => void,
-  compare: number | undefined;
-  editing: boolean;
-  canCommit: boolean;
-  onCreateConcept: (entries: EntryCreate[]) => Promise<void>;
-}) {
+export type ConceptEditHandle = {
+  getOperations: () => ConceptOperation[];
+};
+
+type Panel = {
+  key: string;
+  operation: ConceptOperation;
+};
+
+export default function ({ ref, languages, initial, editing }: { ref: Ref<ConceptEditHandle>; languages: [number, string][]; initial: ConceptOperation[]; editing: boolean; }) {
+  const [panels, setPanels] = useState<Panel[]>(() => initial.map(operation => ({ key: crypto.randomUUID(), operation })));
+  const panelRefs = useRef(new Map<string, PanelHandle>());
+  const [panelLanguages, setPanelLanguages] = useState<Map<string, Set<number>>>(new Map());
+
   const [message, setMessage] = useState("");
-  const [committing, setCommitting] = useState(false);
   const [showEmptyRows, setShowEmptyRows] = useState(false);
+  const visibleLanguages = showEmptyRows ? languages : languages.filter(([id]) => [...panelLanguages.values()].some(panel => panel.has(id)));
 
-  const [entries, setEntries] = useState<Entry[]>([]);
-  const entryGroups = useMemo(() => Map.groupBy(entries, entry => entry.lang), [entries]);
-  const entryExprIdMap = useMemo(() => new Map(entries.map(({ id, lang, expr }) => [JSON.stringify([lang, expr]), id])), [entries]);
-
-  const createGroups = useMemo(() => Map.groupBy(creates, entry => entry.lang), [creates]);
-
-  const [compareEntries, setCompareEntries] = useState<Entry[]>([]);
-  const compareEntryGroups = useMemo(() => Map.groupBy(compareEntries, entry => entry.lang), [compareEntries]);
-  const hasCompare = compare && compare !== concept && compareEntries.length > 0;
+  const editorRef = useRef<HTMLDivElement>(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   useEffect(() => {
-    setEntries([]);
-    if (concept) {
-      let mounted = true;
-      getConceptEntries(concept)
-        .then(entries => mounted && (entries ? setEntries(entries) : setMessage("Concept does not exist.")))
-        .catch(() => mounted && setMessage("Could not load concept."));
-      return () => { mounted = false; };
+    function updateFullscreenState() {
+      setIsFullscreen(document.fullscreenElement === editorRef.current);
     }
-  }, [concept]);
+    document.addEventListener("fullscreenchange", updateFullscreenState);
+    return () => document.removeEventListener("fullscreenchange", updateFullscreenState);
+  }, []);
 
-  useEffect(() => {
-    setCreates(creates => creates.filter(({ lang, expr }) => !entryExprIdMap.get(JSON.stringify([lang, expr]))));
-  }, [entries]);
+  const panelGridStyle = useMemo(() => ({
+    "--panel-count": panels.length,
+    "--language-count": visibleLanguages.length
+  } as React.CSSProperties), [panels.length, visibleLanguages.length]);
 
-  useEffect(() => {
-    setCompareEntries([]);
-    if (compare && compare !== concept) {
-      let mounted = true;
-      getConceptEntries(compare)
-        .then(entries => mounted && (entries ? setCompareEntries(entries) : setMessage("Concept to compare does not exist.")))
-        .catch(() => mounted && setMessage("Could not load concept to compare."));
-      return () => { mounted = false; };
-    }
-  }, [concept, compare]);
+  useImperativeHandle(ref, () => ({
+    getOperations: () => panels.map(panel => panelRefs.current.get(panel.key)?.getOperation()).filter(operation => !!operation)
+  }), [panels]);
 
-  function onRemove(remove: boolean, entry: EntryRemove) {
-    if (remove) {
-      setRemoves(entries => [...entries, entry]);
-    } else {
-      setRemoves(entries => entries.filter(({ id }) => id !== entry.id));
-    }
+  function addPanel(operation: ConceptOperation) {
+    setPanels([...panels, { key: crypto.randomUUID(), operation }]);
   }
 
-  function onCreate(remove: boolean, entry: EntryCreate) {
-    if (!remove) {
-      const id = entryExprIdMap.get(JSON.stringify([entry.lang, entry.expr]));
-      if (id) {
-        setRemoves(entries => entries.filter(entry => entry.id !== id));
-      } else {
-        if (!creates.find(({ lang, expr }) => lang === entry.lang && expr === entry.expr)) {
-          setCreates(entries => [...entries, entry]);
-        }
-      }
-    } else {
-      setCreates(entries => entries.filter(other => other !== entry));
-    }
-  }
-
-  function addEntries(entries: EntryCreate[]) {
-    const idsToRestore = new Set(entries.map(({ lang, expr }) => entryExprIdMap.get(JSON.stringify([lang, expr]))).filter((id): id is number => id !== undefined));
-    const entriesToCreate = entries.filter(({ lang, expr }) => !entryExprIdMap.has(JSON.stringify([lang, expr])) && !creates.some(entry => entry.lang === lang && entry.expr === expr)).map(({ lang, expr }) => ({ lang, expr }));
-    if (idsToRestore.size) { setRemoves(removes => removes.filter(({ id }) => !idsToRestore.has(id))); }
-    if (entriesToCreate.length) { setCreates(creates => [...creates, ...entriesToCreate.filter(entry => !creates.some(({ lang, expr }) => entry.lang === lang && entry.expr === expr))]); }
-  }
-
-  async function commitRemove(entry: EntryRemove) {
-    const { error } = await supabase.from("entries").delete().eq("id", entry.id);
-    if (error) {
-      setMessage("Commit failed.");
-    } else {
-      setEntries(entries => entries.filter(({ id }) => id !== entry.id));
-    }
-  }
-
-  async function commitCreate(entry: EntryCreate) {
-    if (concept === undefined) {
-      return setMessage("Create a concept before committing changes.");
-    }
-    const { data, error } = await supabase.from("entries").insert({ concept, ...entry }).select('id').single();
-    if (error) {
-      setMessage("Commit failed.");
-    } else {
-      setEntries(entries => [...entries, { concept, ...entry, ...data }]);
-    }
-  }
-
-  async function createConcept() {
-    if (!canCommit || concept !== undefined || creates.length === 0 || committing || !onCreateConcept) {
+  function addConcept(event: React.SubmitEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const id = Number(new FormData(form).get("id"));
+    if (!Number.isInteger(id) || id < 1) {
+      setMessage("Invalid concept ID");
       return;
     }
-    setCommitting(true);
+    if (panels.some(panel => panel.operation.type !== "create" && panel.operation.concept === id)) {
+      setMessage(`Concept ${id} already added`);
+      return;
+    }
+    addPanel({ type: "update", concept: id, creates: [], removes: [] });
+    form.reset();
+  }
+
+  async function toggleFullscreen() {
+    const editor = editorRef.current;
+    if (!editor) { return; }
     try {
-      await onCreateConcept(creates);
+      if (document.fullscreenElement === editor) {
+        await document.exitFullscreen();
+      } else {
+        await editor.requestFullscreen();
+      }
     } catch (error) {
-      setMessage(`Concept creation failed: ${error instanceof Error ? error.message : "Unknown error."}`);
-    } finally {
-      setCommitting(false);
+      setMessage(error instanceof Error ? `Could not toggle fullscreen: ${error.message}` : "Could not toggle fullscreen.");
     }
-  }
-
-  async function updateConcept() {
-    if (!canCommit || concept === undefined || (!removes.length && !creates.length) || committing) {
-      return;
-    }
-
-    setCommitting(true);
-    const entry_remove_list = removes.map(({ id }) => id);
-    const { data, error } = await supabase.rpc("update_concept", { concept, entry_remove_list, entry_create_list: creates });
-    if (error) {
-      setMessage(`Commit failed: ${error.message}`);
-    } else {
-      const removedIds = new Set(entry_remove_list);
-      setEntries(entries => [...entries.filter(({ id }) => !removedIds.has(id)), ...data]);
-      setRemoves(() => []);
-      setCreates(() => []);
-    }
-    setCommitting(false);
-  }
-
-  async function deleteConcept() {
-    if (!canCommit || editing || concept === undefined || removes.length || creates.length || committing) {
-      return;
-    }
-    if (!confirm("Are you sure you want to delete this concept and all its entries? This action cannot be undone.")) {
-      return;
-    }
-    setCommitting(true);
-    const { error } = await supabase.from("concepts").delete().eq("id", concept);
-    if (error) {
-      setMessage(`Delete concept failed: ${error.message}`);
-    } else {
-      setEntries([]);
-    }
-    setCommitting(false);
-  }
-
-  async function subsumeCompare() {
-    if (!hasCompare) {
-      return;
-    }
-    if (creates.length) {
-      setMessage("Commit created entries before subsuming.")
-      return;
-    }
-    const subsumed = !compareEntries.find(entry => !entries.find(({ expr }) => entry.expr === expr) && !creates.find(({ expr }) => entry.expr === expr));
-    if (!subsumed && !confirm("Are you sure you want to delete this concept and all its entries? This action cannot be undone.")) {
-      return;
-    }
-    setCommitting(true);
-    const { error } = await supabase.from("concepts").delete().eq("id", compare);
-    if (error) {
-      setMessage(`Delete concept failed: ${error.message}`);
-    } else {
-      setCompareEntries([]);
-    }
-    setCommitting(false);
   }
 
   return (
-    <>
-      {message && <p role="status">{message}</p>}
-      <div className={`row header ${compare ? "compare" : ""}`}>
-        <button className={`filter ${showEmptyRows ? "active" : ""}`} type="button" aria-pressed={showEmptyRows} onClick={() => setShowEmptyRows(!showEmptyRows)}>empty rows</button>
-        <div className="current">
-          <span>{concept ? `Concept ${concept}` : "New concept"}</span>
-          {editing && <EntryImport languages={languages} onImport={addEntries} />}
-          {!editing && concept === undefined && canCommit && creates.length > 0 && <button type="button" disabled={committing} onClick={createConcept}>{committing ? "Creating..." : "Create"}</button>}
-          {!editing && concept !== undefined && canCommit && (removes.length > 0 || creates.length > 0) && <button type="button" disabled={committing} onClick={updateConcept}>{committing ? "Committing..." : "Commit all"}</button>}
-          {!editing && concept !== undefined && canCommit && (!removes.length && !creates.length) && <button type="button" disabled={committing} onClick={deleteConcept}>Delete</button>}
-        </div>
+    <div className="edit" ref={editorRef}>
+      <div className="controls">
+        <button type="button" aria-pressed={isFullscreen} onClick={toggleFullscreen}>{isFullscreen ? "Exit fullscreen" : "Fullscreen"}</button>
         {
-          hasCompare && (
-            <div className="compare">
-              <span>Concept {compare}</span>
-              {editing && <button type="button" onClick={() => addEntries(compareEntries)}>Add all</button>}
-              {!editing && canCommit && <button type="button" disabled={committing} onClick={subsumeCompare}>Subsume</button>}
+          editing && (
+            <div>
+              <form onSubmit={addConcept}>
+                <input name="id" inputMode="numeric" />
+                <button type="submit">Add concept</button>
+              </form>
+              <button type="button" onClick={() => addPanel({ type: "create", creates: [] })}>Add new concept</button>
             </div>
           )
         }
+        {message && <span role="status">{message}</span>}
       </div>
-      <div>
-        {
-          languages.filter(([id]) => showEmptyRows || (entryGroups.get(id)?.length ?? 0) > 0 || (createGroups.get(id)?.length ?? 0) > 0 || (hasCompare && (compareEntryGroups.get(id)?.length ?? 0) > 0)).map(([id, code]) => (
-            <LanguageRow key={id} lang={{ id, code }} entries={entryGroups.get(id) ?? []} removes={removes} creates={createGroups.get(id) ?? []} onRemove={onRemove} onCreate={onCreate} commitRemove={commitRemove} commitCreate={commitCreate} compare={hasCompare ? compareEntryGroups.get(id) ?? [] : undefined} editing={editing} canCommit={canCommit && concept !== undefined && !committing} />
-          ))
-        }
+      <div className={`scroll${panels.length === 1 ? " single" : ""}`}>
+        <div className={`grid${panels.length === 1 ? " single" : ""}`} style={panelGridStyle}>
+          <div className="corner">
+            <button type="button" className={`filter ${showEmptyRows ? "active" : ""}`} aria-pressed={showEmptyRows} onClick={() => setShowEmptyRows(value => !value)}>empty rows</button>
+          </div>
+          {
+            visibleLanguages.map(([id, code], index) => (
+              <div className="lang" key={id} style={{ gridColumn: 1, gridRow: index + 2 }}>{languageLabel(code)}</div>
+            ))
+          }
+          {
+            panels.map((panel, index) => (
+              <Panel
+                key={panel.key}
+                ref={handle => { handle ? panelRefs.current.set(panel.key, handle) : panelRefs.current.delete(panel.key); return; }}
+                self={{
+                  columnCount: panels.length,
+                  column: index,
+                  setMain: () => setPanels([panels[index], ...panels.filter((_, panelIndex) => panelIndex !== index)]),
+                  move: direction => setPanels(current => { const index = current.findIndex(item => item.key === panel.key); const nextIndex = index + direction; if (index < 0 || nextIndex < 0 || nextIndex >= current.length) { return current; } const next = [...current];[next[index], next[nextIndex]] = [next[nextIndex], next[index]]; return next; }),
+                  remove: () => {
+                    setPanels(current => current.filter(item => item.key !== panel.key));
+                    setPanelLanguages(current => {
+                      if (!current.has(panel.key)) { return current; }
+                      const next = new Map(current); next.delete(panel.key); return next;
+                    });
+                  },
+                }}
+                onLanguagesChange={ids => {
+                  setPanelLanguages(current => {
+                    const previous = current.get(panel.key);
+                    if (previous?.size === ids.length && ids.every(id => previous.has(id))) { return current; }
+                    const next = new Map(current); next.set(panel.key, new Set(ids)); return next;
+                  });
+                }}
+                languages={languages}
+                visibleLanguages={visibleLanguages}
+                initial={panel.operation}
+                editing={editing}
+              />
+            ))
+          }
+        </div>
       </div>
-    </>
+    </div>
   );
 }

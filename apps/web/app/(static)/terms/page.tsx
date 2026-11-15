@@ -63,14 +63,10 @@ export default function TermsPage() {
           leave edit mode, then click <strong>Submit</strong> to send the
           proposed changes for review. Accepted changes are merged into the
           public dictionary.
-          When comparing concepts, use <strong>Add all</strong> to propose
-          adding all entries from the compared concept. Click{" "}
-          <strong>Submit subsuming</strong> to send the changes for review and
-          include a request to delete the compared concept.
         </li>
         <li>
           <strong>Suggest a new concept:</strong> Click{" "}
-          <strong>Suggest a new concept</strong> below search results to edit an
+          <strong>Suggest a new concept</strong> below search results to edit from an
           empty concept and submit.
         </li>
       </ul>
@@ -104,8 +100,7 @@ export default function TermsPage() {
         data in the public core database and continues even if the proposal
         or your account is later deleted. Deleting a proposal does not revoke
         a license already granted for material incorporated into the
-        dictionary. The contribution terms are fixed for this project; any
-        future project would have its own terms.
+        dictionary.
       </p>
 
       <h2>Availability and liability</h2>

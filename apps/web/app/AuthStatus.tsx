@@ -13,6 +13,9 @@ export default function () {
       <Link className="signup" href="/login?mode=signup">Sign up</Link>
     </>
   ) : (
-    <Link href="/account">{userProfile.username}</Link>
+    <>
+      <Link href="/submissions">Submissions</Link>
+      <Link href="/account">{userProfile.username}</Link>
+    </>
   );
 }

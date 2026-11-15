@@ -1,12 +1,12 @@
 "use client";
 
-import { Suspense, useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { usePathname, useSearchParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/client";
-import { ConceptOperation, SubmissionPayload } from "@/lib/types";
+import { ConceptOperation } from "@/lib/types";
 import { useUserProfile } from "@/app/AuthProvider";
 import { useActiveLanguages, useLanguages, useSelectedLanguages } from "@/app/LanguageProvider";
-import ConceptEdit from "@/app/ConceptEdit";
+import ConceptEdit, { ConceptEditHandle } from "@/app/ConceptEdit";
 import "./layout.css";
 
 type LanguageFilter = "all" | "selected" | "active";
@@ -29,7 +29,7 @@ function useLanguageFilter(): [[number, string][], LanguageFilter, (languageFilt
   return [languageFilter === "all" ? languages : languageFilter === "selected" ? selectedLanguages : activeLanguages, languageFilter, (languageFilter: LanguageFilter) => { localStorage.setItem("language-filter", languageFilter); setLanguageFilter(languageFilter); }];
 }
 
-function ComparesIdLoader({ setCompares }: { setCompares: (compares: number[]) => void; }) {
+function ComparesIdLoader({ setCompares }: { setCompares: (compares: number[] | undefined) => void; }) {
   const searchParams = useSearchParams();
   const ids = searchParams.getAll("compare").flatMap(value => value.split(",")).map(value => Number(value.trim())).filter((id, index, ids) => Number.isInteger(id) && id > 0 && ids.indexOf(id) === index);
 
@@ -49,11 +49,15 @@ export default function () {
   const pathname = usePathname();
   const isCreate = pathname.endsWith("/create");
   const concept = Number(pathname.split("/").pop());
+  const [compares, setCompares] = useState<number[] | undefined>(undefined);
+  const initial: ConceptOperation[] = useMemo(() => [isCreate ? { type: "create", creates: [] } : { type: "update", concept, removes: [], creates: [] }, ...(compares ?? []).filter(compare => compare !== concept).map(compare => ({ type: "update" as const, concept: compare, removes: [], creates: [] }))], [pathname, compares]);
 
-  const [compares, setCompares] = useState<number[]>([]);
-  const initial: ConceptOperation[] = [isCreate ? { type: "create", creates: [] } : { type: "update", concept, removes: [], creates: [] }, ...compares.map(compare => ({ type: "update", concept: compare, removes: [], creates: [] } as ConceptOperation))]
+  const conceptEditRef = useRef<ConceptEditHandle>(null);
 
   const [editing, setEditing] = useState(isCreate);
+  const canCommit = editing && userProfile && (userProfile.role === "editor" || userProfile.role === "admin");
+
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     if (userProfile === null && editing) {
@@ -70,41 +74,51 @@ export default function () {
   }, [message]);
 
   async function submit() {
-    if (!userProfile) {
-      setMessage("Only members could submit.");
+    if (!userProfile || submitting) {
       return;
     }
-    if ((isCreate && creates.length) || (!isCreate && (removes.length || creates.length)) || subsume) {
-      const payload: SubmissionPayload = { concept, subsume, removes, creates };
-      const { error } = await supabase.from("submissions").insert({ created_by: userProfile.id, payload });
-      setMessage(error ? "Submission failed." : "Submitted for review.");
-      if (!error) { setEditing(false); }
-    } else {
-      setMessage("No changes to submit.");
+    const operations = conceptEditRef.current?.getOperations();
+    if (!operations || !operations.length) {
+      setMessage("Add changes before submitting.");
+      return;
+    }
+    setSubmitting(true);
+    setMessage("");
+    const { data, error } = await supabase.from("submissions").insert({ created_by: userProfile.id, payload: operations }).select("id").single();
+    setSubmitting(false);
+    if (error) {
+      setMessage(`Submission failed: ${error.message}`);
+      return;
+    }
+    if (canCommit) {
+      const { error } = await supabase.rpc("commit_submission", { submission_id: data.id });
+      if (error) {
+        setMessage(`Submission succeeded but failed to commit: ${error.message}`);
+      }
     }
   }
 
   return (
     <article className="concept">
-      <Suspense><ComparesIdLoader setCompares={setCompares} /></Suspense>
+      <Suspense fallback={null}><ComparesIdLoader setCompares={setCompares} /></Suspense>
       <nav aria-label="Concept controls">
         <select aria-label="Languages to display" value={languageFilter} onChange={event => setLanguageFilter(event.target.value as LanguageFilter)}>
           <option value="all">all languages</option>
           <option value="selected">selected languages</option>
           <option value="active">active languages</option>
         </select>
-        <button className="view-toggle" type="button" onClick={() => setEditing(!editing)}>{!editing ? "Edit" : "View"}</button>
+        <button className="view-toggle" type="button" onClick={() => setEditing(editing => !editing)}>{!editing ? "Edit" : "View"}</button>
         {
           editing && (
             <div className="agreement">
-              <span>By submitting, you agree to the{" "}<a href="/terms" target="_blank" rel="noopener noreferrer">Terms and Conditions</a></span>
-              <button type="button" onClick={() => submit()}>Submit</button>
+              <span>By submitting, you agree to the <a href="/terms" target="_blank" rel="noopener noreferrer">Terms and Conditions</a>.</span>
+              <button type="button" disabled={submitting} onClick={submit}>{submitting ? canCommit ? "Committing..." : "Submitting..." : canCommit ? "Commit changes" : "Submit for review"}</button>
             </div>
           )
         }
       </nav>
       {message && <p role="status">{message}</p>}
-      <ConceptEdit languages={languages} initial={initial} editing={editing} />
+      <ConceptEdit ref={conceptEditRef} languages={languages} initial={initial} editing={editing} />
     </article>
   );
 }

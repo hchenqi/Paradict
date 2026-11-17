@@ -224,9 +224,20 @@ function Panel({
     }
   }
 
-  function addEntries(entries: ConceptEntry[]) {
-    setRemoves(removes => removes.filter(({ lang, expr }) => !entries.find(entry => lang === entry.lang && expr === entry.expr)));
-    setCreates(creates => [...creates, ...entries.filter(({ lang, expr }) => !creates.find(entry => lang === entry.lang && expr === entry.expr))]);
+  async function exportEntries() {
+    try {
+      const languageCodes = new Map(languages.map(([id, code]) => [id, code]));
+      const currentEntries = [...entries.filter(({ lang, expr }) => !removes.some(entry => lang === entry.lang && expr === entry.expr)), ...creates].map(({ lang, expr }) => ({ lang: languageCodes.get(lang)!, expr }));
+      await navigator.clipboard.writeText(JSON.stringify(currentEntries, null, 2));
+      setMessage("Entries copied to clipboard.");
+    } catch (error) {
+      setMessage(error instanceof Error ? `Could not copy entries: ${error.message}` : "Could not copy entries.");
+    }
+  }
+
+  function importEntries(entriesImport: ConceptEntry[]) {
+    setRemoves(removes => removes.filter(({ lang, expr }) => !entriesImport.find(entry => lang === entry.lang && expr === entry.expr)));
+    setCreates(creates => [...creates, ...entriesImport.filter(({ lang, expr }) => !entries.find(entry => lang === entry.lang && expr === entry.expr) && !creates.find(entry => lang === entry.lang && expr === entry.expr))]);
   }
 
   return (
@@ -248,7 +259,8 @@ function Panel({
               {
                 editing && (
                   <div className="actions">
-                    <EntryImport languages={languages} onImport={addEntries} />
+                    <button type="button" onClick={exportEntries}>Export</button>
+                    <EntryImport languages={languages} onImport={importEntries} />
                     <button type="button" aria-pressed={deleting} onClick={() => setDeleting(!deleting)}>{deleting ? "Restore" : "Delete"}</button>
                   </div>
                 )
